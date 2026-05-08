@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EAC Tools — Expert Author Community</title>
+  <meta name="description" content="Free tools for expert authors. Reflect, unblock, and write with more clarity.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+       ============================================================ */
+    :root {
+      --color-navy:        #00003D;
+      --color-yellow:      #FFE64B;
+      --color-yellow-mid:  #FFF3A3;
+      --color-blue:        #5296FB;
+      --color-orange:      #FE8D17;
+      --color-white:       #FFFFFF;
+      --color-grey-100:    #F5F5F7;
+      --color-grey-200:    #E8E8EC;
+      --color-grey-400:    #9999AA;
+      --color-grey-700:    #444455;
+
+      --font: 'Montserrat', sans-serif;
+
+      --radius-sm:   6px;
+      --radius-md:   10px;
+      --radius-lg:   16px;
+      --radius-xl:   24px;
+      --radius-full: 999px;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,62,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,62,0.10);
+      --shadow-lg: 0 8px 32px rgba(0,0,62,0.14);
+
+      --transition: 0.18s ease;
+    }
+
+    /* ============================================================
+       RESET
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: var(--font);
+      background: var(--color-grey-100);
+      color: var(--color-navy);
+      min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* ============================================================
+       HEADER
+       ============================================================ */
+    .site-header {
+      background: var(--color-navy);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-logo svg {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .header-logo-text {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-white);
+    }
+
+    .header-link {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+      transition: color var(--transition);
+    }
+    .header-link:hover { color: var(--color-yellow); }
+
+    /* ============================================================
+       HERO
+       ============================================================ */
+    .hero {
+      background: var(--color-navy);
+      padding: 64px 24px 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 48px;
+      background: var(--color-grey-100);
+      border-radius: 48px 48px 0 0;
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-yellow);
+      margin-bottom: 20px;
+    }
+
+    .hero-title {
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 900;
+      line-height: 1.15;
+      color: var(--color-white);
+      max-width: 600px;
+      margin: 0 auto 20px;
+      letter-spacing: -0.01em;
+    }
+
+    .hero-title span {
+      color: var(--color-yellow);
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.65);
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.65;
+    }
+
+    /* ============================================================
+       TOOLS GRID
+       ============================================================ */
+    .tools-section {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 56px 24px 80px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-grey-400);
+      margin-bottom: 24px;
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+
+    /* ============================================================
+       TOOL CARD — LIVE
+       ============================================================ */
+    .tool-card {
+      background: var(--color-white);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      transition: transform var(--transition), box-shadow var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .tool-card-header {
+      background: var(--color-navy);
+      padding: 32px 32px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tool-card-header-accent {
+      position: absolute;
+      top: 0; right: 0;
+      width: 80px; height: 80px;
+    }
+
+    .tool-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      margin-bottom: 16px;
+    }
+
+    .tool-badge.live {
+      background: rgba(255,230,75,0.2);
+      color: var(--color-yellow);
+    }
+
+    .tool-badge.soon {
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.5);
+    }
+
+    .tool-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .tool-card-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--color-white);
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+    }
+
+    .tool-card-body {
+      padding: 24px 32px 28px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tool-card-desc {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-grey-700);
+      line-height: 1.65;
+      flex: 1;
+      margin-bottom: 24px;
+    }
+
+    .tool-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .tool-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-grey-400);
+    }
+
+    .tool-meta-item svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0.7;
+    }
+
+    .btn-tool {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--color-yellow);
+      color: var(--color-navy);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 14px 24px;
+      border-radius: var(--radius-full);
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--transition);
+      width: 100%;
+    }
+
+    .btn-tool:hover {
+      background: #f5d800;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255,230,75,0.4);
+    }
+
+    /* ============================================================
+       TOOL CARD — COMING SOON
+       ============================================================ */
+    .tool-card.coming-soon {
+      opacity: 0.85;
+      cursor: default;
+    }
+
+    .tool-card.coming-soon:hover {
+      transform: none;
+      box-shadow: var(--shadow-md);
+    }
+
+    .tool-card.coming-soon .tool-card-header {
+      background: var(--color-navy);
+      opacity: 0.9;
+    }
+
+    .btn-tool-soon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--color-grey-100);
+      color: var(--color-grey-400);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 14px 24px;
+      border-radius: var(--radius-full);
+      border: 2px solid var(--color-grey-200);
+      width: 100%;
+      cursor: default;
+    }
+
+    /* ============================================================
+       FOOTER CTA BAND
+       ============================================================ */
+    .footer-band {
+      background: var(--color-navy);
+      padding: 56px 24px;
+      text-align: center;
+    }
+
+    .footer-band-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-yellow);
+      margin-bottom: 16px;
+    }
+
+    .footer-band-title {
+      font-size: clamp(22px, 3.5vw, 32px);
+      font-weight: 900;
+      color: var(--color-white);
+      max-width: 480px;
+      margin: 0 auto 12px;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    .footer-band-sub {
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      max-width: 400px;
+      margin: 0 auto 32px;
+      line-height: 1.6;
+    }
+
+    .footer-band-ctas {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--color-yellow);
+      color: var(--color-navy);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 16px 28px;
+      border-radius: var(--radius-full);
+      transition: all var(--transition);
+    }
+    .btn-primary:hover {
+      background: #f5d800;
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 16px 28px;
+      border-radius: var(--radius-full);
+      border: 2px solid rgba(255,255,255,0.2);
+      transition: all var(--transition);
+    }
+    .btn-ghost:hover {
+      border-color: rgba(255,255,255,0.5);
+      color: var(--color-white);
+    }
+
+    /* ============================================================
+       SITE FOOTER
+       ============================================================ */
+    .site-footer {
+      background: var(--color-navy);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 20px 24px;
+      text-align: center;
+    }
+
+    .site-footer p {
+      font-size: 12px;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .site-footer a {
+      color: rgba(255,255,255,0.45);
+      transition: color var(--transition);
+    }
+    .site-footer a:hover { color: var(--color-yellow); }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 480px) {
+      .hero { padding: 48px 20px 72px; }
+      .tools-section { padding: 40px 16px 60px; }
+      .tool-card-header { padding: 24px 24px 20px; }
+      .tool-card-body { padding: 20px 24px 24px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ─────────────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="header-logo">
+      <svg viewBox="0 0 53.3 53.3" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="32.1 53.3 0 53.3 0 21.2 21.1 0.1 53.2 32.2 32.1 53.3" fill="#FFE64B"/>
+        <polyline points="15.8 53.3 0 53.3 0 37.5" fill="#00003D"/>
+        <polygon points="46.6 25.4 33.2 38.8 26.6 32.3 40 19 33.9 13 20.6 26.3 14.4 20.1 27.9 6.7 21.2 0 0 21.2 32.1 53.3 53.3 32.1 46.6 25.4" fill="#00003D"/>
+      </svg>
+      <span class="header-logo-text">EAC Tools</span>
+    </div>
+    <a href="https://www.expertauthor.community" class="header-link" target="_blank" rel="noopener">
+      expertauthor.community →
+    </a>
+  </header>
+
+  <!-- ── HERO ───────────────────────────────────────────────── -->
+  <section class="hero">
+    <p class="hero-eyebrow">Expert Author Community</p>
+    <h1 class="hero-title">
+      Tools to help you<br><span>write with more clarity</span>
+    </h1>
+    <p class="hero-subtitle">
+      Free reflections, diagnostics, and resources for expert authors. No fluff — just tools that help you understand what's actually getting in the way.
+    </p>
+  </section>
+
+  <!-- ── TOOLS GRID ─────────────────────────────────────────── -->
+  <main class="tools-section">
+
+    <p class="section-label">Available now</p>
+
+    <div class="tools-grid">
+
+      <!-- Writing Blocker Quiz -->
+      <div class="tool-card">
+        <div class="tool-card-header">
+          <svg class="tool-card-header-accent" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <polygon points="80 80 0 80 0 0 39.9 40.1 80 80" fill="#FFE64B" opacity="0.12"/>
+            <polyline points="0 0 80 0 80 80" fill="#5296FB" opacity="0.08"/>
+          </svg>
+          <div class="tool-badge live">
+            <span class="tool-badge-dot"></span>
+            Live
+          </div>
+          <h2 class="tool-card-title">What's Getting in the Way of Your Best Writing?</h2>
+        </div>
+        <div class="tool-card-body">
+          <p class="tool-card-desc">
+            A short reflection to identify what is most affecting your writing right now. Pinpoints your primary blocker across five categories — time, structure, noise, isolation, or momentum.
+          </p>
+          <div class="tool-card-meta">
+            <span class="tool-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              5 minutes
+            </span>
+            <span class="tool-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Free, open to all
+            </span>
+          </div>
+          <a href="/unblocker" class="btn-tool">
+            Start the reflection
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Dirty Draft — Coming Soon -->
+      <div class="tool-card coming-soon">
+        <div class="tool-card-header">
+          <svg class="tool-card-header-accent" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <polygon points="80 80 0 80 0 0 39.9 40.1 80 80" fill="#FFE64B" opacity="0.06"/>
+            <polyline points="0 0 80 0 80 80" fill="#FE8D17" opacity="0.06"/>
+          </svg>
+          <div class="tool-badge soon">
+            <span class="tool-badge-dot"></span>
+            Coming soon
+          </div>
+          <h2 class="tool-card-title">Dirty Draft Writing Prompts</h2>
+        </div>
+        <div class="tool-card-body">
+          <p class="tool-card-desc">
+            Prompts designed to get words on the page when you're stuck, overthinking, or waiting for the perfect opening. Lower the bar. Start moving.
+          </p>
+          <div class="tool-card-meta">
+            <span class="tool-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              When you're ready
+            </span>
+          </div>
+          <div class="btn-tool-soon">
+            In development
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ── FOOTER CTA ─────────────────────────────────────────── -->
+  <section class="footer-band">
+    <p class="footer-band-eyebrow">Expert Author Community</p>
+    <h2 class="footer-band-title">Ready to write your best work?</h2>
+    <p class="footer-band-sub">
+      Tools are useful. Community makes them stick. Join authors working on books, thought leadership, and ideas worth sharing.
+    </p>
+    <div class="footer-band-ctas">
+      <a href="https://www.expertauthor.community/programs/write-now" class="btn-primary" target="_blank" rel="noopener">
+        Start with Write Now
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="https://www.expertauthor.community" class="btn-ghost" target="_blank" rel="noopener">
+        Join the EAC Waitlist
+      </a>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ─────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <p>
+      <a href="https://www.expertauthor.community">expertauthor.community</a>
+      &nbsp;·&nbsp; © Expert Author Community
+    </p>
+  </footer>
+
+</body>
+</html>
