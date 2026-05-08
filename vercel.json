@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/blocker-quiz", "destination": "/blocker-quiz.html" }
+  ]
+}

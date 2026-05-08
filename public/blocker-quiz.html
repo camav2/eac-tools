@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What's Getting in the Way of Your Best Writing? | Expert Author Community</title>
+<meta name="description" content="A short reflection to help you identify what is most affecting your writing right now — so you can stop guessing and start addressing the real problem.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   EAC DESIGN TOKENS
+   ============================================================ */
+:root {
+  --color-navy:         #00003D;
+  --color-yellow:       #FFE64B;
+  --color-blue:         #5296FB;
+  --color-orange:       #FE8D17;
+  --color-yellow-light: #FFF3A5;
+  --color-blue-light:   #97C0FD;
+  --color-navy-light:   #E8E8F0;
+  --color-white:        #FFFFFF;
+  --color-off-white:    #F9F9FB;
+  --color-grey-100:     #F2F2F5;
+  --color-grey-200:     #E4E4EA;
+  --color-grey-400:     #9999B0;
+  --color-grey-700:     #444455;
+  --color-black:        #0A0A1A;
+  --font:               'Montserrat', sans-serif;
+  --radius-md:          8px;
+  --radius-lg:          12px;
+  --radius-xl:          16px;
+  --radius-full:        9999px;
+  --shadow-md:          0 4px 12px rgba(0,0,61,0.10);
+  --shadow-lg:          0 8px 32px rgba(0,0,61,0.14);
+  --transition:         0.2s ease;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--color-off-white);
+  color: var(--color-black);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   SCREEN SYSTEM
+   ============================================================ */
+.screen {
+  display: none;
+  min-height: 100vh;
+  animation: fadeUp 0.4s ease forwards;
+}
+.screen.active { display: flex; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   SCREEN 1: INTRO
+   ============================================================ */
+#screen-intro {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-navy);
+  padding: 60px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+#screen-intro::after {
+  content: '';
+  position: absolute;
+  bottom: -100px; left: -60px;
+  width: 400px; height: 400px;
+  background: rgba(82,150,251,0.05);
+  border-radius: 50%;
+}
+
+.dog-ear {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 160px;
+  height: 160px;
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .dog-ear { width: 100px; height: 100px; }
+}
+
+.intro-inner {
+  max-width: 640px;
+  position: relative;
+  z-index: 1;
+}
+
+.intro-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+.intro-logo svg {
+  width: 32px;
+  height: auto;
+}
+.intro-logo-text {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+}
+
+.intro-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-yellow);
+  background: rgba(255,230,75,0.12);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  margin-bottom: 24px;
+}
+
+.intro-title {
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 800;
+  color: var(--color-white);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+
+.intro-title span {
+  color: var(--color-yellow);
+}
+
+.intro-subtitle {
+  font-size: 17px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+
+.intro-body {
+  font-size: 15px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.7;
+  margin-bottom: 40px;
+}
+
+.intro-body p + p { margin-top: 10px; }
+
+.btn-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-yellow);
+  color: var(--color-navy);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 16px 36px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-decoration: none;
+  box-shadow: 0 4px 20px rgba(255,230,75,0.3);
+}
+.btn-start:hover {
+  background: var(--color-yellow-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(255,230,75,0.4);
+}
+
+.intro-meta {
+  margin-top: 20px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ============================================================
+   SCREEN 2: QUESTIONS
+   ============================================================ */
+#screen-questions {
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-off-white);
+  padding: 0;
+}
+
+.q-header {
+  width: 100%;
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-grey-200);
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.q-header-inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.progress-track {
+  flex: 1;
+  height: 6px;
+  background: var(--color-grey-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--color-yellow);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.progress-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-grey-400);
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+.q-header-logo {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-grey-400);
+}
+
+.q-body {
+  width: 100%;
+  max-width: 640px;
+  padding: 40px 24px 80px;
+}
+
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  background: var(--color-yellow);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: 24px;
+}
+
+.q-section-intro {
+  font-size: 13px;
+  color: var(--color-grey-700);
+  margin-bottom: 32px;
+  font-style: italic;
+}
+
+.question-block {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  padding: 28px 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-md);
+  border: 2px solid transparent;
+  transition: border-color var(--transition);
+}
+.question-block.answered {
+  border-color: var(--color-yellow);
+}
+
+.question-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-navy);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.rating-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rating-btn {
+  flex: 1;
+  aspect-ratio: 1;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-grey-200);
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-grey-700);
+  background: var(--color-white);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.rating-btn:hover {
+  border-color: var(--color-blue);
+  color: var(--color-navy);
+  background: var(--color-grey-100);
+}
+.rating-btn.selected {
+  background: var(--color-yellow);
+  border-color: var(--color-yellow);
+  color: var(--color-navy);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(255,230,75,0.4);
+}
+
+.rating-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--color-grey-400);
+  font-weight: 500;
+  padding: 0 2px;
+}
+
+.q-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  background: var(--color-white);
+  border-top: 1px solid var(--color-grey-200);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: center;
+  z-index: 50;
+}
+
+.btn-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-yellow);
+  color: var(--color-navy);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 14px 40px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  width: 100%;
+  max-width: 400px;
+  justify-content: center;
+}
+.btn-next:hover:not(:disabled) {
+  background: var(--color-yellow-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.btn-next:disabled {
+  background: var(--color-grey-200);
+  color: var(--color-grey-400);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================================
+   SCREEN 3: EMAIL CAPTURE
+   ============================================================ */
+#screen-email {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-off-white);
+  padding: 60px 24px;
+}
+
+.email-card {
+  background: var(--color-white);
+  border-radius: 24px;
+  padding: 48px 40px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.email-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--color-yellow);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  font-size: 28px;
+}
+
+.email-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-navy);
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.email-sub {
+  font-size: 15px;
+  color: var(--color-grey-700);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.form-field {
+  margin-bottom: 16px;
+  text-align: left;
+}
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  margin-bottom: 6px;
+}
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--color-grey-200);
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  font-size: 15px;
+  color: var(--color-black);
+  background: var(--color-white);
+  transition: border-color var(--transition);
+  appearance: none;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(82,150,251,0.15);
+}
+.form-input::placeholder { color: var(--color-grey-400); }
+
+.btn-submit {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--color-navy);
+  color: var(--color-white);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 16px 24px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-top: 8px;
+}
+.btn-submit:hover {
+  background: #000055;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.form-privacy {
+  font-size: 12px;
+  color: var(--color-grey-400);
+  margin-top: 16px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   SCREEN 4: RESULT
+   ============================================================ */
+#screen-result {
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-off-white);
+}
+
+.result-hero {
+  width: 100%;
+  background: var(--color-navy);
+  padding: 60px 24px 48px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.result-hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 250px; height: 250px;
+  background: rgba(255,230,75,0.07);
+  border-radius: 50%;
+}
+
+.result-hero-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.result-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-yellow);
+  margin-bottom: 8px;
+}
+
+.result-category {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--color-yellow);
+  color: var(--color-navy);
+  padding: 6px 18px;
+  border-radius: var(--radius-full);
+  margin-bottom: 20px;
+}
+
+.result-headline {
+  font-size: clamp(26px, 4vw, 40px);
+  font-weight: 800;
+  color: var(--color-white);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.result-lead {
+  font-size: 17px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.65;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.result-body {
+  width: 100%;
+  max-width: 640px;
+  padding: 48px 24px 80px;
+}
+
+.result-section {
+  margin-bottom: 40px;
+}
+
+.result-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-grey-400);
+  margin-bottom: 16px;
+}
+
+.result-text {
+  font-size: 16px;
+  color: var(--color-black);
+  line-height: 1.75;
+}
+.result-text p + p { margin-top: 14px; }
+
+.result-quotes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+.result-quote {
+  background: var(--color-grey-100);
+  border-left: 3px solid var(--color-yellow);
+  padding: 14px 18px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--color-grey-700);
+  line-height: 1.6;
+}
+
+.result-next-step {
+  background: var(--color-yellow-light);
+  border: 2px solid var(--color-yellow);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+}
+.result-next-step h4 {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  margin-bottom: 12px;
+}
+.result-next-step p {
+  font-size: 15px;
+  color: var(--color-black);
+  line-height: 1.7;
+}
+
+.result-soft-cta {
+  font-size: 17px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--color-navy);
+  line-height: 1.6;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.result-divider {
+  border: none;
+  border-top: 1px solid var(--color-grey-200);
+  margin: 40px 0;
+}
+
+.result-close {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  font-size: 15px;
+  color: var(--color-grey-700);
+  line-height: 1.75;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-grey-200);
+  margin-bottom: 40px;
+}
+.result-close strong {
+  color: var(--color-navy);
+}
+
+.result-ctas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-cta-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--color-navy);
+  color: var(--color-white);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 18px 32px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-md);
+}
+.btn-cta-primary:hover {
+  background: #000055;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-cta-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: transparent;
+  color: var(--color-navy);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 16px 32px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-navy);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition);
+}
+.btn-cta-secondary:hover {
+  background: var(--color-navy-light);
+}
+
+.result-footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-grey-400);
+  margin-top: 8px;
+}
+.result-footer a {
+  color: var(--color-blue);
+  text-decoration: none;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 480px) {
+  .email-card { padding: 36px 24px; }
+  .rating-btn { font-size: 14px; min-height: 44px; }
+  .result-body { padding: 36px 20px 80px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     SCREEN 1: INTRO
+     ============================================================ -->
+<section class="screen active" id="screen-intro">
+
+  <!-- Dog ear brand mark -->
+  <svg class="dog-ear" viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <polygon points="70 70 0 70 0 0 34.9452 35.0548 70 70" fill="#FFE64B"/>
+    <polyline points="0 0 70 0 70 70" fill="#00003D"/>
+  </svg>
+
+  <div class="intro-inner">
+    <div class="intro-logo">
+      <!-- EAC Logo Mark (inline SVG) -->
+      <svg viewBox="0 0 53 53" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="32.1 53.3 0 53.3 0 21.2 21.1 0.1 53.2 32.2 32.1 53.3" fill="#FFE64B"/>
+        <polyline points="15.8 53.3 0 53.3 0 37.5" fill="#00003D"/>
+        <polygon points="46.6 25.4 33.2 38.8 26.6 32.3 40 19 33.9 13 20.6 26.3 14.4 20.1 27.9 6.7 21.2 0 0 21.2 32.1 53.3 53.3 32.1 46.6 25.4" fill="#00003D"/>
+      </svg>
+      <span class="intro-logo-text">Expert Author Community</span>
+    </div>
+
+    <div class="intro-eyebrow">Free Reflection Tool</div>
+
+    <h1 class="intro-title">
+      What's Getting in the Way of Your <span>Best Writing</span> Right Now?
+    </h1>
+
+    <p class="intro-subtitle">
+      A short reflection to help you identify what is most affecting your writing right now — so you can stop guessing and start addressing the real problem.
+    </p>
+
+    <div class="intro-body">
+      <p>Most writing problems do not start with talent.</p>
+      <p>They start with conditions.</p>
+      <p>You may think the problem is discipline, consistency, or motivation. But often the real issue is something more specific: lack of time, unclear structure, too much noise, too little support, or lost momentum.</p>
+    </div>
+
+    <button class="btn-start" onclick="startQuiz()">
+      Start the reflection
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+
+    <div class="intro-meta">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Takes about 3 minutes
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SCREEN 2: QUESTIONS
+     ============================================================ -->
+<section class="screen" id="screen-questions">
+  <div class="q-header">
+    <div class="q-header-inner">
+      <div class="q-header-logo">Expert Author Community</div>
+      <div class="progress-wrap">
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <span class="progress-label" id="progress-label">0 / 10</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-body" id="q-body">
+    <!-- Dynamically populated -->
+  </div>
+
+  <div class="q-footer">
+    <button class="btn-next" id="btn-next" onclick="nextStep()" disabled>
+      Continue
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</section>
+
+<!-- ============================================================
+     SCREEN 3: EMAIL CAPTURE
+     ============================================================ -->
+<section class="screen" id="screen-email">
+  <div class="email-card">
+    <div class="email-icon">✍️</div>
+    <h2 class="email-title">Almost there.</h2>
+    <p class="email-sub">Where should we send your personalised results? We'll also share what we're building inside EAC to help with exactly what you're facing.</p>
+
+    <form id="email-form" onsubmit="submitEmail(event)">
+      <div class="form-field">
+        <label class="form-label" for="input-name">First name</label>
+        <input class="form-input" type="text" id="input-name" placeholder="Your first name" required autocomplete="given-name">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="input-email">Email address</label>
+        <input class="form-input" type="email" id="input-email" placeholder="you@example.com" required autocomplete="email">
+      </div>
+      <button type="submit" class="btn-submit">
+        See my results
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </form>
+
+    <p class="form-privacy">No spam, ever. We respect your privacy and you can unsubscribe at any time.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SCREEN 4: RESULT
+     ============================================================ -->
+<section class="screen" id="screen-result">
+  <div class="result-hero">
+    <div class="result-hero-inner">
+      <p class="result-eyebrow">Your primary writing blocker</p>
+      <div class="result-category" id="result-category">—</div>
+      <h2 class="result-headline" id="result-headline">—</h2>
+      <p class="result-lead" id="result-lead">—</p>
+    </div>
+  </div>
+
+  <div class="result-body">
+
+    <div class="result-section">
+      <p class="result-section-label">What this means</p>
+      <div class="result-text" id="result-body-text"></div>
+      <div class="result-quotes" id="result-quotes"></div>
+    </div>
+
+    <div class="result-next-step" id="result-next-step">
+      <h4>A useful next step</h4>
+      <p id="result-next-step-text">—</p>
+    </div>
+
+    <hr class="result-divider">
+
+    <p class="result-soft-cta" id="result-soft-cta">—</p>
+
+    <hr class="result-divider">
+
+    <div class="result-close">
+      <p>If this reflection gave you language for something you have been feeling for a while, that is useful.</p>
+      <p style="margin-top:12px">Because once you know what is actually getting in the way, you can stop blaming yourself in vague ways and start building better conditions for the work.</p>
+      <p style="margin-top:12px">That is part of what we care deeply about inside <strong>EAC</strong>: not just helping people write more, but helping them create the conditions for their best thinking to survive and strengthen.</p>
+    </div>
+
+    <div class="result-ctas">
+      <a href="https://www.expertauthor.community/programs/write-now" class="btn-cta-primary" target="_blank" rel="noopener">
+        Start with Write Now
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="https://www.expertauthor.community" class="btn-cta-secondary" target="_blank" rel="noopener">
+        Join the EAC Waitlist
+      </a>
+    </div>
+
+    <p class="result-footer" style="margin-top:24px">
+      <a href="https://www.expertauthor.community">expertauthor.community</a> &nbsp;·&nbsp; © Expert Author Community
+    </p>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+
+/* ============================================================
+   QUIZ DATA
+   ============================================================ */
+const STEPS = [
+  {
+    category: 'Time',
+    questions: [
+      'I struggle to protect enough uninterrupted time to think and write properly.',
+      'Writing keeps getting pushed behind more urgent or visible work.'
+    ]
+  },
+  {
+    category: 'Structure',
+    questions: [
+      'I often know I want to write, but I am not clear on what the next step actually is.',
+      'I have ideas, but I do not yet have a structure strong enough to hold them.'
+    ]
+  },
+  {
+    category: 'Noise',
+    questions: [
+      'My thinking feels crowded by content, input, notifications, or competing demands.',
+      'I often feel pressure to publish quickly before I have fully developed what I want to say.'
+    ]
+  },
+  {
+    category: 'Isolation',
+    questions: [
+      'Writing feels heavier because I am doing it alone.',
+      'I would make faster progress with better feedback, accountability, or the right writing environment.'
+    ]
+  },
+  {
+    category: 'Momentum',
+    questions: [
+      'I start writing with good intentions, but I struggle to sustain progress over time.',
+      'I lose energy or confidence partway through, even when I care deeply about the work.'
+    ]
+  }
+];
+
+const RESULTS = {
+  Time: {
+    headline: 'Your biggest blocker right now is time.',
+    lead: 'This does not necessarily mean you are lazy, undisciplined, or not serious enough. It usually means your writing is competing with too many other priorities — and losing.',
+    body: [
+      'When writing only happens in the margins, your best thinking rarely gets enough space to emerge. You may know what you want to say, but the conditions are too fragmented for you to say it well.'
+    ],
+    quotes: [
+      '"I care about this, but it keeps falling to the bottom of the list."',
+      '"I never seem to get a proper run at it."',
+      '"By the time I sit down, I\'m already mentally spent."'
+    ],
+    nextStep: 'Protect two focused writing sessions this week, even if they are only 45 minutes each. Not admin time. Not planning time. Writing time.',
+    softCta: 'If your writing matters, it cannot survive forever on leftover energy.'
+  },
+  Structure: {
+    headline: 'Your biggest blocker right now is structure.',
+    lead: 'You may have plenty to say. That is not the problem. The problem is that your ideas do not yet have a clear enough shape to hold your thinking with confidence.',
+    body: [
+      'When structure is weak, writing feels heavier than it should. You second-guess yourself. You loop. You overthink. You avoid the page not because you lack ideas, but because you do not yet trust the path.'
+    ],
+    quotes: [
+      '"I have too many ideas and do not know where to begin."',
+      '"I am not sure what belongs, what does not, or what comes next."',
+      '"I need a clearer framework before I can really move."'
+    ],
+    nextStep: 'Do not try to map the whole project. Just define: what this piece is really about, who it is for, and the next three steps only.',
+    softCta: 'Strong writing gets easier when the structure is carrying some of the weight.'
+  },
+  Noise: {
+    headline: 'Your biggest blocker right now is noise.',
+    lead: 'Your problem may not be a lack of ideas. It may be too much interference.',
+    body: [
+      'When your attention is fragmented by content, urgency, input, comparison, and constant exposure to everyone else\'s thinking, it becomes harder to hear your own.',
+      'This does not just affect output. It affects originality, clarity, and conviction.'
+    ],
+    quotes: [
+      '"I feel full of input, but far from my own voice."',
+      '"I keep consuming instead of shaping."',
+      '"I know I need to think more deeply, but I rarely get the chance."'
+    ],
+    nextStep: 'Create one block this week where you write with no tabs, no notifications, no social platforms, and no research rabbit holes. Just you and the work.',
+    softCta: 'Sometimes the most useful thing you can do for your writing is reduce the noise around it.'
+  },
+  Isolation: {
+    headline: 'Your biggest blocker right now is isolation.',
+    lead: 'Writing can be solitary. But it should not always be unsupported.',
+    body: [
+      'When you are doing all of it alone — generating ideas, making decisions, managing doubt, creating accountability, and trying to stay encouraged — the process becomes heavier and slower than it needs to be.',
+      'You may not need more information. You may need better conditions around you.'
+    ],
+    quotes: [
+      '"I wish I had people around me who really understood this process."',
+      '"I get stuck in my own head."',
+      '"Feedback, accountability, or shared momentum would make a huge difference."'
+    ],
+    nextStep: 'Bring one person into the process this week. Ask for feedback, book a co-writing session, or tell someone what you are trying to finish and by when.',
+    softCta: 'Writing may be personal work, but it often moves best in good company.'
+  },
+  Momentum: {
+    headline: 'Your biggest blocker right now is momentum.',
+    lead: 'You can begin. The problem is keeping going.',
+    body: [
+      'This often happens when the project starts to feel bigger, slower, or messier than expected. The excitement fades. Self-doubt gets louder. Other work takes over. And slowly, the writing loses traction.',
+      'This does not mean the project is wrong. It usually means the rhythm is too fragile to carry the weight of the work.'
+    ],
+    quotes: [
+      '"I always start well, then disappear."',
+      '"I lose confidence halfway through."',
+      '"I need help keeping things alive once the first burst of energy fades."'
+    ],
+    nextStep: 'Lower the bar, but increase the rhythm. Choose one small writing target you can repeat three times this week.',
+    softCta: 'Momentum is rarely built through intensity alone. It is built through continuity.'
+  }
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let currentStep = 0;
+let answers = Array(10).fill(0);
+let userName = '';
+let userEmail = '';
+let topCategory = '';
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function startQuiz() {
+  currentStep = 0;
+  answers = Array(10).fill(0);
+  renderQuestions();
+  showScreen('screen-questions');
+}
+
+function restartQuiz() {
+  startQuiz();
+}
+
+function nextStep() {
+  currentStep++;
+  if (currentStep < STEPS.length) {
+    renderQuestions();
+    window.scrollTo(0, 0);
+  } else {
+    showScreen('screen-email');
+  }
+}
+
+/* ============================================================
+   QUESTIONS
+   ============================================================ */
+function renderQuestions() {
+  const step = STEPS[currentStep];
+  const answeredCount = answers.filter(a => a > 0).length;
+
+  // Progress
+  document.getElementById('progress-fill').style.width = (answeredCount / 10 * 100) + '%';
+  document.getElementById('progress-label').textContent = answeredCount + ' / 10';
+
+  // Body
+  const body = document.getElementById('q-body');
+  body.innerHTML = `
+    <div class="category-badge">
+      ${step.category}
+      <span style="opacity:0.6">· ${currentStep + 1} of 5</span>
+    </div>
+    <p class="q-section-intro">Rate each statement from 1 (Not true at all) to 5 (Very true).</p>
+    ${step.questions.map((q, qi) => {
+      const answerIndex = currentStep * 2 + qi;
+      const currentVal = answers[answerIndex];
+      return `
+        <div class="question-block ${currentVal > 0 ? 'answered' : ''}" id="qblock-${answerIndex}">
+          <p class="question-text">${q}</p>
+          <div class="rating-row">
+            ${[1,2,3,4,5].map(n => `
+              <button
+                class="rating-btn ${currentVal === n ? 'selected' : ''}"
+                onclick="rate(${answerIndex}, ${n})"
+                aria-label="Rate ${n}"
+              >${n}</button>
+            `).join('')}
+          </div>
+          <div class="rating-labels">
+            <span>Not true at all</span>
+            <span>Very true</span>
+          </div>
+        </div>
+      `;
+    }).join('')}
+  `;
+
+  updateNextButton();
+}
+
+function rate(index, value) {
+  answers[index] = value;
+
+  // Update buttons visually
+  const block = document.getElementById(`qblock-${index}`);
+  block.classList.add('answered');
+  block.querySelectorAll('.rating-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i + 1 === value);
+  });
+
+  // Update progress
+  const answeredCount = answers.filter(a => a > 0).length;
+  document.getElementById('progress-fill').style.width = (answeredCount / 10 * 100) + '%';
+  document.getElementById('progress-label').textContent = answeredCount + ' / 10';
+
+  updateNextButton();
+}
+
+function updateNextButton() {
+  const q1 = answers[currentStep * 2];
+  const q2 = answers[currentStep * 2 + 1];
+  const btn = document.getElementById('btn-next');
+  const allAnswered = q1 > 0 && q2 > 0;
+  btn.disabled = !allAnswered;
+
+  const isLast = currentStep === STEPS.length - 1;
+  btn.innerHTML = isLast
+    ? 'See my results <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'
+    : 'Continue <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+}
+
+/* ============================================================
+   SCORING
+   ============================================================ */
+function calculateScores() {
+  return STEPS.map((step, i) => ({
+    category: step.category,
+    score: answers[i * 2] + answers[i * 2 + 1]
+  }));
+}
+
+function getTopCategory() {
+  const scores = calculateScores();
+  return scores.reduce((a, b) => b.score > a.score ? b : a).category;
+}
+
+/* ============================================================
+   EMAIL SUBMISSION (public flow)
+   ============================================================ */
+async function submitEmail(e) {
+  e.preventDefault();
+  userName    = document.getElementById('input-name').value.trim();
+  userEmail   = document.getElementById('input-email').value.trim();
+  topCategory = getTopCategory();
+
+  // ── Brevo lead capture ───────────────────────────────────────
+  // Calls /api/subscribe — a serverless function in the same
+  // Vercel deployment that proxies to Brevo server-side.
+  // (Direct browser calls to api.brevo.com are blocked by CORS.)
+  //
+  // The function sets:
+  //   email, FIRSTNAME, WRITING_BLOCKER → triggers the matching
+  //   nurture sequence: Time | Structure | Noise | Isolation | Momentum
+  try {
+    await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: userEmail,
+        name: userName,
+        writingBlocker: topCategory
+      })
+    });
+  } catch (e) {
+    // Subscription failed silently — don't block the result
+    console.warn('Subscribe failed:', e);
+  }
+  // ─────────────────────────────────────────────────────────────
+
+  showResult();
+}
+
+/* ============================================================
+   RESULT
+   ============================================================ */
+function showResult() {
+  const data = RESULTS[topCategory];
+
+  // Core result content
+  document.getElementById('result-category').textContent       = topCategory;
+  document.getElementById('result-headline').textContent       = data.headline;
+  document.getElementById('result-lead').textContent           = data.lead;
+  document.getElementById('result-soft-cta').textContent       = data.softCta;
+  document.getElementById('result-next-step-text').textContent = data.nextStep;
+  document.getElementById('result-body-text').innerHTML        = data.body.map(p => `<p>${p}</p>`).join('');
+  document.getElementById('result-quotes').innerHTML           = data.quotes.map(q => `<div class="result-quote">${q}</div>`).join('');
+
+  showScreen('screen-result');
+}
+</script>
+</body>
+</html>
