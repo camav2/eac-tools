@@ -3,8 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>What's Getting in the Way of Your Best Writing? | Expert Author Community</title>
-<meta name="description" content="A short reflection to help you identify what is most affecting your writing right now — so you can stop guessing and start addressing the real problem.">
+<meta name="description" content="A free 5-minute reflection to identify your biggest writing blocker right now — time, structure, noise, isolation, or momentum — so you can stop guessing and start addressing the real problem.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://tools.expertauthor.community/unblocker">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Expert Author Community">
+<meta property="og:url" content="https://tools.expertauthor.community/unblocker">
+<meta property="og:title" content="What's Getting in the Way of Your Best Writing?">
+<meta property="og:description" content="A free 5-minute reflection to identify your biggest writing blocker right now — so you can stop guessing and start addressing the real problem.">
+<meta property="og:image" content="https://tools.expertauthor.community/og-unblocker.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="What's Getting in the Way of Your Best Writing? — A free reflection tool from the Expert Author Community">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@kellyirvingwrites">
+<meta name="twitter:title" content="What's Getting in the Way of Your Best Writing?">
+<meta name="twitter:description" content="A free 5-minute reflection to identify your biggest writing blocker right now — so you can stop guessing and start addressing the real problem.">
+<meta name="twitter:image" content="https://tools.expertauthor.community/og-unblocker.png">
+<meta name="twitter:image:alt" content="What's Getting in the Way of Your Best Writing? — Expert Author Community">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
 <style>
@@ -1472,39 +1495,4 @@ function closeShareModal() {
 }
 
 function handleOverlayClick(e) {
-  if (e.target === document.getElementById('share-modal')) closeShareModal();
-}
-
-function copyShareUrl() {
-  const btn = document.getElementById('btn-copy-url');
-  navigator.clipboard.writeText(SHARE_URL).then(() => {
-    btn.textContent = 'Copied!';
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy URL`;
-      btn.classList.remove('copied');
-    }, 2000);
-  }).catch(() => {
-    // Fallback
-    const ta = Object.assign(document.createElement('textarea'), {
-      value: SHARE_URL, style: 'position:fixed;opacity:0'
-    });
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    btn.textContent = 'Copied!';
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy URL`;
-      btn.classList.remove('copied');
-    }, 2000);
-  });
-}
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeShareModal();
-});
-</script>
-</body>
-</html>
+  if (e.target === document.getElementById('share-modal')) closeShareModal(
