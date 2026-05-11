@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>5 Questions to Test Whether Your Idea Is Strong Enough for a Book | Expert Author Community</title>
+<meta name="description" content="Not every idea should become a book. These 5 questions will help you test whether yours has the depth, tension, and staying power to go the distance.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://tools.expertauthor.community/idea-test">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Expert Author Community">
+<meta property="og:url" content="https://tools.expertauthor.community/idea-test">
+<meta property="og:title" content="5 Questions to Test Whether Your Idea Is Strong Enough for a Book">
+<meta property="og:description" content="Not every idea should become a book. These 5 questions will help you test whether yours has the depth, tension, and staying power to go the distance.">
+<meta property="og:image" content="https://tools.expertauthor.community/og-idea-test.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="5 Questions to Test Whether Your Idea Is Strong Enough for a Book — Expert Author Community">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@kellyirvingwrites">
+<meta name="twitter:title" content="5 Questions to Test Whether Your Idea Is Strong Enough for a Book">
+<meta name="twitter:description" content="Not every idea should become a book. These 5 questions will help you test whether yours has the depth, tension, and staying power to go the distance.">
+<meta name="twitter:image" content="https://tools.expertauthor.community/og-idea-test.png">
+<meta name="twitter:image:alt" content="5 Questions to Test Your Book Idea — Expert Author Community">
+
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   EAC DESIGN TOKENS
+   ============================================================ */
+:root {
+  --color-navy:         #00003D;
+  --color-yellow:       #FFE64B;
+  --color-blue:         #5296FB;
+  --color-orange:       #FE8D17;
+  --color-yellow-light: #FFF3A5;
+  --color-blue-light:   #97C0FD;
+  --color-navy-light:   #E8E8F0;
+  --color-white:        #FFFFFF;
+  --color-off-white:    #F9F9FB;
+  --color-grey-100:     #F2F2F5;
+  --color-grey-200:     #E4E4EA;
+  --color-grey-400:     #9999B0;
+  --color-grey-700:     #444455;
+  --color-black:        #0A0A1A;
+  --font:               'Montserrat', sans-serif;
+  --radius-md:          8px;
+  --radius-lg:          12px;
+  --radius-xl:          16px;
+  --radius-full:        9999px;
+  --shadow-md:          0 4px 12px rgba(0,0,61,0.10);
+  --shadow-lg:          0 8px 32px rgba(0,0,61,0.14);
+  --transition:         0.2s ease;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--color-off-white);
+  color: var(--color-black);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   SCREEN SYSTEM
+   ============================================================ */
+.screen { display: none; min-height: 100vh; animation: fadeUp 0.4s ease forwards; }
+.screen.active { display: flex; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   DOG-EAR ACCENT
+   ============================================================ */
+.dog-ear {
+  position: absolute;
+  top: 0; right: 0;
+  width: 160px; height: 160px;
+  pointer-events: none;
+}
+@media (max-width: 480px) { .dog-ear { width: 100px; height: 100px; } }
+
+/* ============================================================
+   SCREEN 1: INTRO
+   ============================================================ */
+#screen-intro {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-navy);
+  padding: 60px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+#screen-intro::after {
+  content: '';
+  position: absolute;
+  bottom: -100px; left: -60px;
+  width: 400px; height: 400px;
+  background: rgba(82,150,251,0.05);
+  border-radius: 50%;
+}
+
+.intro-inner {
+  max-width: 640px;
+  position: relative;
+  z-index: 1;
+}
+
+.intro-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+.intro-logo svg { width: 32px; height: auto; }
+.intro-logo-text {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+}
+
+.intro-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-yellow);
+  background: rgba(255,230,75,0.12);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  margin-bottom: 24px;
+}
+
+.intro-title {
+  font-size: clamp(26px, 5vw, 46px);
+  font-weight: 800;
+  color: var(--color-white);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+.intro-title span { color: var(--color-yellow); }
+
+.intro-subtitle {
+  font-size: 17px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+
+.intro-body {
+  font-size: 15px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.7;
+  margin-bottom: 40px;
+}
+.intro-body p + p { margin-top: 10px; }
+
+.btn-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-yellow);
+  color: var(--color-navy);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 16px 36px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-decoration: none;
+  box-shadow: 0 4px 20px rgba(255,230,75,0.3);
+}
+.btn-start:hover {
+  background: var(--color-yellow-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(255,230,75,0.4);
+}
+
+.intro-meta {
+  margin-top: 20px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ============================================================
+   SCREEN 2: QUESTIONS
+   ============================================================ */
+#screen-questions {
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-off-white);
+  padding: 0;
+}
+
+.q-header {
+  width: 100%;
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-grey-200);
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.q-header-inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+.progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.progress-track {
+  flex: 1;
+  height: 6px;
+  background: var(--color-grey-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--color-yellow);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+.progress-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-grey-400);
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+.q-header-logo {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-grey-400);
+}
+
+.q-body {
+  width: 100%;
+  max-width: 640px;
+  padding: 40px 24px 100px;
+}
+
+.q-number-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  background: var(--color-yellow);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: 20px;
+}
+
+/* Individual question panel — only one visible at a time */
+.question-panel { display: none; animation: fadeUp 0.35s ease forwards; }
+.question-panel.active { display: block; }
+
+.question-main {
+  font-size: clamp(20px, 3.5vw, 26px);
+  font-weight: 800;
+  color: var(--color-navy);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin-bottom: 20px;
+}
+
+.question-context {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-grey-200);
+}
+.question-context-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-grey-400);
+  margin-bottom: 12px;
+}
+.question-context p {
+  font-size: 14px;
+  color: var(--color-grey-700);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+.question-tests {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.question-tests li {
+  font-size: 14px;
+  color: var(--color-navy);
+  line-height: 1.5;
+  padding-left: 20px;
+  position: relative;
+}
+.question-tests li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--color-blue);
+  font-weight: 700;
+}
+
+.yn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.yn-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 16px;
+  border: 2px solid var(--color-grey-200);
+  border-radius: var(--radius-xl);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-grey-700);
+  background: var(--color-white);
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.04em;
+  box-shadow: var(--shadow-md);
+}
+.yn-btn .yn-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+.yn-btn:hover {
+  border-color: var(--color-blue);
+  color: var(--color-navy);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.yn-btn.selected-yes {
+  background: var(--color-yellow);
+  border-color: var(--color-yellow);
+  color: var(--color-navy);
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(255,230,75,0.4);
+}
+.yn-btn.selected-no {
+  background: var(--color-navy);
+  border-color: var(--color-navy);
+  color: var(--color-white);
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(0,0,61,0.2);
+}
+
+.q-footer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--color-white);
+  border-top: 1px solid var(--color-grey-200);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: center;
+  z-index: 50;
+}
+
+.btn-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-yellow);
+  color: var(--color-navy);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 14px 40px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  width: 100%;
+  max-width: 400px;
+  justify-content: center;
+}
+.btn-next:hover:not(:disabled) {
+  background: var(--color-yellow-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.btn-next:disabled {
+  background: var(--color-grey-200);
+  color: var(--color-grey-400);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================================
+   SCREEN 3: EMAIL CAPTURE
+   ============================================================ */
+#screen-email {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-off-white);
+  padding: 60px 24px;
+}
+
+.email-card {
+  background: var(--color-white);
+  border-radius: 24px;
+  padding: 48px 40px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+@media (max-width: 480px) {
+  .email-card { padding: 36px 24px; }
+}
+
+.email-icon {
+  width: 64px; height: 64px;
+  background: var(--color-yellow);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  font-size: 28px;
+}
+
+.email-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-navy);
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.email-sub {
+  font-size: 15px;
+  color: var(--color-grey-700);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.form-field {
+  margin-bottom: 16px;
+  text-align: left;
+}
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  margin-bottom: 6px;
+}
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--color-grey-200);
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  font-size: 15px;
+  color: var(--color-black);
+  background: var(--color-white);
+  transition: border-color var(--transition);
+  appearance: none;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(82,150,251,0.15);
+}
+.form-input::placeholder { color: var(--color-grey-400); }
+
+.btn-submit {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--color-navy);
+  color: var(--color-white);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 16px 24px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-top: 8px;
+}
+.btn-submit:hover {
+  background: #000055;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.btn-submit:disabled {
+  background: var(--color-grey-400);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.form-privacy {
+  font-size: 12px;
+  color: var(--color-grey-400);
+  margin-top: 16px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   SCREEN 4: RESULT
+   ============================================================ */
+#screen-result {
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-off-white);
+}
+
+.result-hero {
+  width: 100%;
+  background: var(--color-navy);
+  padding: 60px 24px 48px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.result-hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 250px; height: 250px;
+  background: rgba(255,230,75,0.07);
+  border-radius: 50%;
+}
+.result-hero-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.result-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-yellow);
+  margin-bottom: 12px;
+}
+.result-badge {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--color-yellow);
+  color: var(--color-navy);
+  padding: 6px 18px;
+  border-radius: var(--radius-full);
+  margin-bottom: 20px;
+}
+.result-headline {
+  font-size: clamp(24px, 4vw, 38px);
+  font-weight: 800;
+  color: var(--color-white);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+.result-lead {
+  font-size: 17px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.65;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* Score dots */
+.score-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 28px;
+}
+.score-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  transition: background 0.3s ease;
+}
+.score-dot.yes { background: var(--color-yellow); }
+.score-dot.no  { background: rgba(255,255,255,0.15); }
+
+.result-body {
+  width: 100%;
+  max-width: 640px;
+  padding: 48px 24px 80px;
+}
+
+.result-text {
+  font-size: 16px;
+  color: var(--color-black);
+  line-height: 1.8;
+}
+.result-text p + p { margin-top: 14px; }
+
+.result-divider {
+  border: none;
+  border-top: 1px solid var(--color-grey-200);
+  margin: 40px 0;
+}
+
+/* Mid-page CTA block */
+.result-cta-mid {
+  background: var(--color-navy);
+  border-radius: var(--radius-xl);
+  padding: 36px 32px;
+  text-align: center;
+  margin: 40px 0;
+}
+.result-cta-mid-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-yellow);
+  margin-bottom: 10px;
+}
+.result-cta-mid-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-white);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin-bottom: 12px;
+}
+.result-cta-mid-body {
+  font-size: 14px;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.65;
+  margin-bottom: 24px;
+}
+
+/* Next step card */
+.result-next-step {
+  background: var(--color-yellow-light);
+  border: 2px solid var(--color-yellow);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  margin-bottom: 32px;
+}
+.result-next-step h4 {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  margin-bottom: 10px;
+}
+.result-next-step p {
+  font-size: 15px;
+  color: var(--color-black);
+  line-height: 1.7;
+}
+
+/* Soft italic close */
+.result-soft-close {
+  font-size: 16px;
+  font-style: italic;
+  color: var(--color-grey-700);
+  line-height: 1.7;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+/* Final CTA block */
+.result-ctas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-cta-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--color-yellow);
+  color: var(--color-navy);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 18px 32px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition);
+  box-shadow: 0 4px 20px rgba(255,230,75,0.35);
+}
+.btn-cta-primary:hover {
+  background: var(--color-yellow-light);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(255,230,75,0.45);
+}
+
+.btn-cta-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: transparent;
+  color: var(--color-navy);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 16px 32px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-navy);
+  text-decoration: none;
+  transition: all var(--transition);
+}
+.btn-cta-secondary:hover {
+  background: var(--color-navy);
+  color: var(--color-white);
+  transform: translateY(-1px);
+}
+
+.btn-share {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--color-grey-700);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-grey-200);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.btn-share:hover {
+  border-color: var(--color-grey-400);
+  color: var(--color-navy);
+}
+
+/* ============================================================
+   SHARE MODAL
+   ============================================================ */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,61,0.55);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--color-white);
+  border-radius: 24px;
+  padding: 40px 36px;
+  max-width: 460px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  animation: fadeUp 0.3s ease;
+}
+@media (max-width: 480px) {
+  .modal { padding: 32px 24px; }
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-grey-100);
+  color: var(--color-grey-700);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition);
+}
+.modal-close:hover { background: var(--color-grey-200); }
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-navy);
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+.modal-sub {
+  font-size: 14px;
+  color: var(--color-grey-700);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+.share-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.share-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-grey-200);
+  background: var(--color-white);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-navy);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.02em;
+}
+.share-btn:hover {
+  border-color: var(--color-navy);
+  background: var(--color-grey-100);
+}
+.share-btn-icon {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+.share-btn-icon.linkedin  { background: #0077B5; color: #fff; }
+.share-btn-icon.twitter   { background: #000; color: #fff; }
+.share-btn-icon.email-ico { background: var(--color-blue); color: #fff; }
+
+.share-url-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.share-url-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 2px solid var(--color-grey-200);
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--color-grey-700);
+  background: var(--color-grey-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+.btn-copy {
+  padding: 12px 18px;
+  background: var(--color-navy);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.btn-copy:hover { background: #000055; }
+.btn-copy.copied { background: #2ECC71; }
+
+/* ============================================================
+   ACCESSIBILITY
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--color-yellow);
+  outline-offset: 2px;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     SCREEN 1: INTRO
+     ============================================================ -->
+<div id="screen-intro" class="screen active">
+
+  <!-- Dog-ear accent -->
+  <svg class="dog-ear" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M160 0 L160 160 L0 0 Z" fill="rgba(255,230,75,0.08)"/>
+    <path d="M160 0 L160 80 L80 0 Z" fill="rgba(255,230,75,0.10)"/>
+  </svg>
+
+  <div class="intro-inner">
+
+    <!-- Logo -->
+    <div class="intro-logo">
+      <svg width="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="EAC logo">
+        <rect width="40" height="40" rx="8" fill="#FFE64B"/>
+        <path d="M10 12h20M10 20h14M10 28h20" stroke="#00003D" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <span class="intro-logo-text">Expert Author Community</span>
+    </div>
+
+    <div class="intro-eyebrow">Free Thinking Tool</div>
+
+    <h1 class="intro-title">
+      5 Questions to Test Whether Your Idea Is <span>Strong Enough for a Book</span>
+    </h1>
+
+    <p class="intro-subtitle">
+      Not every idea should become a book. Some ideas are timely. Some are useful. Some are exciting because they are new.
+    </p>
+
+    <div class="intro-body">
+      <p>But a book needs more than that. It needs enough depth to hold your thinking for a long time. Enough tension to keep a reader engaged. And enough weight to matter beyond a single post, talk, or trend cycle.</p>
+      <p>If you have an idea you keep returning to, these five questions will help you test whether it has real book potential — or whether it needs more shape, pressure, or time first.</p>
+    </div>
+
+    <button class="btn-start" onclick="startTool()" aria-label="Begin the 5 questions">
+      Test My Idea &rarr;
+    </button>
+
+    <div class="intro-meta">
+      <span>5 questions &middot; 3 minutes &middot; Free</span>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCREEN 2: QUESTIONS
+     ============================================================ -->
+<div id="screen-questions" class="screen">
+
+  <div class="q-header">
+    <div class="q-header-inner">
+      <div class="progress-wrap">
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+        <span class="progress-label" id="progress-label">Question 1 of 5</span>
+      </div>
+      <div class="q-header-logo">Expert Author Community</div>
+    </div>
+  </div>
+
+  <div class="q-body">
+
+    <!-- ---- Q1 ---- -->
+    <div class="question-panel active" id="panel-1">
+      <div class="q-number-badge">Question 1 of 5</div>
+      <h2 class="question-main">Does this idea keep returning to you?</h2>
+      <div class="question-context">
+        <div class="question-context-label">A useful test</div>
+        <p>A strong book idea rarely appears once and disappears. It tends to follow you — in conversations, client work, frustrations, lived experience, patterns you keep noticing, or questions you cannot stop asking.</p>
+        <ul class="question-tests">
+          <li>Does this idea keep resurfacing, even when you are not trying to force a book idea?</li>
+          <li>Do you find yourself circling back to it because it still feels unfinished or important?</li>
+        </ul>
+      </div>
+      <div class="yn-row">
+        <button class="yn-btn" onclick="selectAnswer(1, true)" id="q1-yes" aria-label="Yes">
+          <span class="yn-icon">✓</span>
+          <span>Yes</span>
+        </button>
+        <button class="yn-btn" onclick="selectAnswer(1, false)" id="q1-no" aria-label="No">
+          <span class="yn-icon">✕</span>
+          <span>Not yet</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ---- Q2 ---- -->
+    <div class="question-panel" id="panel-2">
+      <div class="q-number-badge">Question 2 of 5</div>
+      <h2 class="question-main">Is this a topic — or an argument?</h2>
+      <div class="question-context">
+        <div class="question-context-label">A useful test</div>
+        <p>A topic is not yet a book. "Leadership." "Burnout." "AI." "Confidence." These are territories, not positions. A stronger book idea usually contains an argument, a tension, a challenge, or a reframing — not just "here is what I know," but "here is what people misunderstand or need to see differently."</p>
+        <ul class="question-tests">
+          <li>Can you explain what you believe about this idea in one or two sentences?</li>
+          <li>Is there a clear point of view inside it?</li>
+          <li>Does it say something, rather than just describe a category?</li>
+        </ul>
+      </div>
+      <div class="yn-row">
+        <button class="yn-btn" onclick="selectAnswer(2, true)" id="q2-yes" aria-label="Yes">
+          <span class="yn-icon">✓</span>
+          <span>Yes</span>
+        </button>
+        <button class="yn-btn" onclick="selectAnswer(2, false)" id="q2-no" aria-label="No">
+          <span class="yn-icon">✕</span>
+          <span>Not yet</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ---- Q3 ---- -->
+    <div class="question-panel" id="panel-3">
+      <div class="q-number-badge">Question 3 of 5</div>
+      <h2 class="question-main">Is there a clear reader with something at stake?</h2>
+      <div class="question-context">
+        <div class="question-context-label">A useful test</div>
+        <p>A book idea gets stronger when it matters to someone specific. Who is this for? What are they struggling with, questioning, trying to solve, or trying to become? Why would this idea matter enough for them to stay with it across a whole book?</p>
+        <ul class="question-tests">
+          <li>Can you picture the person this book is for?</li>
+          <li>Do you understand what is at stake for them?</li>
+          <li>Would they feel seen, challenged, helped, or changed by this idea?</li>
+        </ul>
+      </div>
+      <div class="yn-row">
+        <button class="yn-btn" onclick="selectAnswer(3, true)" id="q3-yes" aria-label="Yes">
+          <span class="yn-icon">✓</span>
+          <span>Yes</span>
+        </button>
+        <button class="yn-btn" onclick="selectAnswer(3, false)" id="q3-no" aria-label="No">
+          <span class="yn-icon">✕</span>
+          <span>Not yet</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ---- Q4 ---- -->
+    <div class="question-panel" id="panel-4">
+      <div class="q-number-badge">Question 4 of 5</div>
+      <h2 class="question-main">Does this idea have enough depth to carry a full book?</h2>
+      <div class="question-context">
+        <div class="question-context-label">A useful test</div>
+        <p>Some ideas are excellent essays. Some are keynote talks. Some are frameworks, newsletters, or chapters. That does not make them weak — it just means they may not yet have the range to sustain a full manuscript. A strong book idea has a central argument, multiple dimensions, and room to unfold without repeating itself.</p>
+        <ul class="question-tests">
+          <li>Can you already sense multiple chapters, sections, or lines of inquiry?</li>
+          <li>Does the idea open up when you stay with it?</li>
+          <li>Is there enough here to deepen, not just repeat?</li>
+        </ul>
+      </div>
+      <div class="yn-row">
+        <button class="yn-btn" onclick="selectAnswer(4, true)" id="q4-yes" aria-label="Yes">
+          <span class="yn-icon">✓</span>
+          <span>Yes</span>
+        </button>
+        <button class="yn-btn" onclick="selectAnswer(4, false)" id="q4-no" aria-label="No">
+          <span class="yn-icon">✕</span>
+          <span>Not yet</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ---- Q5 ---- -->
+    <div class="question-panel" id="panel-5">
+      <div class="q-number-badge">Question 5 of 5</div>
+      <h2 class="question-main">Is this connected to the body of work you want to be known for?</h2>
+      <div class="question-context">
+        <div class="question-context-label">A useful test</div>
+        <p>The strongest books do not sit randomly beside your work — they deepen it. A good book idea often sharpens your authority, strengthens your positioning, and connects naturally to the conversations, clients, opportunities, or impact you want more of.</p>
+        <ul class="question-tests">
+          <li>Does this idea feel aligned with the work you want to be known for?</li>
+          <li>Would writing this book deepen your voice, not distract from it?</li>
+          <li>Does it belong in your bigger body of work?</li>
+        </ul>
+      </div>
+      <div class="yn-row">
+        <button class="yn-btn" onclick="selectAnswer(5, true)" id="q5-yes" aria-label="Yes">
+          <span class="yn-icon">✓</span>
+          <span>Yes</span>
+        </button>
+        <button class="yn-btn" onclick="selectAnswer(5, false)" id="q5-no" aria-label="No">
+          <span class="yn-icon">✕</span>
+          <span>Not yet</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="q-footer">
+    <button class="btn-next" id="btn-next" disabled onclick="nextQuestion()">
+      Next Question &rarr;
+    </button>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCREEN 3: EMAIL CAPTURE
+     ============================================================ -->
+<div id="screen-email" class="screen">
+  <div class="email-card">
+    <div class="email-icon">📖</div>
+    <h2 class="email-title">Where should we send your result?</h2>
+    <p class="email-sub">Enter your name and email to see how your idea tested — and get your personalised next step.</p>
+
+    <form id="email-form" onsubmit="submitEmail(event)">
+      <div class="form-field">
+        <label class="form-label" for="input-name">First name</label>
+        <input class="form-input" type="text" id="input-name" name="firstName" placeholder="Your first name" required autocomplete="given-name">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="input-email">Email address</label>
+        <input class="form-input" type="email" id="input-email" name="email" placeholder="your@email.com" required autocomplete="email">
+      </div>
+      <button class="btn-submit" type="submit" id="btn-submit">
+        See My Result &rarr;
+      </button>
+    </form>
+
+    <p class="form-privacy">No spam, ever. We'll use this to send you your result and occasional thinking from Kelly about writing, ideas, and books.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCREEN 4: RESULT
+     ============================================================ -->
+<div id="screen-result" class="screen">
+
+  <!-- Dynamic hero — populated by JS -->
+  <div class="result-hero">
+    <div class="result-hero-inner">
+      <div class="result-eyebrow" id="result-eyebrow">Your Result</div>
+      <div class="result-badge" id="result-badge"></div>
+      <h2 class="result-headline" id="result-headline"></h2>
+      <p class="result-lead" id="result-lead"></p>
+      <div class="score-dots" id="score-dots" aria-label="Your answers"></div>
+    </div>
+  </div>
+
+  <div class="result-body" id="result-body">
+    <!-- Populated by JS -->
+  </div>
+
+</div>
+
+
+<!-- ============================================================
+     SHARE MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="share-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="closeModalOnBackdrop(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()" aria-label="Close">&times;</button>
+    <h3 class="modal-title" id="modal-title">Share this tool</h3>
+    <p class="modal-sub">Know someone sitting on a book idea? Send them this.</p>
+
+    <div class="share-btns">
+      <a class="share-btn" id="share-linkedin" href="#" target="_blank" rel="noopener">
+        <span class="share-btn-icon linkedin">in</span>
+        Share on LinkedIn
+      </a>
+      <a class="share-btn" id="share-twitter" href="#" target="_blank" rel="noopener">
+        <span class="share-btn-icon twitter">𝕏</span>
+        Share on X / Twitter
+      </a>
+      <a class="share-btn" id="share-email-link" href="#">
+        <span class="share-btn-icon email-ico">✉</span>
+        Share via Email
+      </a>
+    </div>
+
+    <div class="share-url-row">
+      <div class="share-url-input" id="share-url-display" aria-label="Tool URL">tools.expertauthor.community/idea-test</div>
+      <button class="btn-copy" id="btn-copy" onclick="copyURL()">Copy</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+/* ---- State ---- */
+const TOOL_URL   = 'https://tools.expertauthor.community/idea-test';
+const WRITE_NOW  = 'https://www.expertauthor.community/programs/write-now';
+const EAC_URL    = 'https://www.expertauthor.community';
+const TOTAL_QS   = 5;
+
+const answers    = {}; // { 1: true/false, 2: true/false, ... }
+let currentQ     = 1;
+let yesCount     = 0;
+let userName     = '';
+
+/* ---- Navigation ---- */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function startTool() {
+  showScreen('screen-questions');
+  updateProgress();
+}
+
+/* ---- Question logic ---- */
+function selectAnswer(qNum, isYes) {
+  answers[qNum] = isYes;
+
+  // Update button styles
+  const yBtn = document.getElementById(`q${qNum}-yes`);
+  const nBtn = document.getElementById(`q${qNum}-no`);
+  yBtn.className = 'yn-btn' + (isYes  ? ' selected-yes' : '');
+  nBtn.className = 'yn-btn' + (!isYes ? ' selected-no'  : '');
+
+  // Enable Next
+  document.getElementById('btn-next').disabled = false;
+}
+
+function nextQuestion() {
+  if (answers[currentQ] === undefined) return;
+
+  if (currentQ < TOTAL_QS) {
+    // Hide current, show next
+    document.getElementById(`panel-${currentQ}`).classList.remove('active');
+    currentQ++;
+    document.getElementById(`panel-${currentQ}`).classList.add('active');
+    updateProgress();
+
+    // Disable next until answered
+    if (answers[currentQ] === undefined) {
+      document.getElementById('btn-next').disabled = true;
+    }
+
+    // Change button label on last question
+    if (currentQ === TOTAL_QS) {
+      document.getElementById('btn-next').textContent = 'See My Result →';
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  } else {
+    // All questions done — go to email capture
+    showScreen('screen-email');
+  }
+}
+
+function updateProgress() {
+  const pct = ((currentQ - 1) / TOTAL_QS) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `Question ${currentQ} of ${TOTAL_QS}`;
+}
+
+/* ---- Email submit ---- */
+async function submitEmail(e) {
+  e.preventDefault();
+
+  const btn   = document.getElementById('btn-submit');
+  const email = document.getElementById('input-email').value.trim();
+  const name  = document.getElementById('input-name').value.trim();
+  userName    = name.split(' ')[0] || 'there';
+
+  btn.disabled = true;
+  btn.textContent = 'One moment…';
+
+  // Calculate score
+  yesCount = Object.values(answers).filter(Boolean).length;
+  const scoreLabel = yesCount >= 4 ? 'ready' : yesCount >= 2 ? 'developing' : 'not-yet';
+
+  // Brevo call (non-blocking)
+  try {
+    await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        firstName: name,
+        BOOK_IDEA_SCORE: scoreLabel,
+        updateEnabled: true
+      })
+    });
+  } catch (_) { /* silent failure — result shows regardless */ }
+
+  buildResult();
+  showScreen('screen-result');
+}
+
+/* ---- Build result ---- */
+const RESULTS = {
+  strong: {
+    badge:    'Strong Potential',
+    headline: 'Your idea has real book potential.',
+    lead:     'The raw material is there. It may still need shaping — but something genuine is already alive in this idea.',
+    body: `
+      <div class="result-text">
+        <p>If you answered yes to most of these questions, there is a good chance your idea has what it takes. It may not be fully formed yet. The structure may still be loose, the reader not quite pinned down, the argument not yet sharp enough to cut.</p>
+        <p>But the raw material is there. And that matters more than people realise.</p>
+        <p>Most books do not start fully formed. They start with a pull — something that keeps coming back, a point of view that wants to be said, a reader you already understand. The rest is craft, structure, and time.</p>
+      </div>
+
+      <div class="result-next-step">
+        <h4>A useful next step</h4>
+        <p>Do not rush into a full book proposal. Instead, write one page — what your book is really about, who it is for, and the three things you most want a reader to walk away with. That single page will tell you a great deal.</p>
+      </div>
+
+      <p class="result-soft-close">Sometimes the most useful thing you can do with a strong idea is give it a little more shape before you give it more speed.</p>
+
+      <div class="result-cta-mid">
+        <div class="result-cta-mid-eyebrow">Ready to build on this?</div>
+        <div class="result-cta-mid-title">Write Now is designed for exactly this moment.</div>
+        <div class="result-cta-mid-body">A practical next step to help you develop your idea with more structure, momentum, and thoughtful support — before the next EAC intake opens.</div>
+        <a class="btn-cta-primary" href="${WRITE_NOW}" target="_blank" rel="noopener">Start with Write Now &rarr;</a>
+      </div>
+
+      <div class="result-text">
+        <p>The difference between a strong idea and a finished book is usually not talent. It is the right conditions: a clear structure to work within, accountability that actually holds, and a community that understands what the process really involves.</p>
+        <p>If this idea matters to you, it deserves more than leftover energy at the end of a busy week.</p>
+      </div>
+    `,
+    ctas: [
+      { label: 'Start with Write Now', url: WRITE_NOW, primary: true },
+      { label: 'Join the EAC Waitlist', url: EAC_URL, primary: false }
+    ]
+  },
+
+  developing: {
+    badge:    'Something Here',
+    headline: 'There\'s something here — it needs more shape.',
+    lead:     'There may still be a strong book in this idea. But it probably needs sharper framing, a clearer reader, or more development before it\'s ready.',
+    body: `
+      <div class="result-text">
+        <p>Answering yes to two or three of these questions is not a failure. It is useful information.</p>
+        <p>It usually means the idea has a core worth pursuing — but it has not yet found its full shape. Maybe the argument is still forming. Maybe you know what you want to say but not quite who you are saying it to. Maybe the depth is there, but you have not yet stayed with it long enough to feel confident.</p>
+        <p>That is a very common place to be. And it is a solvable problem.</p>
+      </div>
+
+      <div class="result-next-step">
+        <h4>A useful next step</h4>
+        <p>Do not try to solve everything at once. Pick the one question where you felt least sure, and spend time there first. Often the clearest path forward is to make one thing more specific — the reader, the argument, or the connection to your broader work.</p>
+      </div>
+
+      <p class="result-soft-close">An idea that is not quite ready yet is not a weak idea. It is an idea that deserves more time, not less.</p>
+
+      <div class="result-cta-mid">
+        <div class="result-cta-mid-eyebrow">Want help developing this further?</div>
+        <div class="result-cta-mid-title">Write Now can help you find the shape of your idea.</div>
+        <div class="result-cta-mid-body">Structure, momentum, and support for authors who are ready to take their idea seriously — before the next EAC intake opens.</div>
+        <a class="btn-cta-primary" href="${WRITE_NOW}" target="_blank" rel="noopener">Start with Write Now &rarr;</a>
+      </div>
+
+      <div class="result-text">
+        <p>Most ideas that become strong books go through a period of uncertainty — where the author knows something is there, but cannot yet fully articulate what. That period is not a problem to skip. It is where the book gets shaped.</p>
+        <p>The key is not to abandon it too early, and not to rush it too fast.</p>
+      </div>
+    `,
+    ctas: [
+      { label: 'Start with Write Now', url: WRITE_NOW, primary: true },
+      { label: 'Join the EAC Waitlist', url: EAC_URL, primary: false }
+    ]
+  },
+
+  notyet: {
+    badge:    'Not Quite Yet',
+    headline: 'This idea might belong somewhere else for now.',
+    lead:     'That is not failure. It may simply mean this idea needs a different form — or a little more time — before it becomes a book.',
+    body: `
+      <div class="result-text">
+        <p>Answering yes to none or one of these questions is not a verdict on your ability to write a book. It is a signal about this particular idea, right now.</p>
+        <p>Some of the best books started as something smaller — an essay, a framework, a recurring observation — before they had enough depth and shape to become a manuscript. The idea may belong in your notes, in a talk, in a newsletter, or in a shorter piece of work first.</p>
+        <p>That is not weakness. That is good judgment.</p>
+      </div>
+
+      <div class="result-next-step">
+        <h4>A useful next step</h4>
+        <p>Write about this idea in a different form first. An essay, a post, a workshop — something shorter that forces you to make the argument clearly. If the idea is real, the act of writing it will show you what it is actually about. And that clarity might be the beginning of a book.</p>
+      </div>
+
+      <p class="result-soft-close">Not every idea needs to be published immediately. Sometimes good judgment looks like staying with an idea a little longer.</p>
+
+      <div class="result-cta-mid">
+        <div class="result-cta-mid-eyebrow">Still want to write?</div>
+        <div class="result-cta-mid-title">Write Now is a great place to start developing your thinking.</div>
+        <div class="result-cta-mid-body">A practical next step to build your writing practice, clarify your ideas, and create momentum — before you commit to a full book.</div>
+        <a class="btn-cta-primary" href="${WRITE_NOW}" target="_blank" rel="noopener">Start with Write Now &rarr;</a>
+      </div>
+
+      <div class="result-text">
+        <p>The authors who go on to write meaningful books are rarely the ones who rushed the first idea that felt exciting. They are the ones who stayed curious, kept writing in smaller forms, and paid attention to what kept pulling at them.</p>
+        <p>You might already have a better idea somewhere in your notes. It just has not surfaced yet.</p>
+      </div>
+    `,
+    ctas: [
+      { label: 'Start with Write Now', url: WRITE_NOW, primary: true },
+      { label: 'Join the EAC Waitlist', url: EAC_URL, primary: false }
+    ]
+  }
+};
+
+function buildResult() {
+  const key    = yesCount >= 4 ? 'strong' : yesCount >= 2 ? 'developing' : 'notyet';
+  const r      = RESULTS[key];
+  const hi     = userName ? `${userName}, ` : '';
+
+  // Hero
+  document.getElementById('result-eyebrow').textContent  = `${hi}here's your result`;
+  document.getElementById('result-badge').textContent     = r.badge;
+  document.getElementById('result-headline').textContent  = r.headline;
+  document.getElementById('result-lead').textContent      = r.lead;
+
+  // Score dots
+  const dotsEl = document.getElementById('score-dots');
+  dotsEl.innerHTML = '';
+  for (let i = 1; i <= TOTAL_QS; i++) {
+    const d = document.createElement('div');
+    d.className = 'score-dot ' + (answers[i] ? 'yes' : 'no');
+    d.title = `Q${i}: ${answers[i] ? 'Yes' : 'Not yet'}`;
+    dotsEl.appendChild(d);
+  }
+
+  // Body
+  const body = document.getElementById('result-body');
+  body.innerHTML = r.body + buildEndCTAs(r.ctas);
+}
+
+function buildEndCTAs(ctas) {
+  const btns = ctas.map(c =>
+    `<a class="${c.primary ? 'btn-cta-primary' : 'btn-cta-secondary'}" href="${c.url}" target="_blank" rel="noopener">${c.label}</a>`
+  ).join('');
+  return `
+    <hr class="result-divider">
+    <div class="result-ctas">
+      ${btns}
+      <button class="btn-share" onclick="openModal()">⬡ Share this tool</button>
+    </div>
+  `;
+}
+
+/* ---- Share modal ---- */
+function openModal() {
+  const url   = encodeURIComponent(TOOL_URL);
+  const title = encodeURIComponent('5 Questions to Test Whether Your Idea Is Strong Enough for a Book');
+  const tweet = encodeURIComponent('Do you have a book idea that keeps pulling at you? These 5 questions will test whether it has real potential — from @kellyirvingwrites');
+
+  document.getElementById('share-linkedin').href     = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+  document.getElementById('share-twitter').href      = `https://twitter.com/intent/tweet?text=${tweet}&url=${url}`;
+  document.getElementById('share-email-link').href   = `mailto:?subject=${encodeURIComponent('Test your book idea — 5 quick questions')}&body=${encodeURIComponent('I just tested my book idea with this free tool from the Expert Author Community. Worth doing if you have an idea you keep returning to:\n\n' + TOOL_URL)}`;
+
+  document.getElementById('share-modal').classList.add('open');
+  document.getElementById('share-modal').focus();
+}
+
+function closeModal() {
+  document.getElementById('share-modal').classList.remove('open');
+}
+
+function closeModalOnBackdrop(e) {
+  if (e.target === document.getElementById('share-modal')) closeModal();
+}
+
+function copyURL() {
+  navigator.clipboard.writeText(TOOL_URL).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+/* ---- Keyboard ---- */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>
