@@ -1393,11 +1393,7 @@ const RESULTS = {
         <p>The difference between a strong idea and a finished book is usually not talent. It is the right conditions: a clear structure to work within, accountability that actually holds, and a community that understands what the process really involves.</p>
         <p>If this idea matters to you, it deserves more than leftover energy at the end of a busy week.</p>
       </div>
-    `,
-    ctas: [
-      { label: 'Start with Write Now', url: WRITE_NOW, primary: true },
-      { label: 'Join the EAC Waitlist', url: EAC_URL, primary: false }
-    ]
+    `
   },
 
   developing: {
@@ -1429,11 +1425,7 @@ const RESULTS = {
         <p>Most ideas that become strong books go through a period of uncertainty — where the author knows something is there, but cannot yet fully articulate what. That period is not a problem to skip. It is where the book gets shaped.</p>
         <p>The key is not to abandon it too early, and not to rush it too fast.</p>
       </div>
-    `,
-    ctas: [
-      { label: 'Start with Write Now', url: WRITE_NOW, primary: true },
-      { label: 'Join the EAC Waitlist', url: EAC_URL, primary: false }
-    ]
+    `
   },
 
   notyet: {
@@ -1465,11 +1457,7 @@ const RESULTS = {
         <p>The authors who go on to write meaningful books are rarely the ones who rushed the first idea that felt exciting. They are the ones who stayed curious, kept writing in smaller forms, and paid attention to what kept pulling at them.</p>
         <p>You might already have a better idea somewhere in your notes. It just has not surfaced yet.</p>
       </div>
-    `,
-    ctas: [
-      { label: 'Start with Write Now', url: WRITE_NOW, primary: true },
-      { label: 'Join the EAC Waitlist', url: EAC_URL, primary: false }
-    ]
+    `
   }
 };
 
@@ -1496,17 +1484,14 @@ function buildResult() {
 
   // Body
   const body = document.getElementById('result-body');
-  body.innerHTML = r.body + buildEndCTAs(r.ctas);
+  body.innerHTML = r.body + buildEndCTA();
 }
 
-function buildEndCTAs(ctas) {
-  const btns = ctas.map(c =>
-    `<a class="${c.primary ? 'btn-cta-primary' : 'btn-cta-secondary'}" href="${c.url}" target="_blank" rel="noopener">${c.label}</a>`
-  ).join('');
+function buildEndCTA() {
   return `
     <hr class="result-divider">
     <div class="result-ctas">
-      ${btns}
+      <a class="btn-cta-primary" href="${WRITE_NOW}" target="_blank" rel="noopener">Start with Write Now &rarr;</a>
       <button class="btn-share" onclick="openModal()">⬡ Share this tool</button>
     </div>
   `;
