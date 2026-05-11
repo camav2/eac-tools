@@ -1,5 +1,9 @@
 {
   "name": "eac-tools",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@vercel/node": "^3.0.0",
+    "@types/node": "^20.0.0"
+  }
 }
