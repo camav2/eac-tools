@@ -1504,6 +1504,13 @@ async function nextStep() {
           body: JSON.stringify({ email: userEmail, name: userName, writingBlocker: topCategory })
         });
       } catch (err) { console.warn('Subscribe failed:', err); }
+      try {
+        await fetch('/api/unblocker', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: userEmail, firstName: userName, writingBlocker: topCategory })
+        });
+      } catch (err) { console.warn('Unblocker Airtable failed:', err); }
       showResult();
     } else {
       showScreen('screen-email');
@@ -1631,10 +1638,18 @@ async function submitEmail(e) {
       })
     });
   } catch (e) {
-    // Subscription failed silently â€” don't block the result
+    // Subscription failed silently — don't block the result
     console.warn('Subscribe failed:', e);
   }
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  try {
+    await fetch('/api/unblocker', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: userEmail, firstName: userName, writingBlocker: topCategory })
+    });
+  } catch (e) {
+    console.warn('Unblocker Airtable failed:', e);
+  }
 
   showResult();
 }
