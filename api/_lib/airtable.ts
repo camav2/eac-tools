@@ -94,7 +94,7 @@ export async function logActivity(params: {
     body: JSON.stringify({
       fields: {
         'Summary':     summary,
-        'Person':      [{ id: personId }],
+        'Person':      [personId],
         'Action Type': actionType,
         'Timestamp':   new Date().toISOString(),
         'Source Tool': sourceTool,

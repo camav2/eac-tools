@@ -82,7 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'Submitted At':     new Date().toISOString(),
     }
     if (personId && typeof personId === 'string') {
-      fields['Person'] = [{ id: personId }]
+      fields['Person'] = [personId]
       console.log('[results] linking person:', personId)
     }
 

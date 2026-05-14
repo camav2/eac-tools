@@ -39,6 +39,7 @@ async function getCommunityMemberId(email: string): Promise<number | null> {
   const params = new URLSearchParams({
     email,
     community_id: process.env.CIRCLE_COMMUNITY_ID!,
+    per_page:     '1',
   })
   const data = await circleFetch(`community_members?${params}`)
   if (!data) return null
