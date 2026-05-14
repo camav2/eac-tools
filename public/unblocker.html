@@ -34,8 +34,6 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
-<script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
 <style>
 /* ============================================================
    EAC DESIGN TOKENS
@@ -974,7 +972,7 @@ body {
   overflow: hidden;
   margin: 4px 0;
 }
-trix-editor {
+.cms-editable {
   min-height: 80px;
   font-family: var(--font) !important;
   font-size: 15px;
@@ -984,7 +982,9 @@ trix-editor {
   outline: none;
   box-shadow: none !important;
 }
-trix-toolbar .trix-button-group { border-color: var(--color-grey-200); }
+.cms-editable { background: #fff; }
+.cms-toolbar { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--color-grey-200); background: var(--color-grey-100); }
+.cms-tb-btn { font-family: var(--font); font-size: 12px; padding: 4px 10px; border: 1px solid var(--color-grey-200); border-radius: 4px; background: #fff; cursor: pointer; }
 .cms-actions {
   display: flex; gap: 8px; padding: 10px 12px;
   border-top: 1px solid var(--color-grey-200);
@@ -1811,17 +1811,35 @@ function editRegion(key) {
   const edWrap = document.createElement('div')
   edWrap.className = 'cms-editor-wrap'
   edWrap.innerHTML = `
-    <input type="hidden" id="${uid}">
-    <trix-editor input="${uid}"></trix-editor>
+    <div class="cms-toolbar">
+      <button type="button" class="cms-tb-btn" data-cmd="bold"><b>B</b></button>
+      <button type="button" class="cms-tb-btn" data-cmd="italic"><i>I</i></button>
+      <button type="button" class="cms-tb-btn" data-cmd="h2">H2</button>
+      <button type="button" class="cms-tb-btn" data-cmd="p">¶</button>
+    </div>
+    <div class="cms-editable" contenteditable="true" id="${uid}"></div>
     <div class="cms-actions">
       <button class="cms-save-btn">Save</button>
       <button class="cms-cancel-btn">Cancel</button>
     </div>`
   wrap.appendChild(edWrap)
+
+  const editable = edWrap.querySelector('.cms-editable')
+  editable.innerHTML = original
+
+  edWrap.querySelectorAll('.cms-tb-btn').forEach(btn => {
+    btn.addEventListener('mousedown', e => {
+      e.preventDefault()
+      const cmd = btn.dataset.cmd
+      if (cmd === 'h2') document.execCommand('formatBlock', false, 'h2')
+      else if (cmd === 'p') document.execCommand('formatBlock', false, 'p')
+      else document.execCommand(cmd)
+      editable.focus()
+    })
+  })
+
   edWrap.querySelector('.cms-save-btn').addEventListener('click', () => saveCms(key, original))
   edWrap.querySelector('.cms-cancel-btn').addEventListener('click', () => cancelCms(key, original))
-  const trix = edWrap.querySelector('trix-editor')
-  trix.addEventListener('trix-initialize', () => trix.editor.loadHTML(original), { once: true })
 }
 
 async function saveCms(key, original) {
@@ -1829,7 +1847,7 @@ async function saveCms(key, original) {
   const wrap = el?.closest('.cms-region')
   if (!wrap) return
   const uid     = 'cms-' + key.replace(/[^a-z0-9]/gi, '-')
-  const html    = document.getElementById(uid)?.value ?? ''
+  const html    = document.getElementById(uid)?.innerHTML ?? ''
   const saveBtn = wrap.querySelector('.cms-save-btn')
   saveBtn.textContent = 'Saving…'
   saveBtn.disabled    = true
