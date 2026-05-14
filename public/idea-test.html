@@ -1302,11 +1302,13 @@ body { padding-top: 60px; }
 
   </div>
 
-  <div class="q-footer">
-    <button class="btn-next" id="btn-next" onclick="nextQuestion()">
-      Next Question &rarr;
-    </button>
-  </div>
+</div>
+
+<!-- Sticky next button — lives outside .screen to avoid transform stacking context -->
+<div class="q-footer">
+  <button class="btn-next" id="btn-next" onclick="nextQuestion()">
+    Next Question &rarr;
+  </button>
 </div>
 
 
