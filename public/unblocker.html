@@ -1383,7 +1383,7 @@ function restartQuiz() {
   startQuiz();
 }
 
-function nextStep() {
+async function nextStep() {
   currentStep++;
   if (currentStep < STEPS.length) {
     renderQuestions();

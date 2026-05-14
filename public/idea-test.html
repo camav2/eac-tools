@@ -1360,7 +1360,7 @@ function selectAnswer(qNum, isYes) {
   document.getElementById('btn-next').disabled = false;
 }
 
-function nextQuestion() {
+async function nextQuestion() {
   if (answers[currentQ] === undefined) return;
 
   if (currentQ < TOTAL_QS) {
