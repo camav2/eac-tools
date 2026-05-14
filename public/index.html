@@ -86,14 +86,40 @@
       color: var(--color-white);
     }
     .header-auth { position: relative; display: flex; align-items: center; }
-    .btn-header-login {
-      font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-      color: var(--color-navy); background: var(--color-yellow);
-      padding: 8px 16px; border-radius: var(--radius-full);
-      text-decoration: none; display: inline-block;
-      transition: background var(--transition);
+    .btn-member-login {
+      position: relative; display: inline-flex; align-items: center;
+      overflow: hidden;
+      background: var(--color-yellow); color: var(--color-navy);
+      font-family: var(--font); font-size: 12px; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 8px 16px 8px 12px; border-radius: 999px;
+      text-decoration: none; white-space: nowrap;
     }
-    .btn-header-login:hover { background: #f5d800; }
+    .btn-member-login::before {
+      content: ''; position: absolute; top: 0; left: -80%;
+      width: 55%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45) 50%, transparent);
+      animation: btn-shimmer 2.8s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes btn-shimmer { 0% { left: -80%; } 100% { left: 150%; } }
+    .btn-member-login .lock-icon {
+      width: 13px; height: 13px; margin-right: 7px; flex-shrink: 0;
+      transition: transform 0.25s ease;
+    }
+    .btn-member-login .login-divider {
+      width: 0; height: 14px; background: rgba(0,0,61,0.2);
+      margin: 0; flex-shrink: 0;
+      transition: width 0.25s ease, margin 0.25s ease;
+    }
+    .btn-member-login .login-dashboard {
+      max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.02em; text-transform: none;
+      transition: max-width 0.3s ease, opacity 0.2s ease;
+    }
+    .btn-member-login:hover .lock-icon { transform: rotate(-15deg); }
+    .btn-member-login:hover .login-divider { width: 1px; margin: 0 10px; }
+    .btn-member-login:hover .login-dashboard { max-width: 120px; opacity: 1; }
     .header-user-btn {
       display: flex; align-items: center; gap: 8px;
       background: none; border: none; cursor: pointer;
@@ -266,12 +292,6 @@
       padding: 32px 32px 28px;
       position: relative;
       overflow: hidden;
-    }
-
-    .tool-card-header-accent {
-      position: absolute;
-      top: 0; right: 0;
-      width: 80px; height: 80px;
     }
 
     .tool-badge {
@@ -534,6 +554,63 @@
       *, *::before, *::after { transition-duration: 0.01ms !important; }
     }
     body { padding-top: 60px; }
+
+    /* ── HERO TEXT COLOUR GUARDS (survive any 3rd-party CSS cascade) ── */
+    .hero .hero-eyebrow          { color: var(--color-yellow)         !important; }
+    .hero .hero-title            { color: var(--color-white)          !important; }
+    .hero .hero-title span       { color: var(--color-yellow)         !important; }
+    .hero .hero-subtitle         { color: rgba(255,255,255,0.65)      !important; }
+
+    /* ── CMS ADMIN EDITOR ── */
+    .cms-region { position: relative; }
+    .cms-edit-btn {
+      position: absolute; top: 6px; right: 6px;
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--color-yellow); color: var(--color-navy);
+      font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      padding: 4px 10px; border-radius: 999px; border: none; cursor: pointer;
+      opacity: 0; transition: opacity 0.15s ease; z-index: 20; white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .cms-region:hover .cms-edit-btn { opacity: 1; }
+    .cms-editor-wrap {
+      background: var(--color-white);
+      border: 2px solid var(--color-yellow);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 4px 0;
+    }
+    .cms-editable {
+      min-height: 80px;
+      font-family: var(--font) !important;
+      font-size: 15px;
+      color: var(--color-navy);
+      padding: 14px 16px;
+      border: none !important;
+      outline: none;
+      box-shadow: none !important;
+    }
+    .cms-editable { background: #fff; }
+    .cms-toolbar { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--color-grey-200); background: var(--color-grey-100); }
+    .cms-tb-btn { font-family: var(--font); font-size: 12px; padding: 4px 10px; border: 1px solid var(--color-grey-200); border-radius: 4px; background: #fff; cursor: pointer; }
+    .cms-actions {
+      display: flex; gap: 8px; padding: 10px 12px;
+      border-top: 1px solid var(--color-grey-200);
+      background: var(--color-grey-100);
+    }
+    .cms-save-btn {
+      background: var(--color-navy); color: var(--color-white);
+      font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 8px 18px; border-radius: 999px; border: none; cursor: pointer;
+    }
+    .cms-save-btn:hover { background: #000055; }
+    .cms-save-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .cms-cancel-btn {
+      background: transparent; color: var(--color-grey-700);
+      font-family: var(--font); font-size: 11px; font-weight: 600;
+      padding: 8px 16px; border-radius: 999px; border: 2px solid var(--color-grey-200); cursor: pointer;
+    }
+    .cms-cancel-btn:hover { border-color: var(--color-grey-400); }
   </style>
 </head>
 <body>
@@ -553,11 +630,11 @@
 
   <!-- ── HERO ───────────────────────────────────────────────── -->
   <section class="hero">
-    <p class="hero-eyebrow">Expert Author Community &middot; Beta</p>
-    <h1 class="hero-title">
+    <p class="hero-eyebrow" data-content-key="index/hero/eyebrow">Expert Author Community &middot; Beta</p>
+    <h1 class="hero-title" data-content-key="index/hero/title">
       Tools to help you<br><span>write with more clarity</span>
     </h1>
-    <p class="hero-subtitle">
+    <p class="hero-subtitle" data-content-key="index/hero/subtitle">
       Free reflections, diagnostics, and resources for expert authors. No fluff — just tools that help you understand what's actually getting in the way.
     </p>
   </section>
@@ -572,18 +649,14 @@
       <!-- Writing Blocker Quiz -->
       <div class="tool-card">
         <div class="tool-card-header">
-          <svg class="tool-card-header-accent" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <polygon points="80 80 0 80 0 0 39.9 40.1 80 80" fill="#FFE64B" opacity="0.12"/>
-            <polyline points="0 0 80 0 80 80" fill="#5296FB" opacity="0.08"/>
-          </svg>
           <div class="tool-badge live">
             <span class="tool-badge-dot"></span>
             Live
           </div>
-          <h2 class="tool-card-title">What's Getting in the Way of Your Best Writing?</h2>
+          <h2 class="tool-card-title" data-content-key="index/card/unblocker/title">What's Getting in the Way of Your Best Writing?</h2>
         </div>
         <div class="tool-card-body">
-          <p class="tool-card-desc">
+          <p class="tool-card-desc" data-content-key="index/card/unblocker/desc">
             A short reflection to identify what is most affecting your writing right now. Pinpoints your primary blocker across five categories — time, structure, noise, isolation, or momentum.
           </p>
           <div class="tool-card-meta">
@@ -606,18 +679,14 @@
       <!-- 5 Questions to Test Your Book Idea -->
       <div class="tool-card">
         <div class="tool-card-header">
-          <svg class="tool-card-header-accent" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <polygon points="80 80 0 80 0 0 39.9 40.1 80 80" fill="#FFE64B" opacity="0.12"/>
-            <polyline points="0 0 80 0 80 80" fill="#FE8D17" opacity="0.08"/>
-          </svg>
           <div class="tool-badge">
             <span class="tool-badge-dot"></span>
             Live
           </div>
-          <h2 class="tool-card-title">5 Questions to Test Whether Your Idea Is Strong Enough for a Book</h2>
+          <h2 class="tool-card-title" data-content-key="index/card/idea-test/title">5 Questions to Test Whether Your Idea Is Strong Enough for a Book</h2>
         </div>
         <div class="tool-card-body">
-          <p class="tool-card-desc">
+          <p class="tool-card-desc" data-content-key="index/card/idea-test/desc">
             Not every idea should become a book. These five questions will help you test whether yours has the depth, tension, and staying power to go the distance — or whether it needs more shape first.
           </p>
           <div class="tool-card-meta">
@@ -640,10 +709,6 @@
       <!-- Dirty Draft — Coming Soon -->
       <div class="tool-card coming-soon">
         <div class="tool-card-header">
-          <svg class="tool-card-header-accent" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <polygon points="80 80 0 80 0 0 39.9 40.1 80 80" fill="#FFE64B" opacity="0.06"/>
-            <polyline points="0 0 80 0 80 80" fill="#FE8D17" opacity="0.06"/>
-          </svg>
           <div class="tool-badge soon">
             <span class="tool-badge-dot"></span>
             Coming soon
@@ -672,9 +737,9 @@
 
   <!-- ── FOOTER CTA ─────────────────────────────────────────── -->
   <section class="footer-band">
-    <p class="footer-band-eyebrow">Expert Author Community</p>
-    <h2 class="footer-band-title">Ready to write your best work?</h2>
-    <p class="footer-band-sub">
+    <p class="footer-band-eyebrow" data-content-key="index/footer/eyebrow">Expert Author Community</p>
+    <h2 class="footer-band-title" data-content-key="index/footer/title">Ready to write your best work?</h2>
+    <p class="footer-band-sub" data-content-key="index/footer/sub">
       Tools are useful. Community makes them stick. Join authors working on books, thought leadership, and ideas worth sharing.
     </p>
     <div class="footer-band-ctas">
@@ -697,6 +762,8 @@
   </footer>
 
   <script>
+    let contentMap = {};
+
     (async function initAuth() {
       const el = document.getElementById('header-auth');
       try {
@@ -717,8 +784,9 @@
               <div class="dropdown-divider"></div>
               <button class="dropdown-item dropdown-logout" onclick="handleLogout()">Log out</button>
             </div>`;
+          if (user.isAdmin) try { enableEditing() } catch (e) { console.error('CMS init failed:', e) }
         } else {
-          el.innerHTML = `<a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
+          el.innerHTML = `<a class="btn-member-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Member Login<span class="login-divider"></span><span class="login-dashboard">Your dashboard →</span></a>`;
         }
       } catch {
         el.innerHTML = `<a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
@@ -735,6 +803,121 @@
     function handleLogout() {
       window.location.href = `https://auth.expertauthor.community/api/auth/logout?redirect=${encodeURIComponent(window.location.href)}`;
     }
+
+    /* ── CMS INLINE EDITOR (admin only) ── */
+    async function loadContent() {
+      try {
+        const r = await fetch('/api/content?page=index')
+        contentMap = await r.json()
+        applyContent()
+      } catch {}
+    }
+
+    function applyContent() {
+      Object.entries(contentMap).forEach(([key, html]) => {
+        const el = document.querySelector(`[data-content-key="${key}"]`)
+        if (el && html) el.innerHTML = html
+      })
+    }
+
+    function enableEditing() {
+      document.querySelectorAll('[data-content-key]').forEach(el => {
+        if (el.closest('.cms-region')) return
+        const key = el.dataset.contentKey
+        const wrap = document.createElement('div')
+        wrap.className = 'cms-region'
+        el.parentNode.insertBefore(wrap, el)
+        wrap.appendChild(el)
+        const btn = document.createElement('button')
+        btn.className = 'cms-edit-btn'
+        btn.title = 'Edit'
+        btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit'
+        btn.addEventListener('click', e => { e.stopPropagation(); editRegion(key) })
+        wrap.appendChild(btn)
+      })
+    }
+
+    function editRegion(key) {
+      const el = document.querySelector(`[data-content-key="${key}"]`)
+      const wrap = el?.closest('.cms-region')
+      if (!wrap || wrap.dataset.editing) return
+      wrap.dataset.editing = 'true'
+      const original = el.innerHTML
+      el.style.display = 'none'
+      wrap.querySelector('.cms-edit-btn').style.display = 'none'
+      const uid = 'cms-' + key.replace(/[^a-z0-9]/gi, '-')
+      const edWrap = document.createElement('div')
+      edWrap.className = 'cms-editor-wrap'
+      edWrap.innerHTML = `
+        <div class="cms-toolbar">
+          <button type="button" class="cms-tb-btn" data-cmd="bold"><b>B</b></button>
+          <button type="button" class="cms-tb-btn" data-cmd="italic"><i>I</i></button>
+          <button type="button" class="cms-tb-btn" data-cmd="h2">H2</button>
+          <button type="button" class="cms-tb-btn" data-cmd="p">¶</button>
+        </div>
+        <div class="cms-editable" contenteditable="true" id="${uid}"></div>
+        <div class="cms-actions">
+          <button class="cms-save-btn">Save</button>
+          <button class="cms-cancel-btn">Cancel</button>
+        </div>`
+      wrap.appendChild(edWrap)
+
+      const editable = edWrap.querySelector('.cms-editable')
+      editable.innerHTML = original
+
+      edWrap.querySelectorAll('.cms-tb-btn').forEach(btn => {
+        btn.addEventListener('mousedown', e => {
+          e.preventDefault()
+          const cmd = btn.dataset.cmd
+          if (cmd === 'h2') document.execCommand('formatBlock', false, 'h2')
+          else if (cmd === 'p') document.execCommand('formatBlock', false, 'p')
+          else document.execCommand(cmd)
+          editable.focus()
+        })
+      })
+
+      edWrap.querySelector('.cms-save-btn').addEventListener('click', () => saveCms(key, original))
+      edWrap.querySelector('.cms-cancel-btn').addEventListener('click', () => cancelCms(key, original))
+    }
+
+    async function saveCms(key, original) {
+      const el   = document.querySelector(`[data-content-key="${key}"]`)
+      const wrap = el?.closest('.cms-region')
+      if (!wrap) return
+      const uid     = 'cms-' + key.replace(/[^a-z0-9]/gi, '-')
+      const html    = document.getElementById(uid)?.innerHTML ?? ''
+      const saveBtn = wrap.querySelector('.cms-save-btn')
+      saveBtn.textContent = 'Saving…'
+      saveBtn.disabled    = true
+      try {
+        const r = await fetch('/api/content', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ key, html, page: 'index', label: key }),
+        })
+        if (!r.ok) throw new Error()
+        finishEdit(key, html)
+      } catch {
+        saveBtn.textContent = 'Save'
+        saveBtn.disabled    = false
+        alert('Save failed — please try again.')
+      }
+    }
+
+    function cancelCms(key, original) { finishEdit(key, original) }
+
+    function finishEdit(key, html) {
+      const el   = document.querySelector(`[data-content-key="${key}"]`)
+      const wrap = el?.closest('.cms-region')
+      if (!wrap) return
+      el.innerHTML = html
+      el.style.display = ''
+      wrap.querySelector('.cms-editor-wrap')?.remove()
+      wrap.querySelector('.cms-edit-btn').style.display = ''
+      delete wrap.dataset.editing
+    }
+
+    loadContent()
   </script>
 </body>
 </html>

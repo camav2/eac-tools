@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -350,10 +350,11 @@ body {
   font-weight: 700;
 }
 
+/* 3-column answer grid */
 .yn-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
 }
 
 .yn-btn {
@@ -361,23 +362,24 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 20px 16px;
+  gap: 4px;
+  padding: 16px 10px;
   border: 2px solid var(--color-grey-200);
   border-radius: var(--radius-xl);
   font-family: var(--font);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 800;
   color: var(--color-grey-700);
   background: var(--color-white);
   cursor: pointer;
   transition: all var(--transition);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   box-shadow: var(--shadow-md);
+  text-align: center;
+  line-height: 1.3;
 }
-.yn-btn .yn-icon {
-  font-size: 24px;
-  line-height: 1;
+@media (max-width: 480px) {
+  .yn-btn { padding: 14px 8px; font-size: 12px; }
 }
 .yn-btn:hover {
   border-color: var(--color-blue);
@@ -391,6 +393,13 @@ body {
   color: var(--color-navy);
   transform: scale(1.02);
   box-shadow: 0 4px 16px rgba(255,230,75,0.4);
+}
+.yn-btn.selected-partial {
+  background: var(--color-blue);
+  border-color: var(--color-blue);
+  color: var(--color-white);
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(82,150,251,0.35);
 }
 .yn-btn.selected-no {
   background: var(--color-navy);
@@ -409,6 +418,11 @@ body {
   display: flex;
   justify-content: center;
   z-index: 50;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+}
+.q-footer.visible {
+  transform: translateY(0);
 }
 
 .btn-next {
@@ -426,21 +440,14 @@ body {
   border-radius: var(--radius-full);
   border: none;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: background var(--transition), box-shadow var(--transition);
   width: 100%;
   max-width: 400px;
   justify-content: center;
 }
-.btn-next:hover:not(:disabled) {
+.btn-next:hover {
   background: var(--color-yellow-light);
-  transform: translateY(-1px);
   box-shadow: var(--shadow-md);
-}
-.btn-next:disabled {
-  background: var(--color-grey-200);
-  color: var(--color-grey-400);
-  cursor: not-allowed;
-  transform: none;
 }
 
 /* ============================================================
@@ -644,8 +651,9 @@ body {
   background: rgba(255,255,255,0.2);
   transition: background 0.3s ease;
 }
-.score-dot.yes { background: var(--color-yellow); }
-.score-dot.no  { background: rgba(255,255,255,0.15); }
+.score-dot.yes     { background: var(--color-yellow); }
+.score-dot.partial { background: var(--color-blue-light); }
+.score-dot.no      { background: rgba(255,255,255,0.15); }
 
 .result-body {
   width: 100%;
@@ -728,6 +736,68 @@ body {
   text-align: center;
   margin-bottom: 32px;
 }
+
+/* Gap blocks */
+.gap-blocks-section {
+  margin: 40px 0;
+}
+.gap-blocks-heading {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-grey-400);
+  margin-bottom: 16px;
+}
+.gap-block {
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 16px;
+  border-left: 4px solid transparent;
+}
+.gap-block--gap {
+  background: rgba(254,141,23,0.07);
+  border-left-color: var(--color-orange);
+}
+.gap-block--advisory {
+  background: rgba(151,192,253,0.12);
+  border-left-color: var(--color-blue-light);
+}
+.gap-block-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-grey-400);
+  margin-bottom: 10px;
+}
+.gap-block p {
+  font-size: 15px;
+  color: var(--color-black);
+  line-height: 1.75;
+  margin-bottom: 12px;
+}
+.gap-block-cta {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-navy);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--transition);
+}
+.gap-block--gap     .gap-block-cta { color: var(--color-orange); }
+.gap-block--advisory .gap-block-cta { color: var(--color-blue); }
+.gap-block-cta:hover { opacity: 0.75; }
+.gap-block-member-cta { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+.gap-block-lesson-link { font-size: 13px; font-weight: 700; color: var(--color-navy); text-decoration: underline; text-underline-offset: 3px; }
+.gap-block--advisory .gap-block-lesson-link { color: var(--color-blue); }
+.gap-block-lesson-copy { font-size: 13px; color: var(--color-grey-700); line-height: 1.65; margin: 0; }
+.gap-block-recs { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+.gap-block-rec { font-size: 12px; font-weight: 600; color: var(--color-grey-700); text-decoration: underline; text-underline-offset: 2px; }
+.gap-block-clarity { display: inline-block; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; color: var(--color-navy); background: var(--color-yellow); padding: 10px 20px; border-radius: var(--radius-full); text-decoration: none; transition: background var(--transition); margin-top: 4px; }
+.gap-block-clarity:hover { background: var(--color-yellow-light); }
 
 /* Final CTA block */
 .result-ctas {
@@ -986,14 +1056,41 @@ input:focus-visible {
   font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
   border-radius: 999px; line-height: 1; margin-left: 6px; position: relative; top: -1px;
 }
-.header-auth { position: relative; display: flex; align-items: center; }
-.btn-header-login {
-  font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--color-navy); background: var(--color-yellow);
-  padding: 8px 16px; border-radius: 999px;
-  text-decoration: none; display: inline-block; transition: background 0.18s ease;
+.header-auth { position: relative; display: flex; align-items: center; gap: 12px; }
+.btn-member-login {
+  position: relative; display: inline-flex; align-items: center;
+  overflow: hidden;
+  background: var(--color-yellow); color: var(--color-navy);
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 8px 16px 8px 12px; border-radius: 999px;
+  text-decoration: none; white-space: nowrap;
 }
-.btn-header-login:hover { background: #f5d800; }
+.btn-member-login::before {
+  content: ''; position: absolute; top: 0; left: -80%;
+  width: 55%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45) 50%, transparent);
+  animation: btn-shimmer 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes btn-shimmer { 0% { left: -80%; } 100% { left: 150%; } }
+.btn-member-login .lock-icon {
+  width: 13px; height: 13px; margin-right: 7px; flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+.btn-member-login .login-divider {
+  width: 0; height: 14px; background: rgba(0,0,61,0.2);
+  margin: 0; flex-shrink: 0;
+  transition: width 0.25s ease, margin 0.25s ease;
+}
+.btn-member-login .login-dashboard {
+  max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.02em; text-transform: none;
+  transition: max-width 0.3s ease, opacity 0.2s ease;
+}
+.btn-member-login:hover .lock-icon { transform: rotate(-15deg); }
+.btn-member-login:hover .login-divider { width: 1px; margin: 0 10px; }
+.btn-member-login:hover .login-dashboard { max-width: 120px; opacity: 1; }
 .header-user-btn {
   display: flex; align-items: center; gap: 8px;
   background: none; border: none; cursor: pointer;
@@ -1043,6 +1140,57 @@ input:focus-visible {
 .dropdown-logout { color: #c0392b; }
 .dropdown-logout:hover { background: #fff5f5 !important; }
 body { padding-top: 60px; }
+
+/* ── CMS ADMIN EDITOR ── */
+.cms-region { position: relative; }
+.cms-edit-btn {
+  position: absolute; top: 6px; right: 6px;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--color-yellow); color: var(--color-navy);
+  font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 4px 10px; border-radius: 999px; border: none; cursor: pointer;
+  opacity: 0; transition: opacity 0.15s ease; z-index: 20; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.cms-region:hover .cms-edit-btn { opacity: 1; }
+.cms-editor-wrap {
+  background: var(--color-white);
+  border: 2px solid var(--color-yellow);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin: 4px 0;
+}
+.cms-editable {
+  min-height: 80px;
+  font-family: var(--font) !important;
+  font-size: 15px;
+  color: var(--color-black);
+  padding: 14px 16px;
+  border: none !important;
+  outline: none;
+  box-shadow: none !important;
+}
+.cms-editable { background: #fff; }
+.cms-toolbar { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--color-grey-200); background: var(--color-grey-100); }
+.cms-tb-btn { font-family: var(--font); font-size: 12px; padding: 4px 10px; border: 1px solid var(--color-grey-200); border-radius: 4px; background: #fff; cursor: pointer; }
+.cms-actions {
+  display: flex; gap: 8px; padding: 10px 12px;
+  border-top: 1px solid var(--color-grey-200);
+  background: var(--color-grey-100);
+}
+.cms-save-btn {
+  background: var(--color-navy); color: var(--color-white);
+  font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 8px 18px; border-radius: 999px; border: none; cursor: pointer;
+}
+.cms-save-btn:hover { background: #000055; }
+.cms-save-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.cms-cancel-btn {
+  background: transparent; color: var(--color-grey-700);
+  font-family: var(--font); font-size: 11px; font-weight: 600;
+  padding: 8px 16px; border-radius: 999px; border: 2px solid var(--color-grey-200); cursor: pointer;
+}
+.cms-cancel-btn:hover { border-color: var(--color-grey-400); }
 </style>
 </head>
 <body>
@@ -1057,7 +1205,12 @@ body { padding-top: 60px; }
     </svg>
     <span class="header-logo-text">EAC Tools</span><span class="beta-badge">Beta</span>
   </a>
-  <div class="header-auth" id="header-auth"><!-- populated by JS --></div>
+  <div class="header-auth" id="header-auth">
+    <a id="header-login-btn" class="btn-member-login" href="#">
+      <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Member Login<span class="login-divider"></span><span class="login-dashboard">Your dashboard →</span>
+    </a>
+  </div>
 </header>
 
 <!-- ============================================================
@@ -1082,17 +1235,17 @@ body { padding-top: 60px; }
       <span class="intro-logo-text">Expert Author Community</span>
     </div>
 
-    <div class="intro-eyebrow">Free Thinking Tool</div>
+    <div class="intro-eyebrow" data-content-key="idea-test/intro/eyebrow">Free Thinking Tool</div>
 
-    <h1 class="intro-title">
+    <h1 class="intro-title" data-content-key="idea-test/intro/title">
       5 Questions to Test Whether Your Idea Is <span>Strong Enough for a Book</span>
     </h1>
 
-    <p class="intro-subtitle">
+    <p class="intro-subtitle" data-content-key="idea-test/intro/subtitle">
       Not every idea should become a book. Some ideas are timely. Some are useful. Some are exciting because they are new.
     </p>
 
-    <div class="intro-body">
+    <div class="intro-body" data-content-key="idea-test/intro/body">
       <p>But a book needs more than that. It needs enough depth to hold your thinking for a long time. Enough tension to keep a reader engaged. And enough weight to matter beyond a single post, talk, or trend cycle.</p>
       <p>If you have an idea you keep returning to, these five questions will help you test whether it has real book potential — or whether it needs more shape, pressure, or time first.</p>
     </div>
@@ -1131,8 +1284,8 @@ body { padding-top: 60px; }
     <!-- ---- Q1 ---- -->
     <div class="question-panel active" id="panel-1">
       <div class="q-number-badge">Question 1 of 5</div>
-      <h2 class="question-main">Does this idea keep returning to you?</h2>
-      <div class="question-context">
+      <h2 class="question-main" data-content-key="idea-test/q1/main">Does this idea keep returning to you?</h2>
+      <div class="question-context" data-content-key="idea-test/q1/context">
         <div class="question-context-label">A useful test</div>
         <p>A strong book idea rarely appears once and disappears. It tends to follow you — in conversations, client work, frustrations, lived experience, patterns you keep noticing, or questions you cannot stop asking.</p>
         <ul class="question-tests">
@@ -1141,22 +1294,17 @@ body { padding-top: 60px; }
         </ul>
       </div>
       <div class="yn-row">
-        <button class="yn-btn" onclick="selectAnswer(1, true)" id="q1-yes" aria-label="Yes">
-          <span class="yn-icon">✓</span>
-          <span>Yes</span>
-        </button>
-        <button class="yn-btn" onclick="selectAnswer(1, false)" id="q1-no" aria-label="No">
-          <span class="yn-icon">✕</span>
-          <span>Not yet</span>
-        </button>
+        <button class="yn-btn" onclick="selectAnswer(1, 'not-yet')" id="q1-not-yet" aria-label="Not yet">Not yet</button>
+        <button class="yn-btn" onclick="selectAnswer(1, 'getting-there')" id="q1-getting-there" aria-label="Getting there">Getting there</button>
+        <button class="yn-btn" onclick="selectAnswer(1, 'yes')" id="q1-yes" aria-label="Yes, clearly">Yes, clearly</button>
       </div>
     </div>
 
     <!-- ---- Q2 ---- -->
     <div class="question-panel" id="panel-2">
       <div class="q-number-badge">Question 2 of 5</div>
-      <h2 class="question-main">Is this a topic — or an argument?</h2>
-      <div class="question-context">
+      <h2 class="question-main" data-content-key="idea-test/q2/main">Is this a topic — or an argument?</h2>
+      <div class="question-context" data-content-key="idea-test/q2/context">
         <div class="question-context-label">A useful test</div>
         <p>A topic is not yet a book. "Leadership." "Burnout." "AI." "Confidence." These are territories, not positions. A stronger book idea usually contains an argument, a tension, a challenge, or a reframing — not just "here is what I know," but "here is what people misunderstand or need to see differently."</p>
         <ul class="question-tests">
@@ -1166,22 +1314,17 @@ body { padding-top: 60px; }
         </ul>
       </div>
       <div class="yn-row">
-        <button class="yn-btn" onclick="selectAnswer(2, true)" id="q2-yes" aria-label="Yes">
-          <span class="yn-icon">✓</span>
-          <span>Yes</span>
-        </button>
-        <button class="yn-btn" onclick="selectAnswer(2, false)" id="q2-no" aria-label="No">
-          <span class="yn-icon">✕</span>
-          <span>Not yet</span>
-        </button>
+        <button class="yn-btn" onclick="selectAnswer(2, 'not-yet')" id="q2-not-yet" aria-label="Not yet">Not yet</button>
+        <button class="yn-btn" onclick="selectAnswer(2, 'getting-there')" id="q2-getting-there" aria-label="Getting there">Getting there</button>
+        <button class="yn-btn" onclick="selectAnswer(2, 'yes')" id="q2-yes" aria-label="Yes, clearly">Yes, clearly</button>
       </div>
     </div>
 
     <!-- ---- Q3 ---- -->
     <div class="question-panel" id="panel-3">
       <div class="q-number-badge">Question 3 of 5</div>
-      <h2 class="question-main">Is there a clear reader with something at stake?</h2>
-      <div class="question-context">
+      <h2 class="question-main" data-content-key="idea-test/q3/main">Is there a clear reader with something at stake?</h2>
+      <div class="question-context" data-content-key="idea-test/q3/context">
         <div class="question-context-label">A useful test</div>
         <p>A book idea gets stronger when it matters to someone specific. Who is this for? What are they struggling with, questioning, trying to solve, or trying to become? Why would this idea matter enough for them to stay with it across a whole book?</p>
         <ul class="question-tests">
@@ -1191,22 +1334,17 @@ body { padding-top: 60px; }
         </ul>
       </div>
       <div class="yn-row">
-        <button class="yn-btn" onclick="selectAnswer(3, true)" id="q3-yes" aria-label="Yes">
-          <span class="yn-icon">✓</span>
-          <span>Yes</span>
-        </button>
-        <button class="yn-btn" onclick="selectAnswer(3, false)" id="q3-no" aria-label="No">
-          <span class="yn-icon">✕</span>
-          <span>Not yet</span>
-        </button>
+        <button class="yn-btn" onclick="selectAnswer(3, 'not-yet')" id="q3-not-yet" aria-label="Not yet">Not yet</button>
+        <button class="yn-btn" onclick="selectAnswer(3, 'getting-there')" id="q3-getting-there" aria-label="Getting there">Getting there</button>
+        <button class="yn-btn" onclick="selectAnswer(3, 'yes')" id="q3-yes" aria-label="Yes, clearly">Yes, clearly</button>
       </div>
     </div>
 
     <!-- ---- Q4 ---- -->
     <div class="question-panel" id="panel-4">
       <div class="q-number-badge">Question 4 of 5</div>
-      <h2 class="question-main">Does this idea have enough depth to carry a full book?</h2>
-      <div class="question-context">
+      <h2 class="question-main" data-content-key="idea-test/q4/main">Does this idea have enough depth to carry a full book?</h2>
+      <div class="question-context" data-content-key="idea-test/q4/context">
         <div class="question-context-label">A useful test</div>
         <p>Some ideas are excellent essays. Some are keynote talks. Some are frameworks, newsletters, or chapters. That does not make them weak — it just means they may not yet have the range to sustain a full manuscript. A strong book idea has a central argument, multiple dimensions, and room to unfold without repeating itself.</p>
         <ul class="question-tests">
@@ -1216,22 +1354,17 @@ body { padding-top: 60px; }
         </ul>
       </div>
       <div class="yn-row">
-        <button class="yn-btn" onclick="selectAnswer(4, true)" id="q4-yes" aria-label="Yes">
-          <span class="yn-icon">✓</span>
-          <span>Yes</span>
-        </button>
-        <button class="yn-btn" onclick="selectAnswer(4, false)" id="q4-no" aria-label="No">
-          <span class="yn-icon">✕</span>
-          <span>Not yet</span>
-        </button>
+        <button class="yn-btn" onclick="selectAnswer(4, 'not-yet')" id="q4-not-yet" aria-label="Not yet">Not yet</button>
+        <button class="yn-btn" onclick="selectAnswer(4, 'getting-there')" id="q4-getting-there" aria-label="Getting there">Getting there</button>
+        <button class="yn-btn" onclick="selectAnswer(4, 'yes')" id="q4-yes" aria-label="Yes, clearly">Yes, clearly</button>
       </div>
     </div>
 
     <!-- ---- Q5 ---- -->
     <div class="question-panel" id="panel-5">
       <div class="q-number-badge">Question 5 of 5</div>
-      <h2 class="question-main">Is this connected to the body of work you want to be known for?</h2>
-      <div class="question-context">
+      <h2 class="question-main" data-content-key="idea-test/q5/main">Is this connected to the body of work you want to be known for?</h2>
+      <div class="question-context" data-content-key="idea-test/q5/context">
         <div class="question-context-label">A useful test</div>
         <p>The strongest books do not sit randomly beside your work — they deepen it. A good book idea often sharpens your authority, strengthens your positioning, and connects naturally to the conversations, clients, opportunities, or impact you want more of.</p>
         <ul class="question-tests">
@@ -1241,24 +1374,21 @@ body { padding-top: 60px; }
         </ul>
       </div>
       <div class="yn-row">
-        <button class="yn-btn" onclick="selectAnswer(5, true)" id="q5-yes" aria-label="Yes">
-          <span class="yn-icon">✓</span>
-          <span>Yes</span>
-        </button>
-        <button class="yn-btn" onclick="selectAnswer(5, false)" id="q5-no" aria-label="No">
-          <span class="yn-icon">✕</span>
-          <span>Not yet</span>
-        </button>
+        <button class="yn-btn" onclick="selectAnswer(5, 'not-yet')" id="q5-not-yet" aria-label="Not yet">Not yet</button>
+        <button class="yn-btn" onclick="selectAnswer(5, 'getting-there')" id="q5-getting-there" aria-label="Getting there">Getting there</button>
+        <button class="yn-btn" onclick="selectAnswer(5, 'yes')" id="q5-yes" aria-label="Yes, clearly">Yes, clearly</button>
       </div>
     </div>
 
   </div>
 
-  <div class="q-footer">
-    <button class="btn-next" id="btn-next" disabled onclick="nextQuestion()">
-      Next Question &rarr;
-    </button>
-  </div>
+</div>
+
+<!-- Sticky next button — lives outside .screen to avoid transform stacking context -->
+<div class="q-footer">
+  <button class="btn-next" id="btn-next" onclick="nextQuestion()">
+    Next Question &rarr;
+  </button>
 </div>
 
 
@@ -1272,6 +1402,13 @@ body { padding-top: 60px; }
     <p class="email-sub">Enter your name and email to see how your idea tested — and get your personalised next step.</p>
 
     <form id="email-form" onsubmit="submitEmail(event)">
+      <div class="form-field">
+        <label class="form-label" for="input-idea">What's your book idea? (1–2 sentences)</label>
+        <textarea class="form-input" id="input-idea" name="ideaText"
+          placeholder="e.g. A book for mid-career professionals who feel successful but stuck — arguing that the problem isn't ambition, it's identity."
+          rows="3" style="resize: vertical;"></textarea>
+        <p style="font-size:12px; color: var(--color-grey-400); margin-top:6px;">Optional — but the more specific, the more useful your result.</p>
+      </div>
       <div class="form-field">
         <label class="form-label" for="input-name">First name</label>
         <input class="form-input" type="text" id="input-name" name="firstName" placeholder="Your first name" required autocomplete="given-name">
@@ -1349,17 +1486,316 @@ body { padding-top: 60px; }
      JAVASCRIPT
      ============================================================ -->
 <script>
-/* ---- State ---- */
-const TOOL_URL   = 'https://tools.expertauthor.community/idea-test';
-const WRITE_NOW  = 'https://www.expertauthor.community/programs/write-now';
-const EAC_URL    = 'https://www.expertauthor.community';
-const TOTAL_QS   = 5;
+// ── PLACEHOLDER URLS — fill before going live ──────────────────
+const CLARITY_CALL_URL   = 'PLACEHOLDER_CLARITY_CALL_URL';   // TODO: fill this URL
+const EAC_WAITLIST_URL   = 'PLACEHOLDER_EAC_WAITLIST_URL';   // TODO: fill this URL
+const FREE_RESOURCE_URL  = 'PLACEHOLDER_FREE_RESOURCE_URL';  // TODO: fill this URL
+const KELLY_LINKEDIN_URL = 'https://www.linkedin.com/in/kellyirving';
+const GAP_CTA_URLS = {
+  1: 'PLACEHOLDER_URL_Q1', // TODO: fill this URL — link to content on persistence/idea validation
+  2: 'PLACEHOLDER_URL_Q2', // TODO: fill this URL — link to content on finding your argument
+  3: 'PLACEHOLDER_URL_Q3', // TODO: fill this URL — link to content on defining your reader
+  4: 'PLACEHOLDER_URL_Q4', // TODO: fill this URL — link to content on book vs essay depth
+  5: 'PLACEHOLDER_URL_Q5', // TODO: fill this URL — link to content on positioning/body of work
+};
+// ───────────────────────────────────────────────────────────────
 
-const answers    = {}; // { 1: true/false, 2: true/false, ... }
+/* ---- Constants ---- */
+const TOOL_URL  = 'https://tools.expertauthor.community/idea-test';
+const WRITE_NOW = 'https://www.expertauthor.community/programs/write-now';
+const EAC_URL   = 'https://www.expertauthor.community';
+const TOTAL_QS  = 5;
+
+/* ---- State ---- */
+const answers    = {}; // { 1: 'not-yet'|'getting-there'|'yes', ... }
 let currentQ     = 1;
-let yesCount     = 0;
+let weightedScore = 0;
 let userName     = '';
+let ideaText     = '';
 let eacUser      = null;
+let contentMap   = {};
+
+/* ---- Weighted scoring ---- */
+const WEIGHTS = { 1: 0.75, 2: 1.5, 3: 1.5, 4: 1.0, 5: 0.75 };
+// Max possible score: 5.5
+
+function answerScore(value, weight) {
+  if (value === 'yes')           return weight;
+  if (value === 'getting-there') return weight * 0.5;
+  return 0;
+}
+
+function calcScore() {
+  return Object.entries(answers).reduce((total, [qNum, value]) => {
+    return total + answerScore(value, WEIGHTS[qNum]);
+  }, 0);
+}
+
+function getTier(score) {
+  if (score >= 3.75) return 'strong';
+  if (score >= 1.75) return 'developing';
+  return 'notyet';
+}
+
+function getTierLabel(tier) {
+  if (tier === 'strong')     return 'Strong';
+  if (tier === 'developing') return 'Developing';
+  return 'Not Yet';
+}
+
+function buildPattern() {
+  const parts = [];
+  for (let q = 1; q <= TOTAL_QS; q++) {
+    if (answers[q] === 'not-yet')        parts.push(`q${q}no`);
+    else if (answers[q] === 'getting-there') parts.push(`q${q}partial`);
+  }
+  return parts.join('-') || 'all-yes';
+}
+
+function withUtm(baseUrl, tier, pattern) {
+  try {
+    const url = new URL(baseUrl);
+    url.searchParams.set('utm_source', 'idea-test');
+    url.searchParams.set('utm_medium', 'tool-result');
+    url.searchParams.set('utm_content', `${tier}-${pattern}`);
+    return url.toString();
+  } catch {
+    return baseUrl; // fallback for placeholder URLs
+  }
+}
+
+/* ---- Gap block content ---- */
+const GAP_BLOCKS = {
+
+  1: {
+    title: 'On persistence and pull',
+    gettingThere: `The pull is there — but it's still forming.
+
+That is actually a reasonable place to be. Some ideas arrive quietly before they become urgent. The question worth sitting with is whether you keep returning to this idea because it genuinely matters to you, or because it feels like something you should want to write about.
+
+Both are worth knowing. The distinction usually becomes clear when you write about it — even just a page.`,
+    notYet: `If this idea is not yet pulling you back on its own, that is worth paying attention to.
+
+It doesn't mean the idea is wrong. It might mean it hasn't fully arrived yet — or that the real book is hidden inside a different, adjacent question you haven't named clearly.
+
+The most reliable test is time and writing. Sit with it for a few weeks. Write about it informally. If it keeps growing, it's real. If it fades when you stop pushing, it may need more time — or a different shape.`,
+    memberCta: {
+      lessonLabel: 'STRATEGY – Ask Why',
+      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/strategy-ask-why',
+      lessonCopy:  'The Ask Why lesson was built for exactly this moment. Work through the Book Screening Canvas to get the idea out of your head and onto the page — and then use the Ranking Matrix to see how it holds up against the rest of your thinking.',
+      rec1Label:   'Watch: The Book Screening Canvas (Coaching Collective)',
+      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/the-book-screening-canvas-march-4-2021',
+      rec2Label:   'Watch: Connecting with Why (Coaching Collective)',
+      rec2Url:     'https://the.expertauthor.community/c/coaching-collective/connecting-with-why-july-31-2020',
+      clarityCallEscalation: false,
+    },
+    nonMemberCta: { label: 'Read: How to know if an idea is worth pursuing', url: GAP_CTA_URLS[1] }
+  },
+
+  2: {
+    title: 'On finding your argument',
+    gettingThere: `You have a sense of the territory — the broad space your book would live in. What's still forming is the specific claim you want to make inside it.
+
+That gap is bridgeable. Most book ideas start as topics and sharpen into arguments through writing and conversation. The question that tends to unlock it: what do most people in this space get wrong? What would your peers push back on?
+
+That friction is usually where the argument lives.`,
+    notYet: `A topic is not yet a book. "Leadership." "Wellbeing." "The future of work." These are territories, not positions.
+
+The thing that turns a topic into a book is a clear argument — something you believe, something that challenges a common assumption, something that says more than "here is what I know about this."
+
+Before you go further with this idea, it's worth spending time on one question: what is the specific thing you want to say? Not what the book is about. What it actually argues.`,
+    memberCta: {
+      lessonLabel: 'STRATEGY – Know What',
+      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/strategy-know-what',
+      lessonCopy:  'Moving from a topic to an argument usually happens when you understand what else exists in your space — and where your thinking is genuinely different. The Know What lesson will take you through that. Start with the market worksheet, then come back to your idea with fresh eyes.',
+      rec1Label:   'Watch: How to get to the heart of your message (Coaching Collective)',
+      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/how-to-get-to-the-heart-of-your-message-may-8-2020',
+      rec2Label:   null,
+      rec2Url:     null,
+      clarityCallEscalation: false,
+    },
+    nonMemberCta: { label: 'Read: From topic to argument', url: GAP_CTA_URLS[2] }
+  },
+
+  3: {
+    title: 'On your reader',
+    gettingThere: `You have a sense of the kind of person this book is for — but the picture isn't sharp enough yet to write toward them.
+
+That matters more than it might seem. A vague reader produces vague writing. The clearer you can see a specific person — what they are struggling with, what they have already tried, what they most need to hear — the stronger every chapter becomes.
+
+It's worth spending time here before you go much further. Often the reader becomes clearest when you think about the clients, colleagues, or conversations that keep sending you back to this idea.`,
+    notYet: `A book without a clear reader tends to say everything — and reach no one.
+
+This is not about narrowing your audience so much that the book feels small. It's about being specific enough that a real person picks it up and thinks: this was written for me.
+
+The question to sit with: who is the person who most needs this idea right now? What are they struggling with? What have they already tried that hasn't worked? What would change for them if this book did its job properly? That person is your reader.`,
+    memberCta: {
+      lessonLabel: 'STRATEGY – Find Who',
+      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/strategy-find-who',
+      lessonCopy:  'A book without a clear reader tends to say everything and reach no one. The Find Who lesson is where you build your Reader Profile — a specific, named person with real pain points — and then use the Bullseye Method to prioritise who matters most. Do this before you go any further.',
+      rec1Label:   "Watch: Taking a trip into your reader's mind (Coaching Collective)",
+      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/taking-a-trip-into-your-reader-s-mind-to-nail-who-you-re-writing-to-february-19-2021',
+      rec2Label:   null,
+      rec2Url:     null,
+      clarityCallEscalation: false,
+    },
+    nonMemberCta: { label: 'Read: How to define your reader', url: GAP_CTA_URLS[3] }
+  },
+
+  4: {
+    title: 'On depth and range',
+    gettingThere: `The idea has real substance — but you're not yet sure it has enough range to sustain a full manuscript.
+
+That uncertainty is worth taking seriously. The most honest test: when you stay with this idea and follow it, does it open up — or does it keep circling back to the same few points?
+
+If it opens, if there are genuinely different dimensions and tensions already forming, the depth is likely there. If it loops, the idea might be strongest as a longer essay or a centrepiece chapter inside a bigger argument you haven't yet named.`,
+    notYet: `This idea, right now, may not yet have the range to carry a full book.
+
+That is not a verdict on the idea. It may be an essay waiting to be written, a framework waiting to be tested, or a chapter inside a bigger argument you haven't fully seen yet.
+
+The most useful thing you can do is write the shorter version first. Write the essay, the talk, the article. Let it show you what it is actually about. Some of the strongest books started exactly that way — as something smaller that kept insisting it wasn't finished.`,
+    memberCta: {
+      lessonLabel: 'STRUCTURE – Build Book',
+      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/structure-build-book',
+      lessonCopy:  "The clearest way to test whether your idea has enough range for a book is to try to build the structure — and see what happens. The Build Book lesson walks you through the three-part framework and asks you to map out your own. If the idea opens up, the depth is there. If it keeps circling, you'll know what to work on first.",
+      rec1Label:   'Watch: Using the 5-step structure to articulate and validate your ideas (Coaching Collective)',
+      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/using-the-5-step-structure-to-articulate-and-validate-your-ideas-august-20-2021',
+      rec2Label:   null,
+      rec2Url:     null,
+      clarityCallEscalation: false,
+    },
+    nonMemberCta: { label: 'Read: Is this a book or an essay?', url: GAP_CTA_URLS[4] }
+  },
+
+  5: {
+    title: 'On alignment with your body of work',
+    gettingThere: `There's a connection between this idea and your broader work — but it's not yet tight enough to feel obvious.
+
+A book that sits adjacent to your body of work can still be worth writing. But it's worth asking: would writing this book take you deeper into the work you want to be known for, or would it pull you sideways?
+
+The best books don't just add to a portfolio — they sharpen a positioning, deepen an authority, and open doors that are already ajar. It might be that this idea needs reframing slightly to connect more directly. Or it might belong to a different season of your work.`,
+    notYet: `A book is a significant investment of time, thinking, and identity. When it doesn't connect clearly to the work you want to be known for, it can pull you off course — even if it's a good idea in the abstract.
+
+The question is not whether this is an interesting idea. It's whether writing this book would deepen the authority and positioning you're building.
+
+If the answer is no, or not yet, it may be worth pausing here — not to abandon the idea, but to get clearer on what your body of work is actually building toward. Often that clarity changes the book idea itself.`,
+    memberCta: {
+      lessonLabel: 'STRATEGY – Ask Why',
+      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/strategy-ask-why',
+      lessonCopy:  "A book that doesn't connect to the work you want to be known for can pull you sideways — even if the idea itself is good. The Ask Why lesson is where you work through the connection between your book and your bigger goals. Start there. If you work through it and still feel like the pieces don't connect, this is worth a conversation.",
+      rec1Label:   'Watch: What a book can really do for your brand and business (Coaching Collective)',
+      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/what-a-book-can-really-do-for-your-brand-and-business-ask-an-author-w-donna-mcgeorge-kelly-irving',
+      rec2Label:   "Watch: Defining your book's business goals — Scott MacMillan (Guest Experts)",
+      rec2Url:     'https://the.expertauthor.community/c/guest-experts-597139/guest-expert-w-scott-macmillan-defining-your-book-s-business-goals-and-purpose',
+      clarityCallEscalation: true, // Also show Clarity Call CTA for this gap
+    },
+    nonMemberCta: { label: 'Read: Positioning and the books that build authority', url: GAP_CTA_URLS[5] }
+  }
+
+};
+
+function buildGapBlock(qNum) {
+  const val   = answers[qNum];
+  const block = GAP_BLOCKS[qNum];
+  const tone  = val === 'getting-there' ? 'advisory' : 'gap';
+  const raw   = val === 'getting-there' ? block.gettingThere : block.notYet;
+  const copyKey = `idea-test/gap/${qNum}/${val}`;
+
+  const copyHtml = raw.trim().split(/\n\n+/).map(p => `<p>${p.trim()}</p>`).join('');
+
+  let ctaHtml = '';
+  if (eacUser) {
+    const mc   = block.memberCta;
+    const recs = [
+      mc.rec1Label && mc.rec1Url
+        ? `<a class="gap-block-rec" href="${mc.rec1Url}" target="_blank" rel="noopener">${mc.rec1Label} &rarr;</a>`
+        : '',
+      mc.rec2Label && mc.rec2Url
+        ? `<a class="gap-block-rec" href="${mc.rec2Url}" target="_blank" rel="noopener">${mc.rec2Label} &rarr;</a>`
+        : '',
+    ].filter(Boolean).join('');
+
+    ctaHtml = `
+      <div class="gap-block-member-cta">
+        <a class="gap-block-lesson-link" href="${mc.lessonUrl}" target="_blank" rel="noopener">Go to lesson: ${mc.lessonLabel} &rarr;</a>
+        <p class="gap-block-lesson-copy" data-content-key="idea-test/gap/${qNum}/member-cta-copy">${mc.lessonCopy}</p>
+        ${recs ? `<div class="gap-block-recs">${recs}</div>` : ''}
+        ${mc.clarityCallEscalation
+          ? `<a class="gap-block-clarity" href="${withUtm(CLARITY_CALL_URL, getTier(weightedScore), buildPattern())}" target="_blank" rel="noopener">Book a Clarity Call with Kelly &rarr;</a>`
+          : ''}
+      </div>`;
+  }
+
+  return `
+    <div class="gap-block gap-block--${tone}">
+      <div class="gap-block-label">Question ${qNum} — ${block.title}</div>
+      <div data-content-key="${copyKey}">${copyHtml}</div>
+      ${ctaHtml}
+    </div>
+  `;
+}
+/* ---- Result content ---- */
+const RESULTS = {
+  strong: {
+    badge:    'Strong Potential',
+    headline: 'Your idea has real book potential.',
+    lead:     'The raw material is there. It may still need shaping — but something genuine is already alive in this idea.',
+    body: `
+      <div class="result-text">
+        <p>If you answered yes to most of these questions, there is a good chance your idea has what it takes. It may not be fully formed yet. The structure may still be loose, the reader not quite pinned down, the argument not yet sharp enough to cut.</p>
+        <p>But the raw material is there. And that matters more than people realise.</p>
+        <p>Most books do not start fully formed. They start with a pull — something that keeps coming back, a point of view that wants to be said, a reader you already understand. The rest is craft, structure, and time.</p>
+      </div>
+
+      <div class="result-next-step">
+        <h4>A useful next step</h4>
+        <p>Do not rush into a full book proposal. Instead, write one page — what your book is really about, who it is for, and the three things you most want a reader to walk away with. That single page will tell you a great deal.</p>
+      </div>
+
+      <p class="result-soft-close">Sometimes the most useful thing you can do with a strong idea is give it a little more shape before you give it more speed.</p>
+    `
+  },
+
+  developing: {
+    badge:    'Something Here',
+    headline: 'There\'s something here — it needs more shape.',
+    lead:     'There may still be a strong book in this idea. But it probably needs sharper framing, a clearer reader, or more development before it\'s ready.',
+    body: `
+      <div class="result-text">
+        <p>Answering yes — or getting there — on two or three of these questions is not a failure. It is useful information.</p>
+        <p>It usually means the idea has a core worth pursuing — but it has not yet found its full shape. Maybe the argument is still forming. Maybe you know what you want to say but not quite who you are saying it to. Maybe the depth is there, but you have not yet stayed with it long enough to feel confident.</p>
+        <p>That is a very common place to be. And it is a solvable problem.</p>
+      </div>
+
+      <div class="result-next-step">
+        <h4>A useful next step</h4>
+        <p>Do not try to solve everything at once. Pick the one question where you felt least sure, and spend time there first. Often the clearest path forward is to make one thing more specific — the reader, the argument, or the connection to your broader work.</p>
+      </div>
+
+      <p class="result-soft-close">An idea that is not quite ready yet is not a weak idea. It is an idea that deserves more time, not less.</p>
+    `
+  },
+
+  notyet: {
+    badge:    'Not Quite Yet',
+    headline: 'This idea might belong somewhere else for now.',
+    lead:     'That is not failure. It may simply mean this idea needs a different form — or a little more time — before it becomes a book.',
+    body: `
+      <div class="result-text">
+        <p>Answering "not yet" on most of these questions is not a verdict on your ability to write a book. It is a signal about this particular idea, right now.</p>
+        <p>Some of the best books started as something smaller — an essay, a framework, a recurring observation — before they had enough depth and shape to become a manuscript. The idea may belong in your notes, in a talk, in a newsletter, or in a shorter piece of work first.</p>
+        <p>That is not weakness. That is good judgment.</p>
+      </div>
+
+      <div class="result-next-step">
+        <h4>A useful next step</h4>
+        <p>Write about this idea in a different form first. An essay, a post, a workshop — something shorter that forces you to make the argument clearly. If the idea is real, the act of writing it will show you what it is actually about. And that clarity might be the beginning of a book.</p>
+      </div>
+
+      <p class="result-soft-close">Not every idea needs to be published immediately. Sometimes good judgment looks like staying with an idea a little longer.</p>
+    `
+  }
+};
 
 /* ---- Navigation ---- */
 function showScreen(id) {
@@ -1374,60 +1810,74 @@ function startTool() {
 }
 
 /* ---- Question logic ---- */
-function selectAnswer(qNum, isYes) {
-  answers[qNum] = isYes;
+function selectAnswer(qNum, value) {
+  answers[qNum] = value;
 
-  // Update button styles
-  const yBtn = document.getElementById(`q${qNum}-yes`);
-  const nBtn = document.getElementById(`q${qNum}-no`);
-  yBtn.className = 'yn-btn' + (isYes  ? ' selected-yes' : '');
-  nBtn.className = 'yn-btn' + (!isYes ? ' selected-no'  : '');
+  const notYetBtn       = document.getElementById(`q${qNum}-not-yet`);
+  const gettingThereBtn = document.getElementById(`q${qNum}-getting-there`);
+  const yesBtn          = document.getElementById(`q${qNum}-yes`);
 
-  // Enable Next
-  document.getElementById('btn-next').disabled = false;
+  notYetBtn.className       = 'yn-btn' + (value === 'not-yet'       ? ' selected-no'      : '');
+  gettingThereBtn.className = 'yn-btn' + (value === 'getting-there' ? ' selected-partial' : '');
+  yesBtn.className          = 'yn-btn' + (value === 'yes'           ? ' selected-yes'     : '');
+
+  document.querySelector('.q-footer').classList.add('visible');
 }
 
 async function nextQuestion() {
   if (answers[currentQ] === undefined) return;
 
   if (currentQ < TOTAL_QS) {
-    // Hide current, show next
     document.getElementById(`panel-${currentQ}`).classList.remove('active');
     currentQ++;
     document.getElementById(`panel-${currentQ}`).classList.add('active');
     updateProgress();
 
-    // Disable next until answered
+    const footer = document.querySelector('.q-footer');
     if (answers[currentQ] === undefined) {
-      document.getElementById('btn-next').disabled = true;
+      footer.classList.remove('visible');
     }
 
-    // Change button label on last question
     if (currentQ === TOTAL_QS) {
       document.getElementById('btn-next').textContent = 'See My Result →';
     }
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 
   } else {
     // All questions done
+    weightedScore = calcScore();
+    const tier = getTier(weightedScore);
+
     if (eacUser) {
       // Already authed — skip email capture
-      const name = eacUser.name || '';
+      const name  = eacUser.name  || '';
       const email = eacUser.email || '';
-      userName = name.split(' ')[0] || 'there';
-      yesCount = Object.values(answers).filter(Boolean).length;
-      const scoreLabel = yesCount >= 4 ? 'ready' : yesCount >= 2 ? 'developing' : 'not-yet';
+      userName  = name.split(' ')[0] || 'there';
+      ideaText  = '';
+
       try {
-        await fetch('/api/subscribe', {
+        await fetch('/api/airtable', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, firstName: name, BOOK_IDEA_SCORE: scoreLabel, updateEnabled: true })
+          body: JSON.stringify({
+            email,
+            firstName:     name,
+            ideaText:      ideaText,
+            weightedScore: parseFloat(weightedScore.toFixed(2)),
+            tier:          getTierLabel(tier),
+            q1: answers[1], q2: answers[2], q3: answers[3],
+            q4: answers[4], q5: answers[5],
+            isMember:      true,
+            circleUserId:  eacUser.circleUserId || '',
+          })
         });
       } catch (_) { /* silent */ }
-      buildResult();
+
+      document.querySelector('.q-footer').classList.remove('visible');
+      buildResult(tier);
       showScreen('screen-result');
     } else {
+      document.querySelector('.q-footer').classList.remove('visible');
       showScreen('screen-email');
     }
   }
@@ -1447,148 +1897,109 @@ async function submitEmail(e) {
   const email = document.getElementById('input-email').value.trim();
   const name  = document.getElementById('input-name').value.trim();
   userName    = name.split(' ')[0] || 'there';
+  ideaText    = document.getElementById('input-idea').value.trim();
 
-  btn.disabled = true;
+  btn.disabled    = true;
   btn.textContent = 'One moment…';
 
-  // Calculate score
-  yesCount = Object.values(answers).filter(Boolean).length;
-  const scoreLabel = yesCount >= 4 ? 'ready' : yesCount >= 2 ? 'developing' : 'not-yet';
+  weightedScore = calcScore();
+  const tier = getTier(weightedScore);
 
-  // Brevo call (non-blocking)
   try {
-    await fetch('/api/subscribe', {
+    await fetch('/api/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email,
-        firstName: name,
-        BOOK_IDEA_SCORE: scoreLabel,
-        updateEnabled: true
+        firstName:     name,
+        ideaText:      ideaText,
+        weightedScore: parseFloat(weightedScore.toFixed(2)),
+        tier:          getTierLabel(tier),
+        q1: answers[1], q2: answers[2], q3: answers[3],
+        q4: answers[4], q5: answers[5],
+        isMember:      false,
       })
     });
   } catch (_) { /* silent failure — result shows regardless */ }
 
-  buildResult();
+  buildResult(tier);
   showScreen('screen-result');
 }
 
 /* ---- Build result ---- */
-const RESULTS = {
-  strong: {
-    badge:    'Strong Potential',
-    headline: 'Your idea has real book potential.',
-    lead:     'The raw material is there. It may still need shaping — but something genuine is already alive in this idea.',
-    body: `
-      <div class="result-text">
-        <p>If you answered yes to most of these questions, there is a good chance your idea has what it takes. It may not be fully formed yet. The structure may still be loose, the reader not quite pinned down, the argument not yet sharp enough to cut.</p>
-        <p>But the raw material is there. And that matters more than people realise.</p>
-        <p>Most books do not start fully formed. They start with a pull — something that keeps coming back, a point of view that wants to be said, a reader you already understand. The rest is craft, structure, and time.</p>
-      </div>
-
-      <div class="result-next-step">
-        <h4>A useful next step</h4>
-        <p>Do not rush into a full book proposal. Instead, write one page — what your book is really about, who it is for, and the three things you most want a reader to walk away with. That single page will tell you a great deal.</p>
-      </div>
-
-      <p class="result-soft-close">Sometimes the most useful thing you can do with a strong idea is give it a little more shape before you give it more speed.</p>
-
-      <div class="result-cta-mid">
-        <div class="result-cta-mid-eyebrow">Ready to build on this?</div>
-        <div class="result-cta-mid-title">Write Now is designed for exactly this moment.</div>
-        <div class="result-cta-mid-body">A practical next step to help you develop your idea with more structure, momentum, and thoughtful support — before the next EAC intake opens.</div>
-        <a class="btn-cta-primary" href="${WRITE_NOW}" target="_blank" rel="noopener">Start with Write Now &rarr;</a>
-      </div>
-    `
-  },
-
-  developing: {
-    badge:    'Something Here',
-    headline: 'There\'s something here — it needs more shape.',
-    lead:     'There may still be a strong book in this idea. But it probably needs sharper framing, a clearer reader, or more development before it\'s ready.',
-    body: `
-      <div class="result-text">
-        <p>Answering yes to two or three of these questions is not a failure. It is useful information.</p>
-        <p>It usually means the idea has a core worth pursuing — but it has not yet found its full shape. Maybe the argument is still forming. Maybe you know what you want to say but not quite who you are saying it to. Maybe the depth is there, but you have not yet stayed with it long enough to feel confident.</p>
-        <p>That is a very common place to be. And it is a solvable problem.</p>
-      </div>
-
-      <div class="result-next-step">
-        <h4>A useful next step</h4>
-        <p>Do not try to solve everything at once. Pick the one question where you felt least sure, and spend time there first. Often the clearest path forward is to make one thing more specific — the reader, the argument, or the connection to your broader work.</p>
-      </div>
-
-      <p class="result-soft-close">An idea that is not quite ready yet is not a weak idea. It is an idea that deserves more time, not less.</p>
-
-      <div class="result-cta-mid">
-        <div class="result-cta-mid-eyebrow">Want help developing this further?</div>
-        <div class="result-cta-mid-title">Write Now can help you find the shape of your idea.</div>
-        <div class="result-cta-mid-body">Structure, momentum, and support for authors who are ready to take their idea seriously — before the next EAC intake opens.</div>
-        <a class="btn-cta-primary" href="${WRITE_NOW}" target="_blank" rel="noopener">Start with Write Now &rarr;</a>
-      </div>
-    `
-  },
-
-  notyet: {
-    badge:    'Not Quite Yet',
-    headline: 'This idea might belong somewhere else for now.',
-    lead:     'That is not failure. It may simply mean this idea needs a different form — or a little more time — before it becomes a book.',
-    body: `
-      <div class="result-text">
-        <p>Answering yes to none or one of these questions is not a verdict on your ability to write a book. It is a signal about this particular idea, right now.</p>
-        <p>Some of the best books started as something smaller — an essay, a framework, a recurring observation — before they had enough depth and shape to become a manuscript. The idea may belong in your notes, in a talk, in a newsletter, or in a shorter piece of work first.</p>
-        <p>That is not weakness. That is good judgment.</p>
-      </div>
-
-      <div class="result-next-step">
-        <h4>A useful next step</h4>
-        <p>Write about this idea in a different form first. An essay, a post, a workshop — something shorter that forces you to make the argument clearly. If the idea is real, the act of writing it will show you what it is actually about. And that clarity might be the beginning of a book.</p>
-      </div>
-
-      <p class="result-soft-close">Not every idea needs to be published immediately. Sometimes good judgment looks like staying with an idea a little longer.</p>
-
-      <div class="result-cta-mid">
-        <div class="result-cta-mid-eyebrow">Still want to write?</div>
-        <div class="result-cta-mid-title">Write Now is a great place to start developing your thinking.</div>
-        <div class="result-cta-mid-body">A practical next step to build your writing practice, clarify your ideas, and create momentum — before you commit to a full book.</div>
-        <a class="btn-cta-primary" href="${WRITE_NOW}" target="_blank" rel="noopener">Start with Write Now &rarr;</a>
-      </div>
-    `
-  }
-};
-
-function buildResult() {
-  const key    = yesCount >= 4 ? 'strong' : yesCount >= 2 ? 'developing' : 'notyet';
-  const r      = RESULTS[key];
-  const hi     = userName ? `${userName}, ` : '';
+function buildResult(tier) {
+  const r       = RESULTS[tier];
+  const hi      = userName ? `${userName}, ` : '';
+  const pattern = buildPattern();
 
   // Hero
   document.getElementById('result-eyebrow').textContent  = `${hi}here's your result`;
-  document.getElementById('result-badge').textContent     = r.badge;
-  document.getElementById('result-headline').textContent  = r.headline;
-  document.getElementById('result-lead').textContent      = r.lead;
 
-  // Score dots
+  const badge    = document.getElementById('result-badge');
+  const headline = document.getElementById('result-headline');
+  const lead     = document.getElementById('result-lead');
+  badge.dataset.contentKey    = `idea-test/result/${tier}/badge`;
+  headline.dataset.contentKey = `idea-test/result/${tier}/headline`;
+  lead.dataset.contentKey     = `idea-test/result/${tier}/lead`;
+  badge.textContent    = r.badge;
+  headline.textContent = r.headline;
+  lead.textContent     = r.lead;
+
+  // Score dots — three states
   const dotsEl = document.getElementById('score-dots');
   dotsEl.innerHTML = '';
   for (let i = 1; i <= TOTAL_QS; i++) {
     const d = document.createElement('div');
-    d.className = 'score-dot ' + (answers[i] ? 'yes' : 'no');
-    d.title = `Q${i}: ${answers[i] ? 'Yes' : 'Not yet'}`;
+    const v = answers[i];
+    d.className = 'score-dot ' + (v === 'yes' ? 'yes' : v === 'getting-there' ? 'partial' : 'no');
+    d.title = `Q${i}: ${v === 'yes' ? 'Yes, clearly' : v === 'getting-there' ? 'Getting there' : 'Not yet'}`;
     dotsEl.appendChild(d);
   }
 
-  // Body
-  const body = document.getElementById('result-body');
-  body.innerHTML = r.body + buildEndCTA();
-}
+  // Gap blocks — for every question not answered 'yes'
+  const notAllYes = [1, 2, 3, 4, 5].some(q => answers[q] !== 'yes');
+  const gapHtml = notAllYes
+    ? `<div class="gap-blocks-section">
+        <div class="gap-blocks-heading">Where to focus next</div>
+        ${[1, 2, 3, 4, 5].filter(q => answers[q] !== 'yes').map(buildGapBlock).join('')}
+      </div>`
+    : '';
 
-function buildEndCTA() {
-  return `
-    <div class="result-ctas">
-      <button class="btn-share" onclick="openModal()">⬡ Share this tool</button>
-    </div>
-  `;
+  // Tier-level CTAs
+  let primaryUrl, primaryLabel, secondaryUrl, secondaryLabel;
+  if (tier === 'strong') {
+    primaryUrl    = withUtm(CLARITY_CALL_URL, tier, pattern);
+    primaryLabel  = 'Book a Clarity Call with Kelly →';
+    secondaryUrl  = withUtm(WRITE_NOW, tier, pattern);
+    secondaryLabel = 'Or start with Write Now →';
+  } else if (tier === 'developing') {
+    primaryUrl    = withUtm(WRITE_NOW, tier, pattern);
+    primaryLabel  = 'Start with Write Now →';
+    secondaryUrl  = withUtm(EAC_WAITLIST_URL, tier, pattern);
+    secondaryLabel = 'Join the waitlist →';
+  } else {
+    primaryUrl    = withUtm(FREE_RESOURCE_URL, tier, pattern);
+    primaryLabel  = 'Get the free Idea Pressure Test →';
+    secondaryUrl  = withUtm(KELLY_LINKEDIN_URL, tier, pattern);
+    secondaryLabel = 'Follow Kelly on LinkedIn →';
+  }
+
+  const ctaBlock = eacUser
+    ? `<div class="result-ctas">
+        <button class="btn-share" onclick="openModal()">⬡ Share this tool</button>
+      </div>`
+    : `<div class="result-ctas">
+        <a class="btn-cta-primary" href="${primaryUrl}" target="_blank" rel="noopener">${primaryLabel}</a>
+        <a class="btn-cta-secondary" href="${secondaryUrl}" target="_blank" rel="noopener">${secondaryLabel}</a>
+        <button class="btn-share" onclick="openModal()">⬡ Share this tool</button>
+      </div>`;
+
+  document.getElementById('result-body').innerHTML =
+    `<div data-content-key="idea-test/result/${tier}/body">${r.body}</div>` + gapHtml + ctaBlock;
+
+  // Apply stored overrides to newly created elements, then enable editing for admins
+  applyContent();
+  if (eacUser?.isAdmin) enableEditing();
 }
 
 /* ---- Share modal ---- */
@@ -1597,9 +2008,9 @@ function openModal() {
   const title = encodeURIComponent('5 Questions to Test Whether Your Idea Is Strong Enough for a Book');
   const tweet = encodeURIComponent('Do you have a book idea that keeps pulling at you? These 5 questions will test whether it has real potential — from @kellyirvingwrites');
 
-  document.getElementById('share-linkedin').href     = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
-  document.getElementById('share-twitter').href      = `https://twitter.com/intent/tweet?text=${tweet}&url=${url}`;
-  document.getElementById('share-email-link').href   = `mailto:?subject=${encodeURIComponent('Test your book idea — 5 quick questions')}&body=${encodeURIComponent('I just tested my book idea with this free tool from the Expert Author Community. Worth doing if you have an idea you keep returning to:\n\n' + TOOL_URL)}`;
+  document.getElementById('share-linkedin').href    = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+  document.getElementById('share-twitter').href     = `https://twitter.com/intent/tweet?text=${tweet}&url=${url}`;
+  document.getElementById('share-email-link').href  = `mailto:?subject=${encodeURIComponent('Test your book idea — 5 quick questions')}&body=${encodeURIComponent('I just tested my book idea with this free tool from the Expert Author Community. Worth doing if you have an idea you keep returning to:\n\n' + TOOL_URL)}`;
 
   document.getElementById('share-modal').classList.add('open');
   document.getElementById('share-modal').focus();
@@ -1632,12 +2043,20 @@ document.addEventListener('keydown', e => {
 
 /* ── AUTH ── */
 (async function initAuth() {
-  const el = document.getElementById('header-auth');
+  const el      = document.getElementById('header-auth');
+  const loginBtn = document.getElementById('header-login-btn');
+
+  // Set login href now that window.location is available
+  const loginHref = `https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}`;
+  if (loginBtn) loginBtn.href = loginHref;
+
   try {
     const res = await fetch('/api/me');
     const { user } = await res.json();
     eacUser = user;
     if (user) {
+      if (user.isAdmin) try { enableEditing() } catch (e) { console.error('CMS init failed:', e) }
+      // Logged-in: replace entire block with avatar + dropdown
       const initial = (user.name || user.email || '?')[0].toUpperCase();
       el.innerHTML = `
         <button class="header-user-btn" onclick="toggleDropdown(event)">
@@ -1652,11 +2071,10 @@ document.addEventListener('keydown', e => {
           <div class="dropdown-divider"></div>
           <button class="dropdown-item dropdown-logout" onclick="handleLogout()">Log out</button>
         </div>`;
-    } else {
-      el.innerHTML = `<a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
     }
+    // Unauthenticated: static HTML already shows "EAC member? / Log in" — nothing to do
   } catch {
-    if (el) el.innerHTML = `<a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
+    // Fetch failed: static HTML already visible, href already set above
   }
 })();
 
@@ -1670,6 +2088,125 @@ document.addEventListener('click', () => {
 function handleLogout() {
   window.location.href = `https://auth.expertauthor.community/api/auth/logout?redirect=${encodeURIComponent(window.location.href)}`;
 }
+
+/* ── CMS INLINE EDITOR (admin only) ── */
+async function loadContent() {
+  try {
+    const r = await fetch('/api/content?page=idea-test')
+    contentMap = await r.json()
+    applyContent()
+  } catch {}
+}
+
+function applyContent() {
+  Object.entries(contentMap).forEach(([key, html]) => {
+    const el = document.querySelector(`[data-content-key="${key}"]`)
+    if (el && html) el.innerHTML = html
+  })
+}
+
+function enableEditing() {
+  document.querySelectorAll('[data-content-key]').forEach(el => {
+    if (el.closest('.cms-region')) return
+    const key = el.dataset.contentKey
+    const wrap = document.createElement('div')
+    wrap.className = 'cms-region'
+    el.parentNode.insertBefore(wrap, el)
+    wrap.appendChild(el)
+    const btn = document.createElement('button')
+    btn.className = 'cms-edit-btn'
+    btn.title = 'Edit'
+    btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit'
+    btn.addEventListener('click', e => { e.stopPropagation(); editRegion(key) })
+    wrap.appendChild(btn)
+  })
+}
+
+function editRegion(key) {
+  const el = document.querySelector(`[data-content-key="${key}"]`)
+  const wrap = el?.closest('.cms-region')
+  if (!wrap || wrap.dataset.editing) return
+
+  wrap.dataset.editing = 'true'
+  const original = el.innerHTML
+  el.style.display = 'none'
+  wrap.querySelector('.cms-edit-btn').style.display = 'none'
+
+  const uid = 'cms-' + key.replace(/[^a-z0-9]/gi, '-')
+  const edWrap = document.createElement('div')
+  edWrap.className = 'cms-editor-wrap'
+  edWrap.innerHTML = `
+    <div class="cms-toolbar">
+      <button type="button" class="cms-tb-btn" data-cmd="bold"><b>B</b></button>
+      <button type="button" class="cms-tb-btn" data-cmd="italic"><i>I</i></button>
+      <button type="button" class="cms-tb-btn" data-cmd="h2">H2</button>
+      <button type="button" class="cms-tb-btn" data-cmd="p">¶</button>
+    </div>
+    <div class="cms-editable" contenteditable="true" id="${uid}"></div>
+    <div class="cms-actions">
+      <button class="cms-save-btn">Save</button>
+      <button class="cms-cancel-btn">Cancel</button>
+    </div>`
+  wrap.appendChild(edWrap)
+
+  const editable = edWrap.querySelector('.cms-editable')
+  editable.innerHTML = original
+
+  edWrap.querySelectorAll('.cms-tb-btn').forEach(btn => {
+    btn.addEventListener('mousedown', e => {
+      e.preventDefault()
+      const cmd = btn.dataset.cmd
+      if (cmd === 'h2') document.execCommand('formatBlock', false, 'h2')
+      else if (cmd === 'p') document.execCommand('formatBlock', false, 'p')
+      else document.execCommand(cmd)
+      editable.focus()
+    })
+  })
+
+  edWrap.querySelector('.cms-save-btn').addEventListener('click', () => saveCms(key, original))
+  edWrap.querySelector('.cms-cancel-btn').addEventListener('click', () => cancelCms(key, original))
+}
+
+async function saveCms(key, original) {
+  const el   = document.querySelector(`[data-content-key="${key}"]`)
+  const wrap = el?.closest('.cms-region')
+  if (!wrap) return
+
+  const uid     = 'cms-' + key.replace(/[^a-z0-9]/gi, '-')
+  const html    = document.getElementById(uid)?.innerHTML ?? ''
+  const saveBtn = wrap.querySelector('.cms-save-btn')
+  saveBtn.textContent = 'Saving…'
+  saveBtn.disabled    = true
+
+  try {
+    const r = await fetch('/api/content', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ key, html, page: 'idea-test', label: key }),
+    })
+    if (!r.ok) throw new Error()
+    finishEdit(key, html)
+  } catch {
+    saveBtn.textContent = 'Save'
+    saveBtn.disabled    = false
+    alert('Save failed — please try again.')
+  }
+}
+
+function cancelCms(key, original) { finishEdit(key, original) }
+
+function finishEdit(key, html) {
+  const el   = document.querySelector(`[data-content-key="${key}"]`)
+  const wrap = el?.closest('.cms-region')
+  if (!wrap) return
+  el.innerHTML = html
+  el.style.display = ''
+  wrap.querySelector('.cms-editor-wrap')?.remove()
+  wrap.querySelector('.cms-edit-btn').style.display = ''
+  delete wrap.dataset.editing
+}
+
+loadContent()
 </script>
 </body>
 </html>

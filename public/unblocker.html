@@ -958,6 +958,50 @@ body {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
+/* ── CMS INLINE EDITOR (admin only) ── */
+.cms-region { position: relative; }
+.cms-edit-btn {
+  position: absolute; top: 4px; right: 4px;
+  display: flex; align-items: center; gap: 4px;
+  opacity: 0; padding: 4px 10px; border: 1px solid var(--color-grey-200);
+  background: var(--color-white); border-radius: var(--radius-full);
+  font-family: var(--font); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+  color: var(--color-navy); transition: opacity var(--transition);
+  box-shadow: var(--shadow-md); z-index: 10;
+}
+.cms-region:hover .cms-edit-btn { opacity: 1; }
+.cms-editor-wrap {
+  background: var(--color-white); border: 2px solid var(--color-blue);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: 0 8px 24px rgba(82,150,251,0.2); margin: 8px 0;
+}
+.cms-editable {
+  min-height: 80px; padding: 16px; font-family: var(--font);
+  font-size: 15px; line-height: 1.7; outline: none;
+}
+.cms-editable { background: #fff; }
+.cms-toolbar { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--color-grey-200); background: var(--color-grey-100); }
+.cms-tb-btn {
+  padding: 4px 10px; border: 1px solid var(--color-grey-200);
+  border-radius: var(--radius-md); font-family: var(--font); font-size: 12px;
+  background: var(--color-white); cursor: pointer;
+}
+.cms-actions {
+  display: flex; gap: 8px; padding: 10px 12px;
+  border-top: 1px solid var(--color-grey-200); background: var(--color-grey-100);
+}
+.cms-save-btn {
+  padding: 6px 16px; background: var(--color-navy); color: var(--color-white);
+  border: none; border-radius: var(--radius-full); font-family: var(--font);
+  font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.cms-cancel-btn {
+  padding: 6px 16px; background: transparent; color: var(--color-grey-700);
+  border: 1px solid var(--color-grey-200); border-radius: var(--radius-full);
+  font-family: var(--font); font-size: 12px; cursor: pointer;
+}
+
 /* ── CONTEXT FIELD (email screen) ── */
 .field-group {
   margin-bottom: 16px;
@@ -1213,17 +1257,17 @@ body { padding-top: 60px; }
       <span class="intro-logo-text">Expert Author Community</span>
     </div>
 
-    <div class="intro-eyebrow">Free Reflection Tool</div>
+    <div class="intro-eyebrow" data-content-key="unblocker/intro/eyebrow">Free Reflection Tool</div>
 
-    <h1 class="intro-title">
+    <h1 class="intro-title" data-content-key="unblocker/intro/title">
       What's Getting in the Way of Your <span>Best Writing</span> Right Now?
     </h1>
 
-    <p class="intro-subtitle">
+    <p class="intro-subtitle" data-content-key="unblocker/intro/subtitle">
       A short reflection to help you identify what is most affecting your writing right now — so you can stop guessing and start addressing the real problem.
     </p>
 
-    <div class="intro-body">
+    <div class="intro-body" data-content-key="unblocker/intro/body">
       <p>Most writing problems do not start with talent.</p>
       <p>They start with conditions.</p>
       <p>You may think the problem is discipline, consistency, or motivation. But often the real issue is something more specific: lack of time, unclear structure, too much noise, too little support, or lost momentum.</p>
@@ -1649,6 +1693,7 @@ let primaryCategory = '';
 let secondaryCategory = '';
 let intensityTier = '';
 let eacUser = null;
+let contentMap = {};
 
 /* ============================================================
    SCORING
@@ -1710,7 +1755,7 @@ async function nextStep() {
       userName  = eacUser.name  || '';
       userEmail = eacUser.email || '';
       showResult();
-      fetch('/api/airtable', {
+      fetch('/api/unblocker', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(buildAirtablePayload())
@@ -1802,7 +1847,7 @@ async function submitEmail(e) {
   userEmail   = document.getElementById('input-email').value.trim();
   userContext = document.getElementById('input-context').value.trim();
   showResult();
-  fetch('/api/airtable', {
+  fetch('/api/unblocker', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(buildAirtablePayload())
@@ -1865,6 +1910,8 @@ function showResult() {
   renderSecondaryBlock();
   renderCtas();
   buildShareContent(primaryCategory);
+  applyContent();
+  if (eacUser?.isAdmin) enableEditing();
   showScreen('screen-result');
 }
 
@@ -1984,7 +2031,7 @@ function saveContext() {
   const ctx = document.getElementById('input-context-member');
   if (!ctx) return;
   userContext = ctx.value.trim();
-  fetch('/api/airtable', {
+  fetch('/api/unblocker', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(buildAirtablePayload())
@@ -2097,6 +2144,120 @@ document.addEventListener('click', () => {
 function handleLogout() {
   window.location.href = `https://auth.expertauthor.community/api/auth/logout?redirect=${encodeURIComponent(window.location.href)}`;
 }
+
+/* ============================================================
+   CMS INLINE EDITOR (admin only)
+   ============================================================ */
+async function loadContent() {
+  try {
+    const r = await fetch('/api/content?page=unblocker');
+    contentMap = await r.json();
+    applyContent();
+  } catch {}
+}
+
+function applyContent() {
+  Object.entries(contentMap).forEach(([key, html]) => {
+    const el = document.querySelector(`[data-content-key="${key}"]`);
+    if (el && html) el.innerHTML = html;
+  });
+}
+
+function enableEditing() {
+  document.querySelectorAll('[data-content-key]').forEach(el => {
+    if (el.closest('.cms-region')) return;
+    const key = el.dataset.contentKey;
+    const wrap = document.createElement('div');
+    wrap.className = 'cms-region';
+    el.parentNode.insertBefore(wrap, el);
+    wrap.appendChild(el);
+    const btn = document.createElement('button');
+    btn.className = 'cms-edit-btn';
+    btn.title = 'Edit';
+    btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit';
+    btn.addEventListener('click', e => { e.stopPropagation(); editRegion(key); });
+    wrap.appendChild(btn);
+  });
+}
+
+function editRegion(key) {
+  const el = document.querySelector(`[data-content-key="${key}"]`);
+  const wrap = el?.closest('.cms-region');
+  if (!wrap || wrap.dataset.editing) return;
+  wrap.dataset.editing = 'true';
+  const original = el.innerHTML;
+  el.style.display = 'none';
+  wrap.querySelector('.cms-edit-btn').style.display = 'none';
+  const uid = 'cms-' + key.replace(/[^a-z0-9]/gi, '-');
+  const edWrap = document.createElement('div');
+  edWrap.className = 'cms-editor-wrap';
+  edWrap.innerHTML = `
+    <div class="cms-toolbar">
+      <button type="button" class="cms-tb-btn" data-cmd="bold"><b>B</b></button>
+      <button type="button" class="cms-tb-btn" data-cmd="italic"><i>I</i></button>
+      <button type="button" class="cms-tb-btn" data-cmd="h2">H2</button>
+      <button type="button" class="cms-tb-btn" data-cmd="p">¶</button>
+    </div>
+    <div class="cms-editable" contenteditable="true" id="${uid}"></div>
+    <div class="cms-actions">
+      <button class="cms-save-btn">Save</button>
+      <button class="cms-cancel-btn">Cancel</button>
+    </div>`;
+  wrap.appendChild(edWrap);
+  const editable = edWrap.querySelector('.cms-editable');
+  editable.innerHTML = original;
+  edWrap.querySelectorAll('.cms-tb-btn').forEach(btn => {
+    btn.addEventListener('mousedown', e => {
+      e.preventDefault();
+      const cmd = btn.dataset.cmd;
+      if (cmd === 'h2') document.execCommand('formatBlock', false, 'h2');
+      else if (cmd === 'p') document.execCommand('formatBlock', false, 'p');
+      else document.execCommand(cmd);
+      editable.focus();
+    });
+  });
+  edWrap.querySelector('.cms-save-btn').addEventListener('click', () => saveCms(key, original));
+  edWrap.querySelector('.cms-cancel-btn').addEventListener('click', () => cancelCms(key, original));
+}
+
+async function saveCms(key, original) {
+  const el = document.querySelector(`[data-content-key="${key}"]`);
+  const wrap = el?.closest('.cms-region');
+  if (!wrap) return;
+  const uid = 'cms-' + key.replace(/[^a-z0-9]/gi, '-');
+  const html = document.getElementById(uid)?.innerHTML ?? '';
+  const saveBtn = wrap.querySelector('.cms-save-btn');
+  saveBtn.textContent = 'Saving…';
+  saveBtn.disabled = true;
+  try {
+    const r = await fetch('/api/content', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, html, page: 'unblocker', label: key }),
+    });
+    if (!r.ok) throw new Error();
+    finishEdit(key, html);
+  } catch {
+    saveBtn.textContent = 'Save';
+    saveBtn.disabled = false;
+    alert('Save failed — please try again.');
+  }
+}
+
+function cancelCms(key, original) { finishEdit(key, original); }
+
+function finishEdit(key, html) {
+  const el = document.querySelector(`[data-content-key="${key}"]`);
+  const wrap = el?.closest('.cms-region');
+  if (!wrap) return;
+  el.innerHTML = html;
+  el.style.display = '';
+  wrap.querySelector('.cms-editor-wrap')?.remove();
+  wrap.querySelector('.cms-edit-btn').style.display = '';
+  delete wrap.dataset.editing;
+}
+
+loadContent();
 </script>
 </body>
 </html>
