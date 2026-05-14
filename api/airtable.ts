@@ -112,7 +112,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         await logActivity({
           personId,
-          actionType:  'tool-completion',
+          actionType:  'Idea Test Completed',
           sourceTool:  'idea-test',
           summary:     `Completed Idea Test — ${tier} (${Number(weightedScore).toFixed(1)})`,
           referenceId: resultId,
