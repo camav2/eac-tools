@@ -965,73 +965,100 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
-/* ── Persistent top auth bar ── */
-.tool-topbar {
+/* ── SHARED NAVBAR ── */
+.site-header {
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 48px;
   background: var(--color-navy);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  z-index: 100;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 0 24px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 200; border-bottom: 1px solid rgba(255,255,255,0.07);
 }
-.tool-topbar-logo {
-  display: flex; align-items: center; gap: 8px; text-decoration: none;
-}
-.tool-topbar-logo svg { width: 22px; height: 22px; flex-shrink: 0; }
-.tool-topbar-logo-text {
-  font-size: 11px; font-weight: 800; letter-spacing: 0.1em;
+.header-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.header-logo svg { width: 26px; height: 26px; flex-shrink: 0; }
+.header-logo-text {
+  font-size: 13px; font-weight: 800; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--color-white);
 }
-.header-auth { display: flex; align-items: center; gap: 10px; }
-.header-user { display: flex; align-items: center; gap: 8px; }
+.beta-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; background: var(--color-orange); color: var(--color-white);
+  font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+  border-radius: 999px; line-height: 1; margin-left: 6px; position: relative; top: -1px;
+}
+.header-auth { position: relative; display: flex; align-items: center; }
+.btn-header-login {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--color-navy); background: var(--color-yellow);
+  padding: 8px 16px; border-radius: 999px;
+  text-decoration: none; display: inline-block; transition: background 0.18s ease;
+}
+.btn-header-login:hover { background: #f5d800; }
+.header-user-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font); padding: 4px 8px 4px 4px;
+  border-radius: 999px; transition: background 0.18s ease;
+}
+.header-user-btn:hover { background: rgba(255,255,255,0.08); }
 .header-avatar {
-  width: 28px; height: 28px; border-radius: 50%;
+  width: 30px; height: 30px; border-radius: 50%;
   object-fit: cover; border: 2px solid rgba(255,255,255,0.2);
 }
 .header-avatar-placeholder {
-  width: 28px; height: 28px; border-radius: 50%;
+  width: 30px; height: 30px; border-radius: 50%;
   background: rgba(255,255,255,0.15);
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; color: var(--color-white);
+  font-size: 12px; font-weight: 700; color: var(--color-white); flex-shrink: 0;
 }
 .header-user-name {
-  font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.8);
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85);
   max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.btn-header-logout {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  color: rgba(255,255,255,0.4); background: none; border: none;
-  cursor: pointer; font-family: var(--font); transition: color 0.2s ease; padding: 0;
+.header-chevron { color: rgba(255,255,255,0.4); flex-shrink: 0; }
+.header-dropdown {
+  display: none;
+  position: absolute; top: calc(100% + 10px); right: 0;
+  background: #fff; border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,62,0.18);
+  min-width: 180px; overflow: hidden; z-index: 300;
 }
-.btn-header-logout:hover { color: rgba(255,255,255,0.75); }
-.btn-header-login {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--color-navy); background: var(--color-yellow); border: none;
-  cursor: pointer; font-family: var(--font); padding: 6px 14px;
-  border-radius: 999px; transition: background 0.2s ease; text-decoration: none;
+.header-dropdown.open { display: block; }
+.dropdown-item {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 12px 16px;
+  font-size: 13px; font-weight: 600; color: #1a1a2e;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font); text-align: left;
+  transition: background 0.15s ease; text-decoration: none;
 }
-.btn-header-login:hover { background: #f5d800; }
-body { padding-top: 48px; }
+.dropdown-item:hover { background: #f5f5f8; }
+.dropdown-item.disabled { color: #aaa; cursor: default; }
+.dropdown-item.disabled:hover { background: none; }
+.dropdown-soon {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #fff; background: #bbb; padding: 2px 6px; border-radius: 999px;
+}
+.dropdown-divider { height: 1px; background: #eee; }
+.dropdown-logout { color: #c0392b; }
+.dropdown-logout:hover { background: #fff5f5 !important; }
+body { padding-top: 60px; }
 </style>
 </head>
 <body>
 
-<!-- ── Persistent top bar ───────────────────────────────────── -->
-<nav class="tool-topbar">
-  <a class="tool-topbar-logo" href="https://tools.expertauthor.community">
+<!-- ── SHARED HEADER ─────────────────────────────────────────── -->
+<header class="site-header">
+  <a class="header-logo" href="https://tools.expertauthor.community">
     <svg viewBox="0 0 53.3 53.3" xmlns="http://www.w3.org/2000/svg">
       <polygon points="32.1 53.3 0 53.3 0 21.2 21.1 0.1 53.2 32.2 32.1 53.3" fill="#FFE64B"/>
       <polyline points="15.8 53.3 0 53.3 0 37.5" fill="#00003D"/>
       <polygon points="46.6 25.4 33.2 38.8 26.6 32.3 40 19 33.9 13 20.6 26.3 14.4 20.1 27.9 6.7 21.2 0 0 21.2 32.1 53.3 53.3 32.1 46.6 25.4" fill="#00003D"/>
     </svg>
-    <span class="tool-topbar-logo-text">EAC Tools</span>
+    <span class="header-logo-text">EAC Tools</span><span class="beta-badge">Beta</span>
   </a>
   <div class="header-auth" id="header-auth"><!-- populated by JS --></div>
-</nav>
+</header>
 
 <!-- ============================================================
      SCREEN 1: INTRO
@@ -1603,37 +1630,43 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });
 
-/* ── Auth ── */
+/* ── AUTH ── */
 (async function initAuth() {
+  const el = document.getElementById('header-auth');
   try {
     const res = await fetch('/api/me');
     const { user } = await res.json();
     eacUser = user;
-
-    const el = document.getElementById('header-auth');
-    if (!el) return;
-
     if (user) {
       const initial = (user.name || user.email || '?')[0].toUpperCase();
       el.innerHTML = `
-        <div class="header-user">
+        <button class="header-user-btn" onclick="toggleDropdown(event)">
           ${user.avatarUrl
             ? `<img class="header-avatar" src="${user.avatarUrl}" alt="${user.name}">`
-            : `<div class="header-avatar-placeholder">${initial}</div>`
-          }
+            : `<div class="header-avatar-placeholder">${initial}</div>`}
           <span class="header-user-name">${user.name || user.email}</span>
-        </div>
-        <button class="btn-header-logout" onclick="handleLogout()">Log out</button>
-      `;
+          <svg class="header-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="header-dropdown" id="header-dropdown">
+          <div class="dropdown-item disabled">Dashboard <span class="dropdown-soon">Soon</span></div>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item dropdown-logout" onclick="handleLogout()">Log out</button>
+        </div>`;
     } else {
       el.innerHTML = `<a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
     }
   } catch {
-    const el = document.getElementById('header-auth');
     if (el) el.innerHTML = `<a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
   }
 })();
 
+function toggleDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('header-dropdown')?.classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  document.getElementById('header-dropdown')?.classList.remove('open');
+});
 function handleLogout() {
   window.location.href = `https://auth.expertauthor.community/api/auth/logout?redirect=${encodeURIComponent(window.location.href)}`;
 }
