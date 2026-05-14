@@ -945,13 +945,16 @@ body {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
-/* ── INTRO TEXT COLOUR GUARDS (survive any 3rd-party CSS cascade) ── */
-#screen-intro .intro-eyebrow   { color: var(--color-yellow) !important; }
-#screen-intro .intro-title     { color: var(--color-white)  !important; }
-#screen-intro .intro-title span{ color: var(--color-yellow) !important; }
-#screen-intro .intro-subtitle  { color: rgba(255,255,255,0.75) !important; }
-#screen-intro .intro-body      { color: rgba(255,255,255,0.55) !important; }
-#screen-intro .intro-body p    { color: rgba(255,255,255,0.55) !important; }
+/* ── INTRO TEXT COLOUR GUARDS (hardcoded hex, survives any cascade) ── */
+#screen-intro .intro-eyebrow        { color: #FFE64B !important; }
+#screen-intro .intro-title          { color: #FFFFFF !important; }
+#screen-intro .intro-title span     { color: #FFE64B !important; }
+#screen-intro .intro-logo-text      { color: rgba(255,255,255,0.7) !important; }
+#screen-intro .intro-subtitle       { color: rgba(255,255,255,0.75) !important; }
+#screen-intro .intro-body           { color: rgba(255,255,255,0.55) !important; }
+#screen-intro .intro-body p         { color: rgba(255,255,255,0.55) !important; }
+#screen-intro .intro-meta           { color: rgba(255,255,255,0.35) !important; }
+#screen-intro .intro-meta svg       { stroke: rgba(255,255,255,0.35) !important; }
 
 /* ── CMS ADMIN EDITOR ── */
 .cms-region { position: relative; }
