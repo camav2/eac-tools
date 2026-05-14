@@ -118,18 +118,6 @@ body {
   border-radius: 50%;
 }
 
-.dog-ear {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 160px;
-  height: 160px;
-  pointer-events: none;
-}
-
-@media (max-width: 480px) {
-  .dog-ear { width: 100px; height: 100px; }
-}
 
 .intro-inner {
   max-width: 640px;
@@ -959,6 +947,14 @@ body {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
+/* ── INTRO TEXT COLOUR GUARDS (survive any 3rd-party CSS cascade) ── */
+#screen-intro .intro-eyebrow   { color: var(--color-yellow) !important; }
+#screen-intro .intro-title     { color: var(--color-white)  !important; }
+#screen-intro .intro-title span{ color: var(--color-yellow) !important; }
+#screen-intro .intro-subtitle  { color: rgba(255,255,255,0.75) !important; }
+#screen-intro .intro-body      { color: rgba(255,255,255,0.55) !important; }
+#screen-intro .intro-body p    { color: rgba(255,255,255,0.55) !important; }
+
 /* ── CMS ADMIN EDITOR ── */
 .cms-region { position: relative; }
 .cms-edit-btn {
@@ -1142,13 +1138,7 @@ body { padding-top: 60px; }
      ============================================================ -->
 <section class="screen active" id="screen-intro">
 
-  <!-- Dog ear brand mark -->
-  <svg class="dog-ear" viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <polygon points="70 70 0 70 0 0 34.9452 35.0548 70 70" fill="#FFE64B"/>
-    <polyline points="0 0 70 0 70 70" fill="#FFFFFF"/>
-  </svg>
-
-  <div class="intro-inner">
+    <div class="intro-inner">
     <div class="intro-logo">
       <!-- EAC Logo Mark (inline SVG) -->
       <svg viewBox="0 0 53 53" xmlns="http://www.w3.org/2000/svg">
