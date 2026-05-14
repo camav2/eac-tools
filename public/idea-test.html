@@ -418,6 +418,11 @@ body {
   display: flex;
   justify-content: center;
   z-index: 50;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+}
+.q-footer.visible {
+  transform: translateY(0);
 }
 
 .btn-next {
@@ -435,21 +440,14 @@ body {
   border-radius: var(--radius-full);
   border: none;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: background var(--transition), box-shadow var(--transition);
   width: 100%;
   max-width: 400px;
   justify-content: center;
 }
-.btn-next:hover:not(:disabled) {
+.btn-next:hover {
   background: var(--color-yellow-light);
-  transform: translateY(-1px);
   box-shadow: var(--shadow-md);
-}
-.btn-next:disabled {
-  background: var(--color-grey-200);
-  color: var(--color-grey-400);
-  cursor: not-allowed;
-  transform: none;
 }
 
 /* ============================================================
@@ -1305,7 +1303,7 @@ body { padding-top: 60px; }
   </div>
 
   <div class="q-footer">
-    <button class="btn-next" id="btn-next" disabled onclick="nextQuestion()">
+    <button class="btn-next" id="btn-next" onclick="nextQuestion()">
       Next Question &rarr;
     </button>
   </div>
@@ -1741,9 +1739,7 @@ function selectAnswer(qNum, value) {
   gettingThereBtn.className = 'yn-btn' + (value === 'getting-there' ? ' selected-partial' : '');
   yesBtn.className          = 'yn-btn' + (value === 'yes'           ? ' selected-yes'     : '');
 
-  const nextBtn = document.getElementById('btn-next');
-  nextBtn.disabled = false;
-  nextBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  document.querySelector('.q-footer').classList.add('visible');
 }
 
 async function nextQuestion() {
@@ -1755,8 +1751,9 @@ async function nextQuestion() {
     document.getElementById(`panel-${currentQ}`).classList.add('active');
     updateProgress();
 
+    const footer = document.querySelector('.q-footer');
     if (answers[currentQ] === undefined) {
-      document.getElementById('btn-next').disabled = true;
+      footer.classList.remove('visible');
     }
 
     if (currentQ === TOTAL_QS) {
