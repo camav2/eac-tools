@@ -1331,13 +1331,16 @@ body { padding-top: 60px; }
     <!-- Dynamically populated -->
   </div>
 
-  <div class="q-footer">
-    <button class="btn-next" id="btn-next" onclick="nextStep()">
-      Continue
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-    </button>
   </div>
 </section>
+
+<!-- Next button — lives outside .screen to avoid transform stacking context -->
+<div class="q-footer">
+  <button class="btn-next" id="btn-next" onclick="nextStep()">
+    Next Statement
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </button>
+</div>
 
 <!-- ============================================================
      SCREEN 3: EMAIL CAPTURE
