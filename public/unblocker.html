@@ -1883,6 +1883,23 @@ function finishEdit(key, html) {
 }
 
 loadContent()
+
+// Force intro colours via inline style — beats extension-injected CSS
+;(function enforceIntroColours() {
+  const rules = [
+    ['#screen-intro .intro-eyebrow',   '#FFE64B'],
+    ['#screen-intro .intro-title',     '#FFFFFF'],
+    ['#screen-intro .intro-subtitle',  'rgba(255,255,255,0.75)'],
+    ['#screen-intro .intro-body',      'rgba(255,255,255,0.55)'],
+    ['#screen-intro .intro-meta',      'rgba(255,255,255,0.35)'],
+    ['#screen-intro .intro-logo-text', 'rgba(255,255,255,0.7)'],
+  ]
+  rules.forEach(([sel, colour]) =>
+    document.querySelectorAll(sel).forEach(el =>
+      el.style.setProperty('color', colour, 'important')))
+  document.querySelectorAll('#screen-intro .intro-title span').forEach(el =>
+    el.style.setProperty('color', '#FFE64B', 'important'))
+})()
 </script>
 </body>
 </html>
