@@ -24,7 +24,7 @@ export async function getCircleAccessGroup(circleUserId: string | number): Promi
     })
 
     const res = await fetch(
-      `https://app.circle.so/api/v1/community_member_access_groups?${params}`,
+      `https://app.circle.so/api/v2/community_member_access_groups?${params}`,
       {
         headers: {
           Authorization: `Token ${process.env.CIRCLE_API_TOKEN}`,
@@ -39,8 +39,8 @@ export async function getCircleAccessGroup(circleUserId: string | number): Promi
     }
 
     const data = await res.json()
-    // Response is an array of access group objects
-    const groups: AccessGroup[] = Array.isArray(data) ? data : data.records ?? []
+    // v2 response is paginated: { records: [...], has_next_page, ... }
+    const groups: AccessGroup[] = data.records ?? []
     return groups[0] ?? null
   } catch (err) {
     console.error('Circle API fetch failed:', err)
