@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/",          "destination": "/index.html" },
     { "source": "/unblocker",  "destination": "/unblocker.html" },
-    { "source": "/idea-test",  "destination": "/idea-test.html" }
+    { "source": "/idea-test",  "destination": "/idea-test.html" },
+    { "source": "/editor",     "destination": "/editor.html" }
   ]
 }
