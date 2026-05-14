@@ -32,8 +32,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 1. Fetch Circle access group for members (non-blocking — fails silently)
     let accessGroup:   string | undefined
     let accessGroupId: string | undefined
-    if (isMember && circleUserId) {
-      const group = await getCircleAccessGroup(circleUserId)
+    if (isMember && email) {
+      const group = await getCircleAccessGroup(email)
       if (group) {
         accessGroup   = group.name
         accessGroupId = String(group.id)
