@@ -4,6 +4,7 @@
  * Env vars required:
  *   CIRCLE_API_TOKEN    — API token from Circle settings
  *   CIRCLE_COMMUNITY_ID — numeric community ID (9832)
+ *   CIRCLE_ADMIN_GROUP  — name of the admin access group (default: "Administrator")
  *
  * NOTE: Circle has two distinct IDs per person:
  *   user_id             — global account ID (what the JWT stores as circleUserId)
@@ -39,11 +40,11 @@ async function getCommunityMemberId(email: string): Promise<number | null> {
     email,
     community_id: process.env.CIRCLE_COMMUNITY_ID!,
   })
-  const data = await circleFetch(`community_members?${params}`)
+  const data = await circleFetch(`community_members/search?${params}`)
   if (!data) return null
-  // v2 list response: { records: [...] }
-  const records = data.records ?? (Array.isArray(data) ? data : [data])
-  return records[0]?.id ?? null
+  // search returns an object with a matching member or an array
+  const member = Array.isArray(data) ? data[0] : data
+  return member?.id ?? null
 }
 
 /**
@@ -70,5 +71,31 @@ export async function getCircleAccessGroup(email: string): Promise<AccessGroup |
   } catch (err) {
     console.error('Circle access group lookup failed:', err)
     return null
+  }
+}
+
+/**
+ * Returns true if the given email belongs to the admin access group.
+ * Group name is configured via CIRCLE_ADMIN_GROUP (default: "Administrator").
+ */
+export async function isCircleAdmin(email: string): Promise<boolean> {
+  try {
+    const communityMemberId = await getCommunityMemberId(email)
+    if (!communityMemberId) return false
+
+    const params = new URLSearchParams({
+      community_member_id: String(communityMemberId),
+      community_id:        process.env.CIRCLE_COMMUNITY_ID!,
+      per_page:            '25',
+    })
+    const data = await circleFetch(`community_member_access_groups?${params}`)
+    if (!data) return false
+
+    const adminGroup = (process.env.CIRCLE_ADMIN_GROUP ?? 'Administrator').toLowerCase()
+    const groups: AccessGroup[] = data.records ?? []
+    return groups.some(g => g.name.toLowerCase() === adminGroup)
+  } catch (err) {
+    console.error('isCircleAdmin check failed:', err)
+    return false
   }
 }
