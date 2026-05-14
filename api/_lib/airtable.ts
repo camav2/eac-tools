@@ -28,12 +28,14 @@ async function at(table: string, path = '', options: RequestInit = {}) {
  * Returns the Airtable record ID.
  */
 export async function upsertPerson(params: {
-  email:           string
-  name?:           string
-  isMember:        boolean
-  circleMemberId?: string
+  email:            string
+  name?:            string
+  isMember:         boolean
+  circleMemberId?:  string
+  accessGroup?:     string
+  accessGroupId?:   string
 }): Promise<string> {
-  const { email, name, isMember, circleMemberId } = params
+  const { email, name, isMember, circleMemberId, accessGroup, accessGroupId } = params
   const category = isMember ? 'Member' : 'Non-member'
   const now = new Date().toISOString()
 
@@ -48,8 +50,10 @@ export async function upsertPerson(params: {
         fields: {
           'Category':    category,
           'Last Active': now,
-          ...(name           ? { 'Full Name':        name           } : {}),
-          ...(circleMemberId ? { 'Circle Member ID': circleMemberId } : {}),
+          ...(name            ? { 'Full Name':        name                   } : {}),
+          ...(circleMemberId  ? { 'Circle Member ID': circleMemberId         } : {}),
+          ...(accessGroup     ? { 'Access Group':     accessGroup            } : {}),
+          ...(accessGroupId   ? { 'Access Group ID':  String(accessGroupId)  } : {}),
         },
       }),
     })
@@ -65,7 +69,9 @@ export async function upsertPerson(params: {
         'Category':    category,
         'First Seen':  now,
         'Last Active': now,
-        ...(circleMemberId ? { 'Circle Member ID': circleMemberId } : {}),
+        ...(circleMemberId  ? { 'Circle Member ID': circleMemberId         } : {}),
+        ...(accessGroup     ? { 'Access Group':     accessGroup            } : {}),
+        ...(accessGroupId   ? { 'Access Group ID':  String(accessGroupId)  } : {}),
       },
     }),
   })

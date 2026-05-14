@@ -14,6 +14,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { upsertPerson, logActivity } from './_lib/airtable'
+import { getCircleAccessGroup }      from './_lib/circle'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -28,15 +29,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!email) return res.status(400).json({ error: 'Email required' })
 
   try {
-    // 1. Upsert People record
+    // 1. Fetch Circle access group for members (non-blocking — fails silently)
+    let accessGroup:   string | undefined
+    let accessGroupId: string | undefined
+    if (isMember && circleUserId) {
+      const group = await getCircleAccessGroup(circleUserId)
+      if (group) {
+        accessGroup   = group.name
+        accessGroupId = String(group.id)
+      }
+    }
+
+    // 2. Upsert People record
     const personId = await upsertPerson({
       email,
       name:            firstName    || '',
       isMember:        !!isMember,
       circleMemberId:  circleUserId || undefined,
+      accessGroup,
+      accessGroupId,
     })
 
-    // 2. Create Idea Test Results record linked to person
+    // 3. Create Idea Test Results record linked to person
     const resultRes = await fetch(
       `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_ID}`,
       {
@@ -73,7 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const { id: resultId } = await resultRes.json()
 
-    // 3. Log activity
+    // 4. Log activity
     await logActivity({
       personId,
       actionType:  'tool-completion',
