@@ -35,11 +35,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const fields: Record<string, unknown> = {
-    'Name':               name || '',
     'Email':              email,
+    'First Name':         name || '',
     'Primary Blocker':    primaryBlocker,
-    'Secondary Blocker':  secondaryBlocker || '',
-    'Intensity Tier':     intensityTier || '',
+    ...(secondaryBlocker ? { 'Secondary Blocker': secondaryBlocker } : {}),
+    'Intensity Tier':     intensityTier || 'scattered',
     'Score: Time':        scores.Time        ?? 0,
     'Score: Structure':   scores.Structure   ?? 0,
     'Score: Noise':       scores.Noise       ?? 0,
