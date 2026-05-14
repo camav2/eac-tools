@@ -1836,10 +1836,10 @@ document.addEventListener('keydown', e => {
           <button class="dropdown-item dropdown-logout" onclick="handleLogout()">Log out</button>
         </div>`;
     } else {
-      el.innerHTML = `<a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
+      el.innerHTML = `<span style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.45);white-space:nowrap;">EAC member?</span><a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
     }
   } catch {
-    if (el) el.innerHTML = `<a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
+    if (el) el.innerHTML = `<span style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.45);white-space:nowrap;">EAC member?</span><a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
   }
 })();
 
