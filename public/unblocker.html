@@ -34,6 +34,8 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
+<script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
 <style>
 /* ============================================================
    EAC DESIGN TOKENS
@@ -957,6 +959,55 @@ body {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
+/* ── CMS ADMIN EDITOR ── */
+.cms-region { position: relative; }
+.cms-edit-btn {
+  position: absolute; top: 6px; right: 6px;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--color-yellow); color: var(--color-navy);
+  font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 4px 10px; border-radius: 999px; border: none; cursor: pointer;
+  opacity: 0; transition: opacity 0.15s ease; z-index: 20; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.cms-region:hover .cms-edit-btn { opacity: 1; }
+.cms-editor-wrap {
+  background: var(--color-white);
+  border: 2px solid var(--color-yellow);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin: 4px 0;
+}
+trix-editor {
+  min-height: 80px;
+  font-family: var(--font) !important;
+  font-size: 15px;
+  color: var(--color-black);
+  padding: 14px 16px;
+  border: none !important;
+  outline: none;
+  box-shadow: none !important;
+}
+trix-toolbar .trix-button-group { border-color: var(--color-grey-200); }
+.cms-actions {
+  display: flex; gap: 8px; padding: 10px 12px;
+  border-top: 1px solid var(--color-grey-200);
+  background: var(--color-grey-100);
+}
+.cms-save-btn {
+  background: var(--color-navy); color: var(--color-white);
+  font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 8px 18px; border-radius: 999px; border: none; cursor: pointer;
+}
+.cms-save-btn:hover { background: #000055; }
+.cms-save-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.cms-cancel-btn {
+  background: transparent; color: var(--color-grey-700);
+  font-family: var(--font); font-size: 11px; font-weight: 600;
+  padding: 8px 16px; border-radius: 999px; border: 2px solid var(--color-grey-200); cursor: pointer;
+}
+.cms-cancel-btn:hover { border-color: var(--color-grey-400); }
+
 /* â”€â”€ SHARED NAVBAR â”€â”€ */
 .site-header {
   position: fixed;
@@ -1108,17 +1159,17 @@ body { padding-top: 60px; }
       <span class="intro-logo-text">Expert Author Community</span>
     </div>
 
-    <div class="intro-eyebrow">Free Reflection Tool</div>
+    <div class=”intro-eyebrow” data-content-key=”unblocker/intro/eyebrow”>Free Reflection Tool</div>
 
-    <h1 class="intro-title">
+    <h1 class=”intro-title” data-content-key=”unblocker/intro/title”>
       What's Getting in the Way of Your <span>Best Writing</span> Right Now?
     </h1>
 
-    <p class="intro-subtitle">
+    <p class=”intro-subtitle” data-content-key=”unblocker/intro/subtitle”>
       A short reflection to help you identify what is most affecting your writing right now â€” so you can stop guessing and start addressing the real problem.
     </p>
 
-    <div class="intro-body">
+    <div class=”intro-body” data-content-key=”unblocker/intro/body”>
       <p>Most writing problems do not start with talent.</p>
       <p>They start with conditions.</p>
       <p>You may think the problem is discipline, consistency, or motivation. But often the real issue is something more specific: lack of time, unclear structure, too much noise, too little support, or lost momentum.</p>
@@ -1415,6 +1466,7 @@ let userName = '';
 let userEmail = '';
 let topCategory = '';
 let eacUser = null;
+let contentMap = {};
 
 /* ============================================================
    NAVIGATION
@@ -1594,19 +1646,26 @@ async function submitEmail(e) {
    ============================================================ */
 function showResult() {
   const data = RESULTS[topCategory];
+  const cat  = topCategory;
 
-  // Core result content
-  document.getElementById('result-category').textContent       = topCategory;
-  document.getElementById('result-headline').textContent       = data.headline;
-  document.getElementById('result-lead').textContent           = data.lead;
-  document.getElementById('result-soft-cta').textContent       = data.softCta;
-  document.getElementById('result-next-step-text').textContent = data.nextStep;
-  document.getElementById('result-body-text').innerHTML        = data.body.map(p => `<p>${p}</p>`).join('');
-  document.getElementById('result-quotes').innerHTML           = data.quotes.map(q => `<div class="result-quote">${q}</div>`).join('');
+  const setKey = (id, key) => {
+    const el = document.getElementById(id)
+    if (el) el.dataset.contentKey = `unblocker/result/${cat}/${key}`
+    return el
+  }
 
-  // Pre-build share content
+  setKey('result-category',      'category').innerHTML      = cat;
+  setKey('result-headline',      'headline').innerHTML      = data.headline;
+  setKey('result-lead',          'lead').innerHTML          = data.lead;
+  setKey('result-soft-cta',      'soft-cta').innerHTML      = data.softCta;
+  setKey('result-next-step-text','next-step').innerHTML     = data.nextStep;
+  setKey('result-body-text',     'body').innerHTML          = data.body.map(p => `<p>${p}</p>`).join('');
+  setKey('result-quotes',        'quotes').innerHTML        = data.quotes.map(q => `<div class="result-quote">${q}</div>`).join('');
+
+  applyContent()
+  if (eacUser?.isAdmin) enableEditing()
+
   buildShareContent(topCategory);
-
   showScreen('screen-result');
 }
 
@@ -1697,6 +1756,7 @@ document.addEventListener('keydown', e => {
           <div class="dropdown-divider"></div>
           <button class="dropdown-item dropdown-logout" onclick="handleLogout()">Log out</button>
         </div>`;
+      if (user.isAdmin) enableEditing()
     } else {
       el.innerHTML = `<a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
     }
@@ -1715,6 +1775,103 @@ document.addEventListener('click', () => {
 function handleLogout() {
   window.location.href = `https://auth.expertauthor.community/api/auth/logout?redirect=${encodeURIComponent(window.location.href)}`;
 }
+
+/* ── CMS INLINE EDITOR (admin only) ── */
+async function loadContent() {
+  try {
+    const r = await fetch('/api/content?page=unblocker')
+    contentMap = await r.json()
+    applyContent()
+  } catch {}
+}
+
+function applyContent() {
+  Object.entries(contentMap).forEach(([key, html]) => {
+    const el = document.querySelector(`[data-content-key="${key}"]`)
+    if (el && html) el.innerHTML = html
+  })
+}
+
+function enableEditing() {
+  document.querySelectorAll('[data-content-key]').forEach(el => {
+    if (el.closest('.cms-region')) return
+    const key = el.dataset.contentKey
+    const wrap = document.createElement('div')
+    wrap.className = 'cms-region'
+    el.parentNode.insertBefore(wrap, el)
+    wrap.appendChild(el)
+    const btn = document.createElement('button')
+    btn.className = 'cms-edit-btn'
+    btn.title = 'Edit'
+    btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit'
+    btn.addEventListener('click', e => { e.stopPropagation(); editRegion(key) })
+    wrap.appendChild(btn)
+  })
+}
+
+function editRegion(key) {
+  const el = document.querySelector(`[data-content-key="${key}"]`)
+  const wrap = el?.closest('.cms-region')
+  if (!wrap || wrap.dataset.editing) return
+  wrap.dataset.editing = 'true'
+  const original = el.innerHTML
+  el.style.display = 'none'
+  wrap.querySelector('.cms-edit-btn').style.display = 'none'
+  const uid = 'cms-' + key.replace(/[^a-z0-9]/gi, '-')
+  const edWrap = document.createElement('div')
+  edWrap.className = 'cms-editor-wrap'
+  edWrap.innerHTML = `
+    <input type="hidden" id="${uid}">
+    <trix-editor input="${uid}"></trix-editor>
+    <div class="cms-actions">
+      <button class="cms-save-btn">Save</button>
+      <button class="cms-cancel-btn">Cancel</button>
+    </div>`
+  wrap.appendChild(edWrap)
+  edWrap.querySelector('.cms-save-btn').addEventListener('click', () => saveCms(key, original))
+  edWrap.querySelector('.cms-cancel-btn').addEventListener('click', () => cancelCms(key, original))
+  const trix = edWrap.querySelector('trix-editor')
+  trix.addEventListener('trix-initialize', () => trix.editor.loadHTML(original), { once: true })
+}
+
+async function saveCms(key, original) {
+  const el   = document.querySelector(`[data-content-key="${key}"]`)
+  const wrap = el?.closest('.cms-region')
+  if (!wrap) return
+  const uid     = 'cms-' + key.replace(/[^a-z0-9]/gi, '-')
+  const html    = document.getElementById(uid)?.value ?? ''
+  const saveBtn = wrap.querySelector('.cms-save-btn')
+  saveBtn.textContent = 'Saving…'
+  saveBtn.disabled    = true
+  try {
+    const r = await fetch('/api/content', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ key, html, page: 'unblocker', label: key }),
+    })
+    if (!r.ok) throw new Error()
+    finishEdit(key, html)
+  } catch {
+    saveBtn.textContent = 'Save'
+    saveBtn.disabled    = false
+    alert('Save failed — please try again.')
+  }
+}
+
+function cancelCms(key, original) { finishEdit(key, original) }
+
+function finishEdit(key, html) {
+  const el   = document.querySelector(`[data-content-key="${key}"]`)
+  const wrap = el?.closest('.cms-region')
+  if (!wrap) return
+  el.innerHTML = html
+  el.style.display = ''
+  wrap.querySelector('.cms-editor-wrap')?.remove()
+  wrap.querySelector('.cms-edit-btn').style.display = ''
+  delete wrap.dataset.editing
+}
+
+loadContent()
 </script>
 </body>
 </html>

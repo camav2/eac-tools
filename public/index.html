@@ -12,6 +12,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
+  <script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
   <style>
     /* ============================================================
        DESIGN TOKENS
@@ -560,6 +562,55 @@
       *, *::before, *::after { transition-duration: 0.01ms !important; }
     }
     body { padding-top: 60px; }
+
+    /* ── CMS ADMIN EDITOR ── */
+    .cms-region { position: relative; }
+    .cms-edit-btn {
+      position: absolute; top: 6px; right: 6px;
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--color-yellow); color: var(--color-navy);
+      font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      padding: 4px 10px; border-radius: 999px; border: none; cursor: pointer;
+      opacity: 0; transition: opacity 0.15s ease; z-index: 20; white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .cms-region:hover .cms-edit-btn { opacity: 1; }
+    .cms-editor-wrap {
+      background: var(--color-white);
+      border: 2px solid var(--color-yellow);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 4px 0;
+    }
+    trix-editor {
+      min-height: 80px;
+      font-family: var(--font) !important;
+      font-size: 15px;
+      color: var(--color-navy);
+      padding: 14px 16px;
+      border: none !important;
+      outline: none;
+      box-shadow: none !important;
+    }
+    trix-toolbar .trix-button-group { border-color: var(--color-grey-200); }
+    .cms-actions {
+      display: flex; gap: 8px; padding: 10px 12px;
+      border-top: 1px solid var(--color-grey-200);
+      background: var(--color-grey-100);
+    }
+    .cms-save-btn {
+      background: var(--color-navy); color: var(--color-white);
+      font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 8px 18px; border-radius: 999px; border: none; cursor: pointer;
+    }
+    .cms-save-btn:hover { background: #000055; }
+    .cms-save-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .cms-cancel-btn {
+      background: transparent; color: var(--color-grey-700);
+      font-family: var(--font); font-size: 11px; font-weight: 600;
+      padding: 8px 16px; border-radius: 999px; border: 2px solid var(--color-grey-200); cursor: pointer;
+    }
+    .cms-cancel-btn:hover { border-color: var(--color-grey-400); }
   </style>
 </head>
 <body>
@@ -579,11 +630,11 @@
 
   <!-- ── HERO ───────────────────────────────────────────────── -->
   <section class="hero">
-    <p class="hero-eyebrow">Expert Author Community &middot; Beta</p>
-    <h1 class="hero-title">
+    <p class="hero-eyebrow" data-content-key="index/hero/eyebrow">Expert Author Community &middot; Beta</p>
+    <h1 class="hero-title" data-content-key="index/hero/title">
       Tools to help you<br><span>write with more clarity</span>
     </h1>
-    <p class="hero-subtitle">
+    <p class="hero-subtitle" data-content-key="index/hero/subtitle">
       Free reflections, diagnostics, and resources for expert authors. No fluff — just tools that help you understand what's actually getting in the way.
     </p>
   </section>
@@ -606,10 +657,10 @@
             <span class="tool-badge-dot"></span>
             Live
           </div>
-          <h2 class="tool-card-title">What's Getting in the Way of Your Best Writing?</h2>
+          <h2 class="tool-card-title" data-content-key="index/card/unblocker/title">What's Getting in the Way of Your Best Writing?</h2>
         </div>
         <div class="tool-card-body">
-          <p class="tool-card-desc">
+          <p class="tool-card-desc" data-content-key="index/card/unblocker/desc">
             A short reflection to identify what is most affecting your writing right now. Pinpoints your primary blocker across five categories — time, structure, noise, isolation, or momentum.
           </p>
           <div class="tool-card-meta">
@@ -640,10 +691,10 @@
             <span class="tool-badge-dot"></span>
             Live
           </div>
-          <h2 class="tool-card-title">5 Questions to Test Whether Your Idea Is Strong Enough for a Book</h2>
+          <h2 class="tool-card-title" data-content-key="index/card/idea-test/title">5 Questions to Test Whether Your Idea Is Strong Enough for a Book</h2>
         </div>
         <div class="tool-card-body">
-          <p class="tool-card-desc">
+          <p class="tool-card-desc" data-content-key="index/card/idea-test/desc">
             Not every idea should become a book. These five questions will help you test whether yours has the depth, tension, and staying power to go the distance — or whether it needs more shape first.
           </p>
           <div class="tool-card-meta">
@@ -698,9 +749,9 @@
 
   <!-- ── FOOTER CTA ─────────────────────────────────────────── -->
   <section class="footer-band">
-    <p class="footer-band-eyebrow">Expert Author Community</p>
-    <h2 class="footer-band-title">Ready to write your best work?</h2>
-    <p class="footer-band-sub">
+    <p class="footer-band-eyebrow" data-content-key="index/footer/eyebrow">Expert Author Community</p>
+    <h2 class="footer-band-title" data-content-key="index/footer/title">Ready to write your best work?</h2>
+    <p class="footer-band-sub" data-content-key="index/footer/sub">
       Tools are useful. Community makes them stick. Join authors working on books, thought leadership, and ideas worth sharing.
     </p>
     <div class="footer-band-ctas">
@@ -723,6 +774,8 @@
   </footer>
 
   <script>
+    let contentMap = {}
+
     (async function initAuth() {
       const el = document.getElementById('header-auth');
       try {
@@ -743,6 +796,7 @@
               <div class="dropdown-divider"></div>
               <button class="dropdown-item dropdown-logout" onclick="handleLogout()">Log out</button>
             </div>`;
+          if (user.isAdmin) enableEditing()
         } else {
           el.innerHTML = `<a class="btn-member-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Member Login<span class="login-divider"></span><span class="login-dashboard">Your dashboard →</span></a>`;
         }
@@ -761,6 +815,103 @@
     function handleLogout() {
       window.location.href = `https://auth.expertauthor.community/api/auth/logout?redirect=${encodeURIComponent(window.location.href)}`;
     }
+
+    /* ── CMS INLINE EDITOR (admin only) ── */
+    async function loadContent() {
+      try {
+        const r = await fetch('/api/content?page=index')
+        contentMap = await r.json()
+        applyContent()
+      } catch {}
+    }
+
+    function applyContent() {
+      Object.entries(contentMap).forEach(([key, html]) => {
+        const el = document.querySelector(`[data-content-key="${key}"]`)
+        if (el && html) el.innerHTML = html
+      })
+    }
+
+    function enableEditing() {
+      document.querySelectorAll('[data-content-key]').forEach(el => {
+        if (el.closest('.cms-region')) return
+        const key = el.dataset.contentKey
+        const wrap = document.createElement('div')
+        wrap.className = 'cms-region'
+        el.parentNode.insertBefore(wrap, el)
+        wrap.appendChild(el)
+        const btn = document.createElement('button')
+        btn.className = 'cms-edit-btn'
+        btn.title = 'Edit'
+        btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit'
+        btn.addEventListener('click', e => { e.stopPropagation(); editRegion(key) })
+        wrap.appendChild(btn)
+      })
+    }
+
+    function editRegion(key) {
+      const el = document.querySelector(`[data-content-key="${key}"]`)
+      const wrap = el?.closest('.cms-region')
+      if (!wrap || wrap.dataset.editing) return
+      wrap.dataset.editing = 'true'
+      const original = el.innerHTML
+      el.style.display = 'none'
+      wrap.querySelector('.cms-edit-btn').style.display = 'none'
+      const uid = 'cms-' + key.replace(/[^a-z0-9]/gi, '-')
+      const edWrap = document.createElement('div')
+      edWrap.className = 'cms-editor-wrap'
+      edWrap.innerHTML = `
+        <input type="hidden" id="${uid}">
+        <trix-editor input="${uid}"></trix-editor>
+        <div class="cms-actions">
+          <button class="cms-save-btn">Save</button>
+          <button class="cms-cancel-btn">Cancel</button>
+        </div>`
+      wrap.appendChild(edWrap)
+      edWrap.querySelector('.cms-save-btn').addEventListener('click', () => saveCms(key, original))
+      edWrap.querySelector('.cms-cancel-btn').addEventListener('click', () => cancelCms(key, original))
+      const trix = edWrap.querySelector('trix-editor')
+      trix.addEventListener('trix-initialize', () => trix.editor.loadHTML(original), { once: true })
+    }
+
+    async function saveCms(key, original) {
+      const el   = document.querySelector(`[data-content-key="${key}"]`)
+      const wrap = el?.closest('.cms-region')
+      if (!wrap) return
+      const uid     = 'cms-' + key.replace(/[^a-z0-9]/gi, '-')
+      const html    = document.getElementById(uid)?.value ?? ''
+      const saveBtn = wrap.querySelector('.cms-save-btn')
+      saveBtn.textContent = 'Saving…'
+      saveBtn.disabled    = true
+      try {
+        const r = await fetch('/api/content', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ key, html, page: 'index', label: key }),
+        })
+        if (!r.ok) throw new Error()
+        finishEdit(key, html)
+      } catch {
+        saveBtn.textContent = 'Save'
+        saveBtn.disabled    = false
+        alert('Save failed — please try again.')
+      }
+    }
+
+    function cancelCms(key, original) { finishEdit(key, original) }
+
+    function finishEdit(key, html) {
+      const el   = document.querySelector(`[data-content-key="${key}"]`)
+      const wrap = el?.closest('.cms-region')
+      if (!wrap) return
+      el.innerHTML = html
+      el.style.display = ''
+      wrap.querySelector('.cms-editor-wrap')?.remove()
+      wrap.querySelector('.cms-edit-btn').style.display = ''
+      delete wrap.dataset.editing
+    }
+
+    loadContent()
   </script>
 </body>
 </html>
