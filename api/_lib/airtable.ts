@@ -79,6 +79,55 @@ export async function upsertPerson(params: {
 }
 
 /**
+ * Resolve a person record: Circle access group lookup (members only) + People upsert.
+ * Best-effort — returns undefined if anything fails.
+ * Use this at the top of every tool handler before writing to a results table.
+ */
+export async function resolvePersonWithCircle(params: {
+  email:          string
+  name?:          string
+  isMember?:      boolean
+  circleUserId?:  string
+}): Promise<string | undefined> {
+  const { email, name, isMember, circleUserId } = params
+
+  let accessGroup:   string | undefined
+  let accessGroupId: string | undefined
+
+  if (isMember && email) {
+    try {
+      const { getCircleAccessGroup } = await import('./circle')
+      const group = await getCircleAccessGroup(email)
+      if (group) {
+        accessGroup   = group.name
+        accessGroupId = String(group.id)
+        console.log('[circle] access group:', group.name, group.id)
+      } else {
+        console.log('[circle] no access group found for', email)
+      }
+    } catch (err) {
+      console.error('[circle] failed:', err)
+    }
+  }
+
+  try {
+    const personId = await upsertPerson({
+      email,
+      name:           name || '',
+      isMember:       !!isMember,
+      circleMemberId: circleUserId ? String(circleUserId) : undefined,
+      accessGroup,
+      accessGroupId,
+    })
+    console.log('[people] upserted:', personId)
+    return personId
+  } catch (err) {
+    console.error('[people] upsert failed:', err)
+    return undefined
+  }
+}
+
+/**
  * Append a row to the Activity Log table linked to a Person.
  */
 export async function logActivity(params: {

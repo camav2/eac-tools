@@ -16,8 +16,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { upsertPerson, logActivity } from './_lib/airtable'
-import { getCircleAccessGroup }      from './_lib/circle'
+import { resolvePersonWithCircle, logActivity } from './_lib/airtable'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -31,39 +30,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!email) return res.status(400).json({ error: 'Email required' })
 
-  // ── Step 1: Circle access group (members only, best-effort) ──────────────
-  let accessGroup:   string | undefined
-  let accessGroupId: string | undefined
-  if (isMember && email) {
-    try {
-      const group = await getCircleAccessGroup(email)
-      if (group) {
-        accessGroup   = group.name
-        accessGroupId = String(group.id)
-        console.log('[circle] access group:', group.name, group.id)
-      } else {
-        console.log('[circle] no access group found for', email)
-      }
-    } catch (err) {
-      console.error('[circle] failed:', err)
-    }
-  }
-
-  // ── Step 2: Upsert People (best-effort) ──────────────────────────────────
-  let personId: string | undefined
-  try {
-    personId = await upsertPerson({
-      email,
-      name:           firstName    || '',
-      isMember:       !!isMember,
-      circleMemberId: circleUserId ? String(circleUserId) : undefined,
-      accessGroup,
-      accessGroupId,
-    })
-    console.log('[people] upserted:', personId)
-  } catch (err) {
-    console.error('[people] upsert failed:', err)
-  }
+  // ── Steps 1+2: Circle access group + People upsert (best-effort) ──────────
+  const personId = await resolvePersonWithCircle({
+    email,
+    name:         firstName    || '',
+    isMember:     !!isMember,
+    circleUserId: circleUserId ? String(circleUserId) : undefined,
+  })
 
   // ── Step 3: Write Idea Test Results (always) ─────────────────────────────
   try {
