@@ -946,6 +946,10 @@ body {
 }
 
 /* ── INTRO TEXT COLOUR GUARDS (hardcoded hex, survives any cascade) ── */
+/* forced-color-adjust: none prevents Windows High Contrast / Brave force-dark
+   from overriding author colours at UA level (above author !important) */
+#screen-intro,
+#screen-intro * { forced-color-adjust: none; }
 #screen-intro .intro-eyebrow        { color: #FFE64B !important; }
 #screen-intro .intro-title          { color: #FFFFFF !important; }
 #screen-intro .intro-title span     { color: #FFE64B !important; }
