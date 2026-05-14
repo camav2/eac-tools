@@ -56,7 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       email,
       name:           firstName    || '',
       isMember:       !!isMember,
-      circleMemberId: circleUserId || undefined,
+      circleMemberId: circleUserId ? String(circleUserId) : undefined,
       accessGroup,
       accessGroupId,
     })
