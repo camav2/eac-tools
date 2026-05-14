@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     email, firstName, ideaText,
     weightedScore, tier,
     q1, q2, q3, q4, q5,
-    isMember,
+    isMember, circleUserId,
   } = req.body
 
   if (!email) return res.status(400).json({ error: 'Email required' })
@@ -31,8 +31,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 1. Upsert People record
     const personId = await upsertPerson({
       email,
-      name:     firstName || '',
-      isMember: !!isMember,
+      name:            firstName    || '',
+      isMember:        !!isMember,
+      circleMemberId:  circleUserId || undefined,
     })
 
     // 2. Create Idea Test Results record linked to person

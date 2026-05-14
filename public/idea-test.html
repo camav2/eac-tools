@@ -1817,6 +1817,7 @@ async function nextQuestion() {
             q1: answers[1], q2: answers[2], q3: answers[3],
             q4: answers[4], q5: answers[5],
             isMember:      true,
+            circleUserId:  eacUser.circleUserId || '',
           })
         });
       } catch (_) { /* silent */ }
