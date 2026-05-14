@@ -97,7 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         await logActivity({
           personId,
-          actionType:  'Unblocker Completed',
+          actionType:  'Writing Unblock Completed',
           sourceTool:  'unblocker',
           summary:     `Completed Unblocker Diagnostic — ${primaryBlocker} (${intensityTier || 'scattered'})`,
           referenceId: resultId,
