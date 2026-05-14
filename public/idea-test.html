@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -792,6 +792,14 @@ body {
 .gap-block--gap     .gap-block-cta { color: var(--color-orange); }
 .gap-block--advisory .gap-block-cta { color: var(--color-blue); }
 .gap-block-cta:hover { opacity: 0.75; }
+.gap-block-member-cta { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+.gap-block-lesson-link { font-size: 13px; font-weight: 700; color: var(--color-navy); text-decoration: underline; text-underline-offset: 3px; }
+.gap-block--advisory .gap-block-lesson-link { color: var(--color-blue); }
+.gap-block-lesson-copy { font-size: 13px; color: var(--color-grey-700); line-height: 1.65; margin: 0; }
+.gap-block-recs { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+.gap-block-rec { font-size: 12px; font-weight: 600; color: var(--color-grey-700); text-decoration: underline; text-underline-offset: 2px; }
+.gap-block-clarity { display: inline-block; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; color: var(--color-navy); background: var(--color-yellow); padding: 10px 20px; border-radius: var(--radius-full); text-decoration: none; transition: background var(--transition); margin-top: 4px; }
+.gap-block-clarity:hover { background: var(--color-yellow-light); }
 
 /* Final CTA block */
 .result-ctas {
@@ -1476,58 +1484,181 @@ function withUtm(baseUrl, tier, pattern) {
 }
 
 /* ---- Gap block content ---- */
-// TODO: Replace placeholder copy below with Kelly's voice before going live.
-// Use the EAC copywriter skill for each gap block's gettingThere and notYet fields.
 const GAP_BLOCKS = {
+
   1: {
     title: 'On persistence and pull',
-    gettingThere: `Your connection to this idea is still forming — and that's fine. The strongest book ideas tend to deepen with time, not arrive fully formed. Pay attention to where this idea keeps showing up in your work and conversations. That's usually where the real book lives.`,
-    notYet: `An idea that hasn't fully taken hold yet isn't a dead end. It may simply need more time in your thinking before it has enough pull to carry a whole book. Notice what you keep returning to — not what excites you for a week, but what won't leave you alone over months.`,
-    cta: { label: 'Read: How to know if an idea is worth pursuing' }
+    gettingThere: `The pull is there — but it's still forming.
+
+That is actually a reasonable place to be. Some ideas arrive quietly before they become urgent. The question worth sitting with is whether you keep returning to this idea because it genuinely matters to you, or because it feels like something you should want to write about.
+
+Both are worth knowing. The distinction usually becomes clear when you write about it — even just a page.`,
+    notYet: `If this idea is not yet pulling you back on its own, that is worth paying attention to.
+
+It doesn't mean the idea is wrong. It might mean it hasn't fully arrived yet — or that the real book is hidden inside a different, adjacent question you haven't named clearly.
+
+The most reliable test is time and writing. Sit with it for a few weeks. Write about it informally. If it keeps growing, it's real. If it fades when you stop pushing, it may need more time — or a different shape.`,
+    memberCta: {
+      lessonLabel: 'STRATEGY – Ask Why',
+      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/strategy-ask-why',
+      lessonCopy:  'The Ask Why lesson was built for exactly this moment. Work through the Book Screening Canvas to get the idea out of your head and onto the page — and then use the Ranking Matrix to see how it holds up against the rest of your thinking.',
+      rec1Label:   'Watch: The Book Screening Canvas (Coaching Collective)',
+      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/the-book-screening-canvas-march-4-2021',
+      rec2Label:   'Watch: Connecting with Why (Coaching Collective)',
+      rec2Url:     'https://the.expertauthor.community/c/coaching-collective/connecting-with-why-july-31-2020',
+      clarityCallEscalation: false,
+    },
+    nonMemberCta: { label: 'Read: How to know if an idea is worth pursuing', url: GAP_CTA_URLS[1] }
   },
+
   2: {
     title: 'On finding your argument',
-    gettingThere: `You have a sense of what you want to say, but it's not sharp enough to cut yet. That's not a bad place to be — it means you're closer than you think. The move from topic to argument is often just one good question away: what do most people in this space get wrong?`,
-    notYet: `The gap between a topic and a book is almost always a missing argument. Topics are territories — anyone can stand in them. Arguments are positions — only you hold yours. What do you believe about this that most people don't? Start there.`,
-    cta: { label: 'Read: From topic to argument' }
+    gettingThere: `You have a sense of the territory — the broad space your book would live in. What's still forming is the specific claim you want to make inside it.
+
+That gap is bridgeable. Most book ideas start as topics and sharpen into arguments through writing and conversation. The question that tends to unlock it: what do most people in this space get wrong? What would your peers push back on?
+
+That friction is usually where the argument lives.`,
+    notYet: `A topic is not yet a book. "Leadership." "Wellbeing." "The future of work." These are territories, not positions.
+
+The thing that turns a topic into a book is a clear argument — something you believe, something that challenges a common assumption, something that says more than "here is what I know about this."
+
+Before you go further with this idea, it's worth spending time on one question: what is the specific thing you want to say? Not what the book is about. What it actually argues.`,
+    memberCta: {
+      lessonLabel: 'STRATEGY – Know What',
+      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/strategy-know-what',
+      lessonCopy:  'Moving from a topic to an argument usually happens when you understand what else exists in your space — and where your thinking is genuinely different. The Know What lesson will take you through that. Start with the market worksheet, then come back to your idea with fresh eyes.',
+      rec1Label:   'Watch: How to get to the heart of your message (Coaching Collective)',
+      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/how-to-get-to-the-heart-of-your-message-may-8-2020',
+      rec2Label:   null,
+      rec2Url:     null,
+      clarityCallEscalation: false,
+    },
+    nonMemberCta: { label: 'Read: From topic to argument', url: GAP_CTA_URLS[2] }
   },
+
   3: {
     title: 'On your reader',
-    gettingThere: `You have a sense of who this is for, but the picture isn't fully clear yet. The reader gets sharper when you get more specific. Think about one real person you know who needs this — what are they struggling with right now, and why does your idea speak directly to that?`,
-    notYet: `A book without a specific reader tends to say everything and reach no one. The most powerful books feel like they were written for exactly one person — and that specificity is what makes them resonate with thousands. Who is the one person this is for?`,
-    cta: { label: 'Read: How to define your reader' }
+    gettingThere: `You have a sense of the kind of person this book is for — but the picture isn't sharp enough yet to write toward them.
+
+That matters more than it might seem. A vague reader produces vague writing. The clearer you can see a specific person — what they are struggling with, what they have already tried, what they most need to hear — the stronger every chapter becomes.
+
+It's worth spending time here before you go much further. Often the reader becomes clearest when you think about the clients, colleagues, or conversations that keep sending you back to this idea.`,
+    notYet: `A book without a clear reader tends to say everything — and reach no one.
+
+This is not about narrowing your audience so much that the book feels small. It's about being specific enough that a real person picks it up and thinks: this was written for me.
+
+The question to sit with: who is the person who most needs this idea right now? What are they struggling with? What have they already tried that hasn't worked? What would change for them if this book did its job properly? That person is your reader.`,
+    memberCta: {
+      lessonLabel: 'STRATEGY – Find Who',
+      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/strategy-find-who',
+      lessonCopy:  'A book without a clear reader tends to say everything and reach no one. The Find Who lesson is where you build your Reader Profile — a specific, named person with real pain points — and then use the Bullseye Method to prioritise who matters most. Do this before you go any further.',
+      rec1Label:   "Watch: Taking a trip into your reader's mind (Coaching Collective)",
+      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/taking-a-trip-into-your-reader-s-mind-to-nail-who-you-re-writing-to-february-19-2021',
+      rec2Label:   null,
+      rec2Url:     null,
+      clarityCallEscalation: false,
+    },
+    nonMemberCta: { label: 'Read: How to define your reader', url: GAP_CTA_URLS[3] }
   },
+
   4: {
     title: 'On depth and range',
-    gettingThere: `The idea has substance, but you're not yet sure it has enough range for a full book. That's worth testing before committing. Try mapping out seven to ten possible chapters or sections. If you can do it without forcing it, the depth is probably there.`,
-    notYet: `This idea may belong in a shorter form first — an essay, a talk, a framework. That's not a failure; it's often the right move. Many of the best books started as something smaller. Writing the shorter version may be exactly what shows you whether there's a book underneath.`,
-    cta: { label: 'Read: Is this a book or an essay?' }
+    gettingThere: `The idea has real substance — but you're not yet sure it has enough range to sustain a full manuscript.
+
+That uncertainty is worth taking seriously. The most honest test: when you stay with this idea and follow it, does it open up — or does it keep circling back to the same few points?
+
+If it opens, if there are genuinely different dimensions and tensions already forming, the depth is likely there. If it loops, the idea might be strongest as a longer essay or a centrepiece chapter inside a bigger argument you haven't yet named.`,
+    notYet: `This idea, right now, may not yet have the range to carry a full book.
+
+That is not a verdict on the idea. It may be an essay waiting to be written, a framework waiting to be tested, or a chapter inside a bigger argument you haven't fully seen yet.
+
+The most useful thing you can do is write the shorter version first. Write the essay, the talk, the article. Let it show you what it is actually about. Some of the strongest books started exactly that way — as something smaller that kept insisting it wasn't finished.`,
+    memberCta: {
+      lessonLabel: 'STRUCTURE – Build Book',
+      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/structure-build-book',
+      lessonCopy:  "The clearest way to test whether your idea has enough range for a book is to try to build the structure — and see what happens. The Build Book lesson walks you through the three-part framework and asks you to map out your own. If the idea opens up, the depth is there. If it keeps circling, you'll know what to work on first.",
+      rec1Label:   'Watch: Using the 5-step structure to articulate and validate your ideas (Coaching Collective)',
+      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/using-the-5-step-structure-to-articulate-and-validate-your-ideas-august-20-2021',
+      rec2Label:   null,
+      rec2Url:     null,
+      clarityCallEscalation: false,
+    },
+    nonMemberCta: { label: 'Read: Is this a book or an essay?', url: GAP_CTA_URLS[4] }
   },
+
   5: {
     title: 'On alignment with your body of work',
-    gettingThere: `This idea sits near your work but the connection isn't fully clear yet. It's worth asking: if you wrote this book and it became the thing you were known for, would that feel right? Your answer to that question will tell you a lot about whether this is the right idea at the right time.`,
-    notYet: `A book that doesn't connect to the work you want to be known for can pull you sideways — away from the authority you're building, rather than toward it. That doesn't mean this idea is wrong. It may mean it needs to find its place in your bigger narrative before it becomes a book.`,
-    cta: { label: 'Read: Positioning and the books that build authority' }
+    gettingThere: `There's a connection between this idea and your broader work — but it's not yet tight enough to feel obvious.
+
+A book that sits adjacent to your body of work can still be worth writing. But it's worth asking: would writing this book take you deeper into the work you want to be known for, or would it pull you sideways?
+
+The best books don't just add to a portfolio — they sharpen a positioning, deepen an authority, and open doors that are already ajar. It might be that this idea needs reframing slightly to connect more directly. Or it might belong to a different season of your work.`,
+    notYet: `A book is a significant investment of time, thinking, and identity. When it doesn't connect clearly to the work you want to be known for, it can pull you off course — even if it's a good idea in the abstract.
+
+The question is not whether this is an interesting idea. It's whether writing this book would deepen the authority and positioning you're building.
+
+If the answer is no, or not yet, it may be worth pausing here — not to abandon the idea, but to get clearer on what your body of work is actually building toward. Often that clarity changes the book idea itself.`,
+    memberCta: {
+      lessonLabel: 'STRATEGY – Ask Why',
+      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/strategy-ask-why',
+      lessonCopy:  "A book that doesn't connect to the work you want to be known for can pull you sideways — even if the idea itself is good. The Ask Why lesson is where you work through the connection between your book and your bigger goals. Start there. If you work through it and still feel like the pieces don't connect, this is worth a conversation.",
+      rec1Label:   'Watch: What a book can really do for your brand and business (Coaching Collective)',
+      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/what-a-book-can-really-do-for-your-brand-and-business-ask-an-author-w-donna-mcgeorge-kelly-irving',
+      rec2Label:   "Watch: Defining your book's business goals — Scott MacMillan (Guest Experts)",
+      rec2Url:     'https://the.expertauthor.community/c/guest-experts-597139/guest-expert-w-scott-macmillan-defining-your-book-s-business-goals-and-purpose',
+      clarityCallEscalation: true, // Also show Clarity Call CTA for this gap
+    },
+    nonMemberCta: { label: 'Read: Positioning and the books that build authority', url: GAP_CTA_URLS[5] }
   }
+
 };
 
 function buildGapBlock(qNum) {
-  const val    = answers[qNum];
-  const block  = GAP_BLOCKS[qNum];
-  const copy   = val === 'getting-there' ? block.gettingThere : block.notYet;
-  const tone   = val === 'getting-there' ? 'advisory' : 'gap';
-  const ctaUrl = GAP_CTA_URLS[qNum];
-  const showCta = !ctaUrl.startsWith('PLACEHOLDER');
+  const val   = answers[qNum];
+  const block = GAP_BLOCKS[qNum];
+  const tone  = val === 'getting-there' ? 'advisory' : 'gap';
+  const raw   = val === 'getting-there' ? block.gettingThere : block.notYet;
+
+  // Convert double newlines to paragraph breaks
+  const copyHtml = raw.trim().split(/\n\n+/).map(p => `<p>${p.trim()}</p>`).join('');
+
+  let ctaHtml = '';
+  if (eacUser) {
+    const mc   = block.memberCta;
+    const recs = [
+      mc.rec1Label && mc.rec1Url
+        ? `<a class="gap-block-rec" href="${mc.rec1Url}" target="_blank" rel="noopener">${mc.rec1Label} &rarr;</a>`
+        : '',
+      mc.rec2Label && mc.rec2Url
+        ? `<a class="gap-block-rec" href="${mc.rec2Url}" target="_blank" rel="noopener">${mc.rec2Label} &rarr;</a>`
+        : '',
+    ].filter(Boolean).join('');
+
+    ctaHtml = `
+      <div class="gap-block-member-cta">
+        <a class="gap-block-lesson-link" href="${mc.lessonUrl}" target="_blank" rel="noopener">Go to lesson: ${mc.lessonLabel} &rarr;</a>
+        <p class="gap-block-lesson-copy">${mc.lessonCopy}</p>
+        ${recs ? `<div class="gap-block-recs">${recs}</div>` : ''}
+        ${mc.clarityCallEscalation
+          ? `<a class="gap-block-clarity" href="${withUtm(CLARITY_CALL_URL, getTier(weightedScore), buildPattern())}" target="_blank" rel="noopener">Book a Clarity Call with Kelly &rarr;</a>`
+          : ''}
+      </div>`;
+  } else {
+    const nc = block.nonMemberCta;
+    const showCta = nc.url && !String(nc.url).startsWith('PLACEHOLDER');
+    if (showCta) {
+      ctaHtml = `<a class="gap-block-cta" href="${nc.url}" target="_blank" rel="noopener">${nc.label} &rarr;</a>`;
+    }
+  }
 
   return `
     <div class="gap-block gap-block--${tone}">
       <div class="gap-block-label">Question ${qNum} — ${block.title}</div>
-      <p>${copy}</p>
-      ${showCta ? `<a class="gap-block-cta" href="${ctaUrl}" target="_blank" rel="noopener">${block.cta.label} &rarr;</a>` : ''}
+      ${copyHtml}
+      ${ctaHtml}
     </div>
   `;
 }
-
 /* ---- Result content ---- */
 const RESULTS = {
   strong: {
