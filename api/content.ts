@@ -1,85 +1,89 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { jwtVerify } from 'jose'
-import { isCircleAdmin } from './_lib/circle'
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
-const OWNER      = process.env.GITHUB_OWNER ?? 'camav2'
-const REPO       = process.env.GITHUB_REPO  ?? 'eac-tools'
-const FILE_PATH  = 'public/index.html'
+const CONTENT_TABLE = 'tblUyaPEteDmd21IM'
 
 function parseCookie(header: string, name: string): string | null {
-  const match = header.match(new RegExp(`(?:^|;\s*)${name}=([^;]+)`))
-  return match ? decodeURIComponent(match[1]) : null
+  const m = header.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`))
+  return m ? decodeURIComponent(m[1]) : null
 }
 
-async function requireAdmin(req: VercelRequest): Promise<string | null> {
+async function getAuthedEmail(req: VercelRequest): Promise<string | null> {
   const token = parseCookie(req.headers.cookie ?? '', 'eac_session')
   if (!token) return null
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET)
-    const email = payload.sub as string
-    return (await isCircleAdmin(email)) ? email : null
+    const { jwtVerify } = await import('jose')
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET!))
+    return (payload.sub as string) ?? null
   } catch {
     return null
   }
 }
 
-async function githubRequest(path: string, options: RequestInit = {}) {
-  const res = await fetch(
-    `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`,
-    {
-      ...options,
-      headers: {
-        Authorization:          `Bearer ${process.env.GITHUB_TOKEN}`,
-        Accept:                 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-        ...((options.headers as Record<string, string>) ?? {}),
-      },
-    }
-  )
-  if (!res.ok) {
-    const err = await res.json()
-    throw new Error(err.message ?? 'GitHub API error')
-  }
-  return res.json()
+function isAdmin(email: string): boolean {
+  return (process.env.ADMIN_EMAILS ?? '')
+    .split(',').map(e => e.trim()).filter(Boolean)
+    .includes(email)
+}
+
+async function at(path = '', options: RequestInit = {}) {
+  const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${CONTENT_TABLE}${path}`
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      Authorization:  `Bearer ${process.env.AIRTABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string> ?? {}),
+    },
+  })
+  const json = await res.json()
+  if (!res.ok) throw json
+  return json
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
 
-  const email = await requireAdmin(req)
-  if (!email) return res.status(403).json({ error: 'Admin access required' })
-
+  // GET — public, returns { key: html } for a page
   if (req.method === 'GET') {
-    try {
-      const file    = await githubRequest(FILE_PATH)
-      const content = Buffer.from(file.content, 'base64').toString('utf-8')
-      return res.status(200).json({ content, sha: file.sha })
-    } catch (err) {
-      console.error('content GET error:', err)
-      return res.status(500).json({ error: 'Failed to read file' })
+    const page = req.query.page as string
+    if (!page) return res.status(400).json({ error: 'page required' })
+
+    const filter = encodeURIComponent(`{Page}="${page}"`)
+    const data   = await at(`?filterByFormula=${filter}&maxRecords=100`)
+    const map: Record<string, string> = {}
+    for (const record of data.records ?? []) {
+      if (record.fields.Key) map[record.fields.Key] = record.fields.HTML ?? ''
     }
+    return res.status(200).json(map)
   }
 
+  // POST — admin only, upserts a content record
   if (req.method === 'POST') {
-    const { content, sha } = req.body ?? {}
-    if (!content || !sha) return res.status(400).json({ error: 'content and sha required' })
+    const email = await getAuthedEmail(req)
+    if (!email || !isAdmin(email)) return res.status(403).json({ error: 'Forbidden' })
 
-    try {
-      const result = await githubRequest(FILE_PATH, {
-        method:  'PUT',
-        headers: { 'Content-Type': 'application/json' },
+    const { key, html, page, label } = req.body
+    if (!key || !page) return res.status(400).json({ error: 'key and page required' })
+
+    const filter = encodeURIComponent(`{Key}="${key}"`)
+    const found  = await at(`?filterByFormula=${filter}&maxRecords=1`)
+
+    if (found.records?.length) {
+      const { id } = found.records[0]
+      await at(`/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ fields: { HTML: html, 'Updated At': new Date().toISOString() } }),
+      })
+    } else {
+      await at('', {
+        method: 'POST',
         body: JSON.stringify({
-          message: `Update index.html [${email}]`,
-          content: Buffer.from(content).toString('base64'),
-          sha,
+          fields: { Key: key, Page: page, HTML: html, Label: label ?? key, 'Updated At': new Date().toISOString() },
         }),
       })
-      return res.status(200).json({ ok: true, sha: result.content.sha })
-    } catch (err) {
-      console.error('content POST error:', err)
-      return res.status(500).json({ error: 'Failed to update file' })
     }
+
+    return res.status(200).json({ ok: true })
   }
 
   return res.status(405).json({ error: 'Method not allowed' })

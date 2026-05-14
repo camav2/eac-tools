@@ -34,6 +34,8 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
+<script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
 
 <style>
 /* ============================================================
@@ -1140,6 +1142,55 @@ input:focus-visible {
 .dropdown-logout { color: #c0392b; }
 .dropdown-logout:hover { background: #fff5f5 !important; }
 body { padding-top: 60px; }
+
+/* ── CMS ADMIN EDITOR ── */
+.cms-region { position: relative; }
+.cms-edit-btn {
+  position: absolute; top: 6px; right: 6px;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--color-yellow); color: var(--color-navy);
+  font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 4px 10px; border-radius: 999px; border: none; cursor: pointer;
+  opacity: 0; transition: opacity 0.15s ease; z-index: 20; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.cms-region:hover .cms-edit-btn { opacity: 1; }
+.cms-editor-wrap {
+  background: var(--color-white);
+  border: 2px solid var(--color-yellow);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin: 4px 0;
+}
+trix-editor {
+  min-height: 80px;
+  font-family: var(--font) !important;
+  font-size: 15px;
+  color: var(--color-black);
+  padding: 14px 16px;
+  border: none !important;
+  outline: none;
+  box-shadow: none !important;
+}
+trix-toolbar .trix-button-group { border-color: var(--color-grey-200); }
+.cms-actions {
+  display: flex; gap: 8px; padding: 10px 12px;
+  border-top: 1px solid var(--color-grey-200);
+  background: var(--color-grey-100);
+}
+.cms-save-btn {
+  background: var(--color-navy); color: var(--color-white);
+  font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 8px 18px; border-radius: 999px; border: none; cursor: pointer;
+}
+.cms-save-btn:hover { background: #000055; }
+.cms-save-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.cms-cancel-btn {
+  background: transparent; color: var(--color-grey-700);
+  font-family: var(--font); font-size: 11px; font-weight: 600;
+  padding: 8px 16px; border-radius: 999px; border: 2px solid var(--color-grey-200); cursor: pointer;
+}
+.cms-cancel-btn:hover { border-color: var(--color-grey-400); }
 </style>
 </head>
 <body>
@@ -1184,17 +1235,17 @@ body { padding-top: 60px; }
       <span class="intro-logo-text">Expert Author Community</span>
     </div>
 
-    <div class="intro-eyebrow">Free Thinking Tool</div>
+    <div class="intro-eyebrow" data-content-key="idea-test/intro/eyebrow">Free Thinking Tool</div>
 
-    <h1 class="intro-title">
+    <h1 class="intro-title" data-content-key="idea-test/intro/title">
       5 Questions to Test Whether Your Idea Is <span>Strong Enough for a Book</span>
     </h1>
 
-    <p class="intro-subtitle">
+    <p class="intro-subtitle" data-content-key="idea-test/intro/subtitle">
       Not every idea should become a book. Some ideas are timely. Some are useful. Some are exciting because they are new.
     </p>
 
-    <div class="intro-body">
+    <div class="intro-body" data-content-key="idea-test/intro/body">
       <p>But a book needs more than that. It needs enough depth to hold your thinking for a long time. Enough tension to keep a reader engaged. And enough weight to matter beyond a single post, talk, or trend cycle.</p>
       <p>If you have an idea you keep returning to, these five questions will help you test whether it has real book potential — or whether it needs more shape, pressure, or time first.</p>
     </div>
@@ -1233,8 +1284,8 @@ body { padding-top: 60px; }
     <!-- ---- Q1 ---- -->
     <div class="question-panel active" id="panel-1">
       <div class="q-number-badge">Question 1 of 5</div>
-      <h2 class="question-main">Does this idea keep returning to you?</h2>
-      <div class="question-context">
+      <h2 class="question-main" data-content-key="idea-test/q1/main">Does this idea keep returning to you?</h2>
+      <div class="question-context" data-content-key="idea-test/q1/context">
         <div class="question-context-label">A useful test</div>
         <p>A strong book idea rarely appears once and disappears. It tends to follow you — in conversations, client work, frustrations, lived experience, patterns you keep noticing, or questions you cannot stop asking.</p>
         <ul class="question-tests">
@@ -1252,8 +1303,8 @@ body { padding-top: 60px; }
     <!-- ---- Q2 ---- -->
     <div class="question-panel" id="panel-2">
       <div class="q-number-badge">Question 2 of 5</div>
-      <h2 class="question-main">Is this a topic — or an argument?</h2>
-      <div class="question-context">
+      <h2 class="question-main" data-content-key="idea-test/q2/main">Is this a topic — or an argument?</h2>
+      <div class="question-context" data-content-key="idea-test/q2/context">
         <div class="question-context-label">A useful test</div>
         <p>A topic is not yet a book. "Leadership." "Burnout." "AI." "Confidence." These are territories, not positions. A stronger book idea usually contains an argument, a tension, a challenge, or a reframing — not just "here is what I know," but "here is what people misunderstand or need to see differently."</p>
         <ul class="question-tests">
@@ -1272,8 +1323,8 @@ body { padding-top: 60px; }
     <!-- ---- Q3 ---- -->
     <div class="question-panel" id="panel-3">
       <div class="q-number-badge">Question 3 of 5</div>
-      <h2 class="question-main">Is there a clear reader with something at stake?</h2>
-      <div class="question-context">
+      <h2 class="question-main" data-content-key="idea-test/q3/main">Is there a clear reader with something at stake?</h2>
+      <div class="question-context" data-content-key="idea-test/q3/context">
         <div class="question-context-label">A useful test</div>
         <p>A book idea gets stronger when it matters to someone specific. Who is this for? What are they struggling with, questioning, trying to solve, or trying to become? Why would this idea matter enough for them to stay with it across a whole book?</p>
         <ul class="question-tests">
@@ -1292,8 +1343,8 @@ body { padding-top: 60px; }
     <!-- ---- Q4 ---- -->
     <div class="question-panel" id="panel-4">
       <div class="q-number-badge">Question 4 of 5</div>
-      <h2 class="question-main">Does this idea have enough depth to carry a full book?</h2>
-      <div class="question-context">
+      <h2 class="question-main" data-content-key="idea-test/q4/main">Does this idea have enough depth to carry a full book?</h2>
+      <div class="question-context" data-content-key="idea-test/q4/context">
         <div class="question-context-label">A useful test</div>
         <p>Some ideas are excellent essays. Some are keynote talks. Some are frameworks, newsletters, or chapters. That does not make them weak — it just means they may not yet have the range to sustain a full manuscript. A strong book idea has a central argument, multiple dimensions, and room to unfold without repeating itself.</p>
         <ul class="question-tests">
@@ -1312,8 +1363,8 @@ body { padding-top: 60px; }
     <!-- ---- Q5 ---- -->
     <div class="question-panel" id="panel-5">
       <div class="q-number-badge">Question 5 of 5</div>
-      <h2 class="question-main">Is this connected to the body of work you want to be known for?</h2>
-      <div class="question-context">
+      <h2 class="question-main" data-content-key="idea-test/q5/main">Is this connected to the body of work you want to be known for?</h2>
+      <div class="question-context" data-content-key="idea-test/q5/context">
         <div class="question-context-label">A useful test</div>
         <p>The strongest books do not sit randomly beside your work — they deepen it. A good book idea often sharpens your authority, strengthens your positioning, and connects naturally to the conversations, clients, opportunities, or impact you want more of.</p>
         <ul class="question-tests">
@@ -1992,6 +2043,7 @@ document.addEventListener('keydown', e => {
     const { user } = await res.json();
     eacUser = user;
     if (user) {
+      if (user.isAdmin) enableEditing()
       // Logged-in: replace entire block with avatar + dropdown
       const initial = (user.name || user.email || '?')[0].toUpperCase();
       el.innerHTML = `
@@ -2024,6 +2076,104 @@ document.addEventListener('click', () => {
 function handleLogout() {
   window.location.href = `https://auth.expertauthor.community/api/auth/logout?redirect=${encodeURIComponent(window.location.href)}`;
 }
+
+/* ── CMS INLINE EDITOR (admin only) ── */
+async function loadContent() {
+  try {
+    const r = await fetch('/api/content?page=idea-test')
+    const map = await r.json()
+    Object.entries(map).forEach(([key, html]) => {
+      const el = document.querySelector(`[data-content-key="${key}"]`)
+      if (el && html) el.innerHTML = html
+    })
+  } catch {}
+}
+
+function enableEditing() {
+  document.querySelectorAll('[data-content-key]').forEach(el => {
+    const key = el.dataset.contentKey
+    const wrap = document.createElement('div')
+    wrap.className = 'cms-region'
+    el.parentNode.insertBefore(wrap, el)
+    wrap.appendChild(el)
+    const btn = document.createElement('button')
+    btn.className = 'cms-edit-btn'
+    btn.title = 'Edit'
+    btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit'
+    btn.addEventListener('click', e => { e.stopPropagation(); editRegion(key) })
+    wrap.appendChild(btn)
+  })
+}
+
+function editRegion(key) {
+  const el = document.querySelector(`[data-content-key="${key}"]`)
+  const wrap = el?.closest('.cms-region')
+  if (!wrap || wrap.dataset.editing) return
+
+  wrap.dataset.editing = 'true'
+  const original = el.innerHTML
+  el.style.display = 'none'
+  wrap.querySelector('.cms-edit-btn').style.display = 'none'
+
+  const uid = 'cms-' + key.replace(/[^a-z0-9]/gi, '-')
+  const edWrap = document.createElement('div')
+  edWrap.className = 'cms-editor-wrap'
+  edWrap.innerHTML = `
+    <input type="hidden" id="${uid}">
+    <trix-editor input="${uid}"></trix-editor>
+    <div class="cms-actions">
+      <button class="cms-save-btn">Save</button>
+      <button class="cms-cancel-btn">Cancel</button>
+    </div>`
+  wrap.appendChild(edWrap)
+
+  edWrap.querySelector('.cms-save-btn').addEventListener('click', () => saveCms(key, original))
+  edWrap.querySelector('.cms-cancel-btn').addEventListener('click', () => cancelCms(key, original))
+
+  const trix = edWrap.querySelector('trix-editor')
+  trix.addEventListener('trix-initialize', () => trix.editor.loadHTML(original), { once: true })
+}
+
+async function saveCms(key, original) {
+  const el   = document.querySelector(`[data-content-key="${key}"]`)
+  const wrap = el?.closest('.cms-region')
+  if (!wrap) return
+
+  const uid     = 'cms-' + key.replace(/[^a-z0-9]/gi, '-')
+  const html    = document.getElementById(uid)?.value ?? ''
+  const saveBtn = wrap.querySelector('.cms-save-btn')
+  saveBtn.textContent = 'Saving…'
+  saveBtn.disabled    = true
+
+  try {
+    const r = await fetch('/api/content', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ key, html, page: 'idea-test', label: key }),
+    })
+    if (!r.ok) throw new Error()
+    finishEdit(key, html)
+  } catch {
+    saveBtn.textContent = 'Save'
+    saveBtn.disabled    = false
+    alert('Save failed — please try again.')
+  }
+}
+
+function cancelCms(key, original) { finishEdit(key, original) }
+
+function finishEdit(key, html) {
+  const el   = document.querySelector(`[data-content-key="${key}"]`)
+  const wrap = el?.closest('.cms-region')
+  if (!wrap) return
+  el.innerHTML = html
+  el.style.display = ''
+  wrap.querySelector('.cms-editor-wrap')?.remove()
+  wrap.querySelector('.cms-edit-btn').style.display = ''
+  delete wrap.dataset.editing
+}
+
+loadContent()
 </script>
 </body>
 </html>
