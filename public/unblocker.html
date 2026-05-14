@@ -51,6 +51,7 @@
   --color-grey-100:     #F2F2F5;
   --color-grey-200:     #E4E4EA;
   --color-grey-400:     #9999B0;
+  --color-grey-600:     #666677;
   --color-grey-700:     #444455;
   --color-black:        #0A0A1A;
   --font:               'Montserrat', sans-serif;
@@ -957,6 +958,142 @@ body {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
+/* ── CONTEXT FIELD (email screen) ── */
+.field-group {
+  margin-bottom: 16px;
+  text-align: left;
+}
+.field-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  margin-bottom: 6px;
+}
+.field-optional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-grey-400);
+  font-size: 11px;
+}
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ── INTENSITY BADGE ── */
+.intensity-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  margin-top: 12px;
+}
+.intensity-dominant {
+  background: rgba(255,230,75,0.15);
+  color: var(--color-yellow);
+  border: 1px solid rgba(255,230,75,0.3);
+}
+
+/* ── SECONDARY BLOCKER BLOCK ── */
+.result-secondary {
+  background: var(--color-grey-100);
+  border-radius: 12px;
+  padding: 24px;
+  border-left: 3px solid var(--color-blue);
+}
+.secondary-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--color-blue);
+  color: var(--color-white);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: 14px;
+}
+
+/* ── MEMBER CTA BLOCK ── */
+.result-member-cta { margin-bottom: 0; }
+.lesson-copy {
+  font-size: 15px;
+  color: var(--color-grey-600);
+  line-height: 1.7;
+  margin-top: 12px;
+  margin-bottom: 20px;
+}
+.clarity-call-block {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-grey-200);
+}
+.clarity-call-block p {
+  font-size: 15px;
+  color: var(--color-grey-700);
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+
+/* ── NON-MEMBER SOFT CTA ── */
+.non-member-soft-cta {
+  font-size: 14px;
+  color: var(--color-grey-600);
+  line-height: 1.6;
+  text-align: center;
+  margin-top: 12px;
+}
+
+/* ── MEMBER CONTEXT PROMPT (result screen) ── */
+.context-prompt {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 24px 32px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.context-prompt textarea {
+  flex: 1;
+  padding: 12px 14px;
+  border: 2px solid var(--color-grey-200);
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--color-black);
+  background: var(--color-white);
+  resize: none;
+  transition: border-color var(--transition);
+}
+.context-prompt textarea:focus {
+  outline: none;
+  border-color: var(--color-blue);
+}
+.context-prompt textarea::placeholder { color: var(--color-grey-400); }
+.context-prompt button {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  background: var(--color-navy);
+  color: var(--color-white);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.context-prompt button:hover { background: #000055; }
+
 /* ── SHARED NAVBAR ── */
 .site-header {
   position: fixed;
@@ -1150,6 +1287,17 @@ body { padding-top: 60px; }
         <label class="form-label" for="input-email">Email address</label>
         <input class="form-input" type="email" id="input-email" placeholder="you@example.com" required autocomplete="email">
       </div>
+      <div class="field-group">
+        <label for="input-context">What are you currently working on? <span class="field-optional">(optional)</span></label>
+        <textarea
+          class="form-input form-textarea"
+          id="input-context"
+          name="context"
+          rows="3"
+          placeholder="e.g. a business book I've been circling for two years, a leadership framework I want to turn into a manuscript..."
+          maxlength="500"
+        ></textarea>
+      </div>
       <button type="submit" class="btn-submit">
         See my results
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -1170,7 +1318,15 @@ body { padding-top: 60px; }
       <div class="result-category" id="result-category">—</div>
       <h2 class="result-headline" id="result-headline">—</h2>
       <p class="result-lead" id="result-lead">—</p>
+      <div id="intensity-badge" class="intensity-badge intensity-dominant" style="display:none">Strong pattern</div>
     </div>
+  </div>
+
+  <div id="context-prompt-member" class="context-prompt" style="display:none">
+    <textarea id="input-context-member" rows="2"
+      placeholder="What are you currently working on? (optional)"
+      maxlength="500"></textarea>
+    <button onclick="saveContext()">Save</button>
   </div>
 
   <div class="result-body">
@@ -1179,6 +1335,12 @@ body { padding-top: 60px; }
       <p class="result-section-label">What this means</p>
       <div class="result-text" id="result-body-text"></div>
       <div class="result-quotes" id="result-quotes"></div>
+    </div>
+
+    <div id="result-secondary" class="result-section result-secondary" style="display:none">
+      <div class="result-section-label">Also showing up</div>
+      <div class="secondary-tag" id="result-secondary-tag"></div>
+      <div class="result-text" id="result-secondary-text"></div>
     </div>
 
     <div class="result-next-step" id="result-next-step">
@@ -1198,11 +1360,8 @@ body { padding-top: 60px; }
       <p style="margin-top:12px">That is part of what we care deeply about inside <strong>EAC</strong>: not just helping people write more, but helping them create the conditions for their best thinking to survive and strengthen.</p>
     </div>
 
-    <div class="result-ctas">
-      <a href="https://www.expertauthor.community/programs/write-now" class="btn-cta-primary" target="_blank" rel="noopener">
-        Start with Write Now
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </a>
+    <div id="result-ctas" class="result-ctas">
+      <!-- populated by renderCtas() -->
     </div>
 
     <button class="btn-share" onclick="openShareModal()">
@@ -1261,117 +1420,221 @@ body { padding-top: 60px; }
    QUIZ DATA
    ============================================================ */
 const STEPS = [
-  {
-    category: 'Time',
-    questions: [
-      'I struggle to protect enough uninterrupted time to think and write properly.',
-      'Writing keeps getting pushed behind more urgent or visible work.'
-    ]
-  },
-  {
-    category: 'Structure',
-    questions: [
-      'I often know I want to write, but I am not clear on what the next step actually is.',
-      'I have ideas, but I do not yet have a structure strong enough to hold them.'
-    ]
-  },
-  {
-    category: 'Noise',
-    questions: [
-      'My thinking feels crowded by content, input, notifications, or competing demands.',
-      'I often feel pressure to publish quickly before I have fully developed what I want to say.'
-    ]
-  },
-  {
-    category: 'Isolation',
-    questions: [
-      'Writing feels heavier because I am doing it alone.',
-      'I would make faster progress with better feedback, accountability, or the right writing environment.'
-    ]
-  },
-  {
-    category: 'Momentum',
-    questions: [
-      'I start writing with good intentions, but I struggle to sustain progress over time.',
-      'I lose energy or confidence partway through, even when I care deeply about the work.'
-    ]
-  }
+  { category: 'Time', questions: [
+    'I struggle to protect enough uninterrupted time to think and write properly.',
+    'When I do sit down to write, I find it hard to get into focused, generative thinking quickly.'
+  ]},
+  { category: 'Structure', questions: [
+    'I often know I want to write, but I am not clear on what the next step actually is.',
+    'When I am writing, I often get stuck on whether I am going in the right direction, or whether what I am producing is good enough.'
+  ]},
+  { category: 'Noise', questions: [
+    'My thinking feels crowded by content, input, notifications, or competing demands.',
+    'Exposure to other people\'s writing and ideas makes it harder to find and trust my own voice.'
+  ]},
+  { category: 'Isolation', questions: [
+    'Writing feels heavier because I am doing it alone.',
+    'Without people who understand this process around me, I often lose confidence or momentum when things get difficult.'
+  ]},
+  { category: 'Momentum', questions: [
+    'I start writing with good intentions, but I struggle to sustain progress over time.',
+    'When I fall off my writing practice, it takes me a long time to restart — and each restart feels harder than the last.'
+  ]}
 ];
 
 const RESULTS = {
   Time: {
     headline: 'Your biggest blocker right now is time.',
-    lead: 'This does not necessarily mean you are lazy, undisciplined, or not serious enough. It usually means your writing is competing with too many other priorities — and losing.',
+    lead: 'This is rarely about discipline. It is almost always about competition — your writing is competing with too many other priorities, and it keeps losing.',
+    intensityModifier: {
+      dominant: 'Time is clearly the central issue. Your writing is not in the margins — it is not in the schedule at all.',
+      scattered: 'Time is nudging at you, but it is not the only thing. The pattern here is diffuse — worth looking at alongside the other areas.'
+    },
     body: [
-      'When writing only happens in the margins, your best thinking rarely gets enough space to emerge. You may know what you want to say, but the conditions are too fragmented for you to say it well.'
+      'When writing only happens in the margins, your best thinking rarely gets enough space to emerge. Fragmented conditions produce fragmented work — not because you are not good enough, but because the work requires a different quality of attention than most professional tasks do.',
+      'The other dimension worth noticing: when you do sit down, how quickly can you actually get into it? For many writers, the time exists on paper but the mental transition into generative thinking takes so long that the session is over before real work begins.'
     ],
     quotes: [
-      '"I care about this, but it keeps falling to the bottom of the list."',
+      '"I care about this deeply, but it keeps falling to the bottom of the list."',
       '"I never seem to get a proper run at it."',
-      '"By the time I sit down, I\'m already mentally spent."'
+      '"By the time I sit down, I\'m already too spent to think properly."'
     ],
-    nextStep: 'Protect two focused writing sessions this week, even if they are only 45 minutes each. Not admin time. Not planning time. Writing time.',
-    softCta: 'If your writing matters, it cannot survive forever on leftover energy.'
+    nextStep: 'Protect two focused writing sessions this week — 45 minutes minimum, with no other tasks running alongside. Not admin. Not reading. Writing. Treat them as you would a client meeting: non-negotiable.',
+    softCta: 'If this work matters, it cannot survive forever on leftover energy.'
   },
   Structure: {
     headline: 'Your biggest blocker right now is structure.',
-    lead: 'You may have plenty to say. That is not the problem. The problem is that your ideas do not yet have a clear enough shape to hold your thinking with confidence.',
+    lead: 'You have plenty to say. That is not the problem. The problem is that your ideas do not yet have a clear enough shape to hold your thinking with confidence.',
+    intensityModifier: {
+      dominant: 'Structure is clearly the central issue. The ideas exist — the architecture for them does not yet.',
+      scattered: 'Structure is part of the picture, but it is not the only thing holding you back. The pattern is wider.'
+    },
     body: [
-      'When structure is weak, writing feels heavier than it should. You second-guess yourself. You loop. You overthink. You avoid the page not because you lack ideas, but because you do not yet trust the path.'
+      'When structure is weak, writing becomes harder than it needs to be. You second-guess. You loop. You avoid the page — not because you lack ideas, but because you do not yet trust the path enough to commit to it.',
+      'There is also an in-session dimension: even when you sit down with energy, you can stall on questions like "is this going in the right direction?" or "is what I\'m producing good enough?" That doubt is not a creativity problem. It is a structure problem. A clearer framework reduces those questions because it tells you what "right" looks like before you start.'
     ],
     quotes: [
-      '"I have too many ideas and do not know where to begin."',
-      '"I am not sure what belongs, what does not, or what comes next."',
+      '"I have too many ideas and don\'t know where to begin."',
+      '"I\'m not sure what belongs, what doesn\'t, or what order makes sense."',
       '"I need a clearer framework before I can really move."'
     ],
-    nextStep: 'Do not try to map the whole project. Just define: what this piece is really about, who it is for, and the next three steps only.',
+    nextStep: 'Do not try to map the whole project. Define three things only: what this piece is really arguing, who it is for, and the next three sections or steps. Nothing else. That is enough to write from.',
     softCta: 'Strong writing gets easier when the structure is carrying some of the weight.'
   },
   Noise: {
     headline: 'Your biggest blocker right now is noise.',
-    lead: 'Your problem may not be a lack of ideas. It may be too much interference.',
+    lead: 'The problem may not be a lack of ideas. It may be too much interference with the ones you already have.',
+    intensityModifier: {
+      dominant: 'Noise is clearly the central issue. The signal is in there — but it is being drowned out.',
+      scattered: 'Noise is part of what\'s making this hard, but the pattern is spread. Other things are contributing too.'
+    },
     body: [
-      'When your attention is fragmented by content, urgency, input, comparison, and constant exposure to everyone else\'s thinking, it becomes harder to hear your own.',
-      'This does not just affect output. It affects originality, clarity, and conviction.'
+      'When attention is fragmented — by content, comparison, urgency, and constant exposure to everyone else\'s thinking — it becomes harder to hear your own voice clearly. This does not just affect output. It affects originality, conviction, and the willingness to commit to a position.',
+      'There is also a voice dimension: the more you are exposed to other people\'s writing, the harder it can become to find what is distinctly yours. The comparison is often unconscious. But it is real, and it shapes what you allow yourself to say.'
     ],
     quotes: [
-      '"I feel full of input, but far from my own voice."',
-      '"I keep consuming instead of shaping."',
-      '"I know I need to think more deeply, but I rarely get the chance."'
+      '"I feel full of input but far from my own voice."',
+      '"I keep consuming instead of creating."',
+      '"I know I need to think more deeply, but I never get the conditions for it."'
     ],
-    nextStep: 'Create one block this week where you write with no tabs, no notifications, no social platforms, and no research rabbit holes. Just you and the work.',
-    softCta: 'Sometimes the most useful thing you can do for your writing is reduce the noise around it.'
+    nextStep: 'Create one block this week where you write with no tabs, no notifications, no social platforms open. Just you and the work. Do not research during this block. Do not read during this block. See what surfaces when the noise drops.',
+    softCta: 'Sometimes the most useful thing you can do for your writing is reduce the input around it.'
   },
   Isolation: {
     headline: 'Your biggest blocker right now is isolation.',
-    lead: 'Writing can be solitary. But it should not always be unsupported.',
+    lead: 'Writing is personal work. But it was never meant to be entirely unsupported work.',
+    intensityModifier: {
+      dominant: 'Isolation is clearly the central issue. The writing is not just hard — it is heavier than it needs to be because you are carrying it alone.',
+      scattered: 'Isolation is part of the picture, but it is not the only thing. The pattern here is wider.'
+    },
     body: [
-      'When you are doing all of it alone — generating ideas, making decisions, managing doubt, creating accountability, and trying to stay encouraged — the process becomes heavier and slower than it needs to be.',
-      'You may not need more information. You may need better conditions around you.'
+      'When you are doing all of it alone — generating ideas, making decisions, managing doubt, creating accountability, trying to stay encouraged — the process accumulates a weight it does not need to carry. That weight is not a signal that you are not cut out for this. It is a signal that you are trying to do something in worse conditions than necessary.',
+      'There is also a confidence dimension: without people who understand what this process actually involves, it is harder to recover when things get difficult. The doubt gets louder. The restarts feel more fragile. Community does not just help with accountability — it changes how much the hard parts cost you.'
     ],
     quotes: [
-      '"I wish I had people around me who really understood this process."',
-      '"I get stuck in my own head."',
-      '"Feedback, accountability, or shared momentum would make a huge difference."'
+      '"I wish I had people around me who really understood what this involves."',
+      '"I get too stuck in my own head."',
+      '"Feedback, accountability, or shared momentum would make a real difference."'
     ],
-    nextStep: 'Bring one person into the process this week. Ask for feedback, book a co-writing session, or tell someone what you are trying to finish and by when.',
-    softCta: 'Writing may be personal work, but it often moves best in good company.'
+    nextStep: 'Bring one person into the process this week. Ask for feedback on one page, book a co-writing session, or tell someone what you are trying to finish and by when. The specificity matters — vague accountability does not hold.',
+    softCta: 'Writing may be personal work. But it often moves best in good company.'
   },
   Momentum: {
     headline: 'Your biggest blocker right now is momentum.',
-    lead: 'You can begin. The problem is keeping going.',
+    lead: 'Beginning is not the problem. Keeping going is.',
+    intensityModifier: {
+      dominant: 'Momentum is clearly the central issue. The project stalls not at the start, but somewhere in the middle — and the restarts keep getting harder.',
+      scattered: 'Momentum is part of what\'s making this hard, but the pattern is spread. Other things are contributing too.'
+    },
     body: [
-      'This often happens when the project starts to feel bigger, slower, or messier than expected. The excitement fades. Self-doubt gets louder. Other work takes over. And slowly, the writing loses traction.',
-      'This does not mean the project is wrong. It usually means the rhythm is too fragile to carry the weight of the work.'
+      'This often happens when the project starts to feel bigger, slower, or messier than expected. The early energy fades. Self-doubt gets louder. Other work fills the gap. And gradually, the writing loses its grip on your attention and your schedule.',
+      'There is also a recovery dimension: the longer a lapse, the more psychologically heavy the restart becomes. What begins as a missed week can slowly turn into a much longer absence — not because the work has changed, but because the cost of re-entering it keeps climbing. Reducing that cost is often more important than adding motivation.'
     ],
     quotes: [
       '"I always start well, then disappear."',
-      '"I lose confidence halfway through."',
-      '"I need help keeping things alive once the first burst of energy fades."'
+      '"I lose confidence somewhere in the middle."',
+      '"Every time I take a break, it gets harder to come back."'
     ],
-    nextStep: 'Lower the bar, but increase the rhythm. Choose one small writing target you can repeat three times this week.',
-    softCta: 'Momentum is rarely built through intensity alone. It is built through continuity.'
+    nextStep: 'Lower the bar — but increase the rhythm. Choose a writing target so small it feels almost too easy: one paragraph, 200 words, ten minutes. Repeat it three times this week. The goal is not output. The goal is re-establishing the pattern.',
+    softCta: 'Momentum does not need a breakthrough. It needs a rhythm small enough to survive real life.'
   }
+};
+
+const COMBINATION_PATTERNS = {
+  'Time+Isolation': {
+    insight: `You're dealing with two things at once: not enough time, and not enough support to make the time you do have feel worthwhile. When writing is both scarce and solitary, the effort-to-reward ratio starts to feel too steep — and the work gets deprioritised.\n\nThe most useful thing you can do is not work harder on either problem separately. Find one other person who is doing the same work and write alongside them, even once. That changes both problems at once.`
+  },
+  'Structure+Momentum': {
+    insight: `You need a clear path and the energy to keep walking it — and right now you're short on both. These two blockers tend to feed each other: without structure, momentum fades because there's no clear target. Without momentum, even a good structure goes unused because the rhythm has broken down.\n\nThe entry point is almost always structure. When you know exactly what the next small step is, it becomes much easier to take it.`
+  },
+  'Noise+Structure': {
+    insight: `Your thinking is crowded — too much input, too many voices — and when you do find quiet, you're not sure where to direct it. Both blockers make the blank page feel inaccessible, just for different reasons.\n\nGetting clear requires two moves, not one: reduce the input (create conditions where you can hear yourself) and sharpen the output (name the specific thing you are writing toward). Neither works without the other.`
+  },
+  'Time+Momentum': {
+    insight: `The rhythm never quite gets established. Life keeps intervening before the habit is solid, and each restart feels harder than the last — which makes it easier to delay the next one.\n\nThe way through is smaller, not harder. A writing session you can protect for 30 minutes three times a week will do more for momentum than a four-hour block you never quite manage to book.`
+  },
+  'Noise+Isolation': {
+    insight: `You're taking in more than you're putting out — and you're doing it alone. The comparison and crowding from other people's ideas tends to get loudest when there's no one around to help you find your own signal.\n\nThe combination of noise and isolation is one of the most common patterns among expert writers who have a lot to say but can't quite land on what is distinctly theirs. The fix is usually community, not solitude — being around the right people changes what you notice about your own thinking.`
+  }
+};
+
+const SECONDARY_LABELS = {
+  Time:      'protecting time',
+  Structure: 'finding structure',
+  Noise:     'managing noise',
+  Isolation: 'writing in isolation',
+  Momentum:  'maintaining momentum'
+};
+
+const MEMBER_CTAS = {
+  Time: {
+    lessonLabel: 'SYSTEM – Maximise Time',
+    lessonUrl:   'https://the.expertauthor.community/c/write-book-course/system-maximise-time',
+    lessonCopy:  'The Maximise Time lesson was built for exactly this. It covers how to protect writing time, create a 30-day plan, and use the Book Deadline Calculator to make a realistic commitment to the work. Start there — then come back and write.',
+    rec1Label:   'Watch: Working with Your Writing Type (Coaching Collective)',
+    rec1Url:     'https://the.expertauthor.community/c/coaching-collective/working-with-your-writing-type-september-3-2021',
+    rec2Label:   'Watch: Harnessing Your Creativity through Mindful Writing – Melo Calarco (Guest Experts)',
+    rec2Url:     'https://the.expertauthor.community/c/guest-experts-597139/harnessing-your-creativity-through-mindful-writing-with-melo-calarco',
+    clarityCallEscalation: false
+  },
+  Structure: {
+    lessonLabel: 'STRUCTURE – Build Book',
+    lessonUrl:   'https://the.expertauthor.community/c/write-book-course/structure-build-book',
+    lessonCopy:  'The Build Book lesson is the most direct path through this. It walks you through the three-part framework and asks you to map out exactly what your book is doing — chapter by chapter. The structure either holds up when you test it, or you find out quickly what needs to change.',
+    rec1Label:   'Watch: Book Structure Coaching (Coaching Collective)',
+    rec1Url:     'https://the.expertauthor.community/c/coaching-collective/book-structure-coaching-october-11-2019',
+    rec2Label:   'Watch: From Strategy to Structure with Scott MacMillan (Coaching Collective)',
+    rec2Url:     'https://the.expertauthor.community/c/coaching-collective/from-strategy-to-structure-with-scott-macmillan-grammar-factory-february-18-2022',
+    clarityCallEscalation: false
+  },
+  Noise: {
+    lessonLabel: 'SYSTEM – Grow Self',
+    lessonUrl:   'https://the.expertauthor.community/c/write-book-course/system-grow-self',
+    lessonCopy:  'Getting clear enough to write well requires protecting your thinking space, not just your writing time. The Grow Self lesson is where you work on the mindset conditions — including learning to hear your own voice clearly enough to trust it on the page.',
+    rec1Label:   'Watch: Harnessing Your Creativity through Mindful Writing – Melo Calarco (Guest Experts)',
+    rec1Url:     'https://the.expertauthor.community/c/guest-experts-597139/harnessing-your-creativity-through-mindful-writing-with-melo-calarco',
+    rec2Label:   'Watch: How to Create a Thriving Mind with Jenny Brockis (Coaching Collective)',
+    rec2Url:     'https://the.expertauthor.community/c/coaching-collective/how-to-create-a-thriving-mind-with-jenny-brockis-september-11-2020',
+    clarityCallEscalation: false
+  },
+  Isolation: {
+    lessonLabel: 'SYSTEM – Grow Self',
+    lessonUrl:   'https://the.expertauthor.community/c/write-book-course/system-grow-self',
+    lessonCopy:  'You\'re already inside a community built for exactly this — and the Grow Self lesson is where you learn how to use it. It covers how to share your journey, build accountability, and approach the work in a way that makes you less reliant on willpower alone.',
+    rec1Label:   'Watch: How to Realise Your Self-Worth in Your Writing – Cassandra Goodman (Coaching Collective)',
+    rec1Url:     'https://the.expertauthor.community/c/coaching-collective/how-to-realise-your-self-worth-in-your-writing-february-5-2021',
+    rec2Label:   'Watch: How to Awaken Your Creative Brilliance – Ciara Lancaster (Coaching Collective)',
+    rec2Url:     'https://the.expertauthor.community/c/coaching-collective/how-to-awaken-your-creative-brilliance-with-ciara-lancaster-october-23-2020',
+    clarityCallEscalation: true
+  },
+  Momentum: {
+    lessonLabel: 'SYSTEM – Maximise Time',
+    lessonUrl:   'https://the.expertauthor.community/c/write-book-course/system-maximise-time',
+    lessonCopy:  'Momentum isn\'t about doing more — it\'s about making the habit smaller and the restarts cheaper. The Maximise Time lesson is where you build the conditions that keep writing alive even when life gets in the way. Work through the 30-day plan and use the Book Deadline Calculator to anchor the next phase.',
+    rec1Label:   'Watch: How to Progress with Play in the Writing Process – Christopher Sellers (Coaching Collective)',
+    rec1Url:     'https://the.expertauthor.community/c/coaching-collective/how-to-progress-with-play-in-the-writing-process-september-17-2021',
+    rec2Label:   'Watch: Working with Your Writing Type (Coaching Collective)',
+    rec2Url:     'https://the.expertauthor.community/c/coaching-collective/working-with-your-writing-type-september-3-2021',
+    clarityCallEscalation: false
+  }
+};
+
+const NON_MEMBER_CTAS = {
+  Time:      { label: 'Join EAC — and protect your writing time',    url: 'https://www.expertauthor.community/join?utm_source=unblocker&utm_medium=tool&utm_campaign=time' },
+  Structure: { label: 'Join EAC — and build a structure that holds', url: 'https://www.expertauthor.community/join?utm_source=unblocker&utm_medium=tool&utm_campaign=structure' },
+  Noise:     { label: 'Join EAC — and find your own signal',         url: 'https://www.expertauthor.community/join?utm_source=unblocker&utm_medium=tool&utm_campaign=noise' },
+  Isolation: { label: 'Join EAC — and stop doing this alone',        url: 'https://www.expertauthor.community/join?utm_source=unblocker&utm_medium=tool&utm_campaign=isolation' },
+  Momentum:  { label: 'Join EAC — and build a rhythm that sticks',   url: 'https://www.expertauthor.community/join?utm_source=unblocker&utm_medium=tool&utm_campaign=momentum' },
+  scattered: { label: 'Explore the Expert Author Community',         url: 'https://www.expertauthor.community/join?utm_source=unblocker&utm_medium=tool&utm_campaign=scattered' }
+};
+
+const SHARE_TEXTS = {
+  Time:      'My biggest writing blocker right now is time — not a lack of ideas, but a lack of protected space to think.',
+  Structure: 'My biggest writing blocker right now is structure — I have the ideas, but not yet the architecture to hold them.',
+  Noise:     'My biggest writing blocker right now is noise — too much input, not enough of my own voice.',
+  Isolation: 'My biggest writing blocker right now is isolation — writing alone is heavier than it needs to be.',
+  Momentum:  'My biggest writing blocker right now is momentum — I can start, but sustaining it is the real challenge.',
+  scattered: 'My writing blockers are spread — no single thing is stopping me, but the conditions aren\'t quite right yet.'
 };
 
 /* ============================================================
@@ -1381,8 +1644,43 @@ let currentStep = 0;
 let answers = Array(10).fill(0);
 let userName = '';
 let userEmail = '';
-let topCategory = '';
+let userContext = '';
+let primaryCategory = '';
+let secondaryCategory = '';
+let intensityTier = '';
 let eacUser = null;
+
+/* ============================================================
+   SCORING
+   ============================================================ */
+function calculateScores() {
+  return STEPS.map((step, i) => ({
+    category: step.category,
+    score: answers[i * 2] + answers[i * 2 + 1]
+  }));
+}
+
+function getTopTwo() {
+  const scores = calculateScores();
+  const sorted = [...scores].sort((a, b) => b.score - a.score);
+  return { primary: sorted[0], secondary: sorted[1] };
+}
+
+function getIntensityTier(primaryScore) {
+  if (primaryScore >= 9) return 'dominant';
+  if (primaryScore >= 6) return 'likely';
+  return 'scattered';
+}
+
+function shouldShowSecondary(primaryScore, secondaryScore) {
+  return secondaryScore >= 4 && (primaryScore - secondaryScore) <= 4;
+}
+
+function getCombinationKey(primary, secondary) {
+  const k1 = `${primary}+${secondary}`;
+  const k2 = `${secondary}+${primary}`;
+  return COMBINATION_PATTERNS[k1] ? k1 : (COMBINATION_PATTERNS[k2] ? k2 : null);
+}
 
 /* ============================================================
    NAVIGATION
@@ -1400,9 +1698,7 @@ function startQuiz() {
   showScreen('screen-questions');
 }
 
-function restartQuiz() {
-  startQuiz();
-}
+function restartQuiz() { startQuiz(); }
 
 async function nextStep() {
   currentStep++;
@@ -1411,18 +1707,14 @@ async function nextStep() {
     window.scrollTo(0, 0);
   } else {
     if (eacUser) {
-      // Already authed — skip email capture, go straight to results
-      userName    = eacUser.name || '';
-      userEmail   = eacUser.email || '';
-      topCategory = getTopCategory();
-      try {
-        await fetch('/api/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: userEmail, name: userName, writingBlocker: topCategory })
-        });
-      } catch (err) { console.warn('Subscribe failed:', err); }
+      userName  = eacUser.name  || '';
+      userEmail = eacUser.email || '';
       showResult();
+      fetch('/api/airtable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildAirtablePayload())
+      }).catch(e => console.warn('Airtable failed:', e));
     } else {
       showScreen('screen-email');
     }
@@ -1436,11 +1728,9 @@ function renderQuestions() {
   const step = STEPS[currentStep];
   const answeredCount = answers.filter(a => a > 0).length;
 
-  // Progress
   document.getElementById('progress-fill').style.width = (answeredCount / 10 * 100) + '%';
   document.getElementById('progress-label').textContent = answeredCount + ' / 10';
 
-  // Body
   const body = document.getElementById('q-body');
   body.innerHTML = `
     <div class="category-badge">
@@ -1478,14 +1768,12 @@ function renderQuestions() {
 function rate(index, value) {
   answers[index] = value;
 
-  // Update buttons visually
   const block = document.getElementById(`qblock-${index}`);
   block.classList.add('answered');
   block.querySelectorAll('.rating-btn').forEach((btn, i) => {
     btn.classList.toggle('selected', i + 1 === value);
   });
 
-  // Update progress
   const answeredCount = answers.filter(a => a > 0).length;
   document.getElementById('progress-fill').style.width = (answeredCount / 10 * 100) + '%';
   document.getElementById('progress-label').textContent = answeredCount + ' / 10';
@@ -1497,8 +1785,7 @@ function updateNextButton() {
   const q1 = answers[currentStep * 2];
   const q2 = answers[currentStep * 2 + 1];
   const btn = document.getElementById('btn-next');
-  const allAnswered = q1 > 0 && q2 > 0;
-  btn.disabled = !allAnswered;
+  btn.disabled = !(q1 > 0 && q2 > 0);
 
   const isLast = currentStep === STEPS.length - 1;
   btn.innerHTML = isLast
@@ -1507,75 +1794,204 @@ function updateNextButton() {
 }
 
 /* ============================================================
-   SCORING
-   ============================================================ */
-function calculateScores() {
-  return STEPS.map((step, i) => ({
-    category: step.category,
-    score: answers[i * 2] + answers[i * 2 + 1]
-  }));
-}
-
-function getTopCategory() {
-  const scores = calculateScores();
-  return scores.reduce((a, b) => b.score > a.score ? b : a).category;
-}
-
-/* ============================================================
-   EMAIL SUBMISSION (public flow)
+   EMAIL SUBMISSION
    ============================================================ */
 async function submitEmail(e) {
   e.preventDefault();
   userName    = document.getElementById('input-name').value.trim();
   userEmail   = document.getElementById('input-email').value.trim();
-  topCategory = getTopCategory();
-
-  // ── Brevo lead capture ───────────────────────────────────────
-  // Calls /api/subscribe — a serverless function in the same
-  // Vercel deployment that proxies to Brevo server-side.
-  // (Direct browser calls to api.brevo.com are blocked by CORS.)
-  //
-  // The function sets:
-  //   email, FIRSTNAME, WRITING_BLOCKER → triggers the matching
-  //   nurture sequence: Time | Structure | Noise | Isolation | Momentum
-  try {
-    await fetch('/api/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: userEmail,
-        name: userName,
-        writingBlocker: topCategory
-      })
-    });
-  } catch (e) {
-    // Subscription failed silently — don't block the result
-    console.warn('Subscribe failed:', e);
-  }
-  // ─────────────────────────────────────────────────────────────
-
+  userContext = document.getElementById('input-context').value.trim();
   showResult();
+  fetch('/api/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(buildAirtablePayload())
+  }).catch(e => console.warn('Airtable failed:', e));
+}
+
+/* ============================================================
+   AIRTABLE PAYLOAD
+   ============================================================ */
+function buildAirtablePayload() {
+  const scores = {};
+  calculateScores().forEach(s => scores[s.category] = s.score);
+  const comboKey = secondaryCategory ? getCombinationKey(primaryCategory, secondaryCategory) : null;
+  return {
+    email:              userEmail,
+    name:               userName,
+    primaryBlocker:     primaryCategory,
+    secondaryBlocker:   secondaryCategory,
+    intensityTier:      intensityTier,
+    scores:             scores,
+    context:            userContext,
+    isMember:           !!eacUser,
+    combinationPattern: comboKey,
+    source:             'unblocker'
+  };
 }
 
 /* ============================================================
    RESULT
    ============================================================ */
 function showResult() {
-  const data = RESULTS[topCategory];
+  const { primary, secondary } = getTopTwo();
+  primaryCategory   = primary.category;
+  intensityTier     = getIntensityTier(primary.score);
+  secondaryCategory = shouldShowSecondary(primary.score, secondary.score) ? secondary.category : null;
 
-  // Core result content
-  document.getElementById('result-category').textContent       = topCategory;
-  document.getElementById('result-headline').textContent       = data.headline;
-  document.getElementById('result-lead').textContent           = data.lead;
-  document.getElementById('result-soft-cta').textContent       = data.softCta;
-  document.getElementById('result-next-step-text').textContent = data.nextStep;
-  document.getElementById('result-body-text').innerHTML        = data.body.map(p => `<p>${p}</p>`).join('');
-  document.getElementById('result-quotes').innerHTML           = data.quotes.map(q => `<div class="result-quote">${q}</div>`).join('');
+  if (intensityTier === 'scattered') {
+    renderScatteredResult();
+    showScreen('screen-result');
+    return;
+  }
 
-  // Pre-build share content
-  buildShareContent(topCategory);
+  const data = RESULTS[primaryCategory];
 
+  document.getElementById('result-category').innerHTML       = primaryCategory;
+  document.getElementById('result-headline').innerHTML       = data.headline;
+  document.getElementById('result-lead').innerHTML           =
+    intensityTier === 'dominant' ? data.intensityModifier.dominant : data.lead;
+  document.getElementById('result-body-text').innerHTML      = data.body.map(p => `<p>${p}</p>`).join('');
+  document.getElementById('result-quotes').innerHTML         = data.quotes.map(q => `<div class="result-quote">${q}</div>`).join('');
+  document.getElementById('result-next-step-text').innerHTML = data.nextStep;
+  document.getElementById('result-soft-cta').innerHTML       = data.softCta;
+
+  const badge = document.getElementById('intensity-badge');
+  if (badge) badge.style.display = intensityTier === 'dominant' ? 'inline-block' : 'none';
+
+  const ctxMember = document.getElementById('context-prompt-member');
+  if (ctxMember) ctxMember.style.display = eacUser ? 'block' : 'none';
+
+  renderSecondaryBlock();
+  renderCtas();
+  buildShareContent(primaryCategory);
   showScreen('screen-result');
+}
+
+function renderScatteredResult() {
+  document.getElementById('result-category').innerHTML       = 'Mixed';
+  document.getElementById('result-headline').innerHTML       = 'Your blockers are not concentrated — they are spread.';
+  document.getElementById('result-lead').innerHTML           = 'There is no single thing in the way. Your writing is not being held back by one dominant pattern, which can actually mean you are closer than you think. The work right now is probably less about fixing something and more about finding the conditions — small, consistent, protected — where you actually write.';
+  document.getElementById('result-body-text').innerHTML      = '';
+  document.getElementById('result-quotes').innerHTML         = '';
+  document.getElementById('result-next-step-text').innerHTML = 'Pick the simplest possible writing session this week. Not the most ambitious one. One hour, one topic, no planning. See what surfaces. That will tell you more than this diagnostic can.';
+  document.getElementById('result-soft-cta').innerHTML       = '';
+
+  const badge = document.getElementById('intensity-badge');
+  if (badge) badge.style.display = 'none';
+
+  const secondary = document.getElementById('result-secondary');
+  if (secondary) secondary.style.display = 'none';
+
+  const ctxMember = document.getElementById('context-prompt-member');
+  if (ctxMember) ctxMember.style.display = eacUser ? 'block' : 'none';
+
+  renderScatteredCtas();
+  buildShareContent('scattered');
+}
+
+function renderSecondaryBlock() {
+  const el = document.getElementById('result-secondary');
+  if (!el) return;
+
+  if (!secondaryCategory) {
+    el.style.display = 'none';
+    return;
+  }
+
+  const comboKey = getCombinationKey(primaryCategory, secondaryCategory);
+  let insightText;
+  if (comboKey) {
+    insightText = '<p>' + COMBINATION_PATTERNS[comboKey].insight.replace(/\n\n/g, '</p><p>') + '</p>';
+  } else {
+    insightText = `<p>We also noticed a pattern around ${SECONDARY_LABELS[secondaryCategory]}. It's not your primary blocker, but it's close enough to be worth paying attention to as you work through what's in the way.</p>`;
+  }
+
+  document.getElementById('result-secondary-tag').textContent = secondaryCategory;
+  document.getElementById('result-secondary-text').innerHTML  = insightText;
+  el.style.display = 'block';
+}
+
+function renderCtas() {
+  const el = document.getElementById('result-ctas');
+  if (!el) return;
+  eacUser ? renderMemberCtas(el) : renderNonMemberCtas(el);
+}
+
+function renderScatteredCtas() {
+  const el = document.getElementById('result-ctas');
+  if (!el) return;
+
+  if (eacUser) {
+    el.innerHTML = `
+      <div class="result-section result-member-cta">
+        <div class="result-section-label">Where to go next</div>
+        <p class="lesson-copy">Your blockers are spread, which means there isn't one obvious next lesson. The best starting point is the part of the course most aligned with the condition you want to improve first. Browse the course and start where you feel the most resistance.</p>
+        <a class="btn-cta-primary" href="https://the.expertauthor.community/c/write-book-course?utm_source=unblocker&utm_medium=tool&utm_campaign=scattered" target="_blank">
+          Go to the course →
+        </a>
+      </div>`;
+  } else {
+    const cta = NON_MEMBER_CTAS.scattered;
+    el.innerHTML = `
+      <a href="${cta.url}" class="btn-cta-primary" target="_blank" rel="noopener">
+        ${cta.label}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <p class="non-member-soft-cta">Inside the Expert Author Community, you'll find the course, coaching, and community built for exactly this.</p>`;
+  }
+}
+
+function renderNonMemberCtas(el) {
+  const cta = NON_MEMBER_CTAS[primaryCategory];
+  if (!cta) return;
+  el.innerHTML = `
+    <a href="${cta.url}" class="btn-cta-primary" target="_blank" rel="noopener">
+      ${cta.label}
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <p class="non-member-soft-cta">Inside the Expert Author Community, you'll find the course, coaching, and community built for exactly this.</p>`;
+}
+
+function renderMemberCtas(el) {
+  const cta = MEMBER_CTAS[primaryCategory];
+  if (!cta) return;
+  const cat = primaryCategory.toLowerCase();
+  el.innerHTML = `
+    <div class="result-section result-member-cta">
+      <div class="result-section-label">Where to go next</div>
+      <a class="btn-cta-primary" href="${cta.lessonUrl}?utm_source=unblocker&utm_medium=tool&utm_campaign=${cat}" target="_blank">
+        ${cta.lessonLabel} →
+      </a>
+      <p class="lesson-copy">${cta.lessonCopy}</p>
+      <div class="result-section-label" style="margin-top:28px">Coaching recordings for this</div>
+      <a class="btn-cta-secondary" href="${cta.rec1Url}" target="_blank">${cta.rec1Label}</a>
+      ${cta.rec2Url ? `<a class="btn-cta-secondary" href="${cta.rec2Url}" target="_blank">${cta.rec2Label}</a>` : ''}
+      ${cta.clarityCallEscalation ? `
+      <div class="clarity-call-block">
+        <p>This one is often better worked through in conversation. If you'd like to talk it through with Kelly directly, a Clarity Call is the place to do that.</p>
+        <a class="btn-cta-secondary" href="https://www.expertauthor.community/programs/write-now?utm_source=unblocker&utm_medium=tool&utm_campaign=clarity-call" target="_blank">
+          Book a Clarity Call →
+        </a>
+      </div>` : ''}
+    </div>`;
+}
+
+/* ============================================================
+   MEMBER CONTEXT SAVE
+   ============================================================ */
+function saveContext() {
+  const ctx = document.getElementById('input-context-member');
+  if (!ctx) return;
+  userContext = ctx.value.trim();
+  fetch('/api/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(buildAirtablePayload())
+  }).catch(e => console.warn('Airtable failed:', e));
+  ctx.disabled = true;
+  const btn = ctx.nextElementSibling;
+  if (btn) btn.textContent = 'Saved';
 }
 
 /* ============================================================
@@ -1584,16 +2000,15 @@ function showResult() {
 const SHARE_URL = 'https://tools.expertauthor.community/unblocker';
 
 function buildShareContent(category) {
+  const shareText    = SHARE_TEXTS[category] || SHARE_TEXTS.scattered;
+  const tweetText    = `${shareText}\n\nFound out in 5 minutes with this free reflection tool 👇\n${SHARE_URL}`;
   const emailSubject = `My biggest writing blocker is ${category}`;
-  const emailBody    = `I just did a 5-minute reflection and found out my biggest writing blocker is ${category}.\n\nThought you might find it useful too:\n${SHARE_URL}`;
-  const tweetText    = `My biggest writing blocker right now is ${category}.\n\nFound out in 5 minutes with this free reflection tool 👇\n${SHARE_URL}`;
+  const emailBody    = `${shareText}\n\nFound out with this free 5-minute reflection tool:\n${SHARE_URL}`;
 
   document.getElementById('btn-email').href =
     `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-
   document.getElementById('btn-linkedin').href =
     `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(SHARE_URL)}`;
-
   document.getElementById('btn-twitter').href =
     `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
 }
@@ -1622,7 +2037,6 @@ function copyShareUrl() {
       btn.classList.remove('copied');
     }, 2000);
   }).catch(() => {
-    // Fallback
     const ta = Object.assign(document.createElement('textarea'), {
       value: SHARE_URL, style: 'position:fixed;opacity:0'
     });
