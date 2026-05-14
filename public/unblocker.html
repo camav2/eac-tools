@@ -1395,13 +1395,6 @@ body { padding-top: 60px; }
     </div>
   </div>
 
-  <div id="context-prompt-member" class="context-prompt" style="display:none">
-    <textarea id="input-context-member" rows="2"
-      placeholder="What are you currently working on? (optional)"
-      maxlength="500"></textarea>
-    <button onclick="saveContext()">Save</button>
-  </div>
-
   <div class="result-body">
 
     <div class="result-section">
@@ -1754,6 +1747,9 @@ function getCombinationKey(primary, secondary) {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  if (id !== 'screen-questions') {
+    document.querySelector('.q-footer').classList.remove('visible');
+  }
   window.scrollTo(0, 0);
 }
 
