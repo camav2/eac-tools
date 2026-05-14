@@ -1643,13 +1643,8 @@ function buildGapBlock(qNum) {
           ? `<a class="gap-block-clarity" href="${withUtm(CLARITY_CALL_URL, getTier(weightedScore), buildPattern())}" target="_blank" rel="noopener">Book a Clarity Call with Kelly &rarr;</a>`
           : ''}
       </div>`;
-  } else {
-    const nc = block.nonMemberCta;
-    const showCta = nc.url && !String(nc.url).startsWith('PLACEHOLDER');
-    if (showCta) {
-      ctaHtml = `<a class="gap-block-cta" href="${nc.url}" target="_blank" rel="noopener">${nc.label} &rarr;</a>`;
-    }
   }
+  // nonMemberCta intentionally hidden until placeholder URLs are filled
 
   return `
     <div class="gap-block gap-block--${tone}">
