@@ -1892,13 +1892,15 @@ function buildResult(tier) {
     secondaryLabel = 'Follow Kelly on LinkedIn →';
   }
 
-  const ctaBlock = `
-    <div class="result-ctas">
-      <a class="btn-cta-primary" href="${primaryUrl}" target="_blank" rel="noopener">${primaryLabel}</a>
-      <a class="btn-cta-secondary" href="${secondaryUrl}" target="_blank" rel="noopener">${secondaryLabel}</a>
-      <button class="btn-share" onclick="openModal()">⬡ Share this tool</button>
-    </div>
-  `;
+  const ctaBlock = eacUser
+    ? `<div class="result-ctas">
+        <button class="btn-share" onclick="openModal()">⬡ Share this tool</button>
+      </div>`
+    : `<div class="result-ctas">
+        <a class="btn-cta-primary" href="${primaryUrl}" target="_blank" rel="noopener">${primaryLabel}</a>
+        <a class="btn-cta-secondary" href="${secondaryUrl}" target="_blank" rel="noopener">${secondaryLabel}</a>
+        <button class="btn-share" onclick="openModal()">⬡ Share this tool</button>
+      </div>`;
 
   document.getElementById('result-body').innerHTML = r.body + gapHtml + ctaBlock;
 }
