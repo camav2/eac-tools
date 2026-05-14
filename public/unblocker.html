@@ -1746,7 +1746,7 @@ document.addEventListener('keydown', e => {
           <div class="dropdown-divider"></div>
           <button class="dropdown-item dropdown-logout" onclick="handleLogout()">Log out</button>
         </div>`;
-      if (user.isAdmin) enableEditing()
+      if (user.isAdmin) try { enableEditing() } catch (e) { console.error('CMS init failed:', e) }
     } else {
       el.innerHTML = `<a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
     }

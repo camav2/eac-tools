@@ -2055,7 +2055,7 @@ document.addEventListener('keydown', e => {
     const { user } = await res.json();
     eacUser = user;
     if (user) {
-      if (user.isAdmin) enableEditing()
+      if (user.isAdmin) try { enableEditing() } catch (e) { console.error('CMS init failed:', e) }
       // Logged-in: replace entire block with avatar + dropdown
       const initial = (user.name || user.email || '?')[0].toUpperCase();
       el.innerHTML = `
