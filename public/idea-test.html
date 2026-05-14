@@ -1121,7 +1121,10 @@ body { padding-top: 60px; }
     </svg>
     <span class="header-logo-text">EAC Tools</span><span class="beta-badge">Beta</span>
   </a>
-  <div class="header-auth" id="header-auth"><!-- populated by JS --></div>
+  <div class="header-auth" id="header-auth">
+    <span id="header-member-prompt" style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.45);white-space:nowrap;">EAC member?</span>
+    <a id="header-login-btn" class="btn-header-login" href="#">Log in</a>
+  </div>
 </header>
 
 <!-- ============================================================
@@ -1815,12 +1818,19 @@ document.addEventListener('keydown', e => {
 
 /* ── AUTH ── */
 (async function initAuth() {
-  const el = document.getElementById('header-auth');
+  const el      = document.getElementById('header-auth');
+  const loginBtn = document.getElementById('header-login-btn');
+
+  // Set login href now that window.location is available
+  const loginHref = `https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}`;
+  if (loginBtn) loginBtn.href = loginHref;
+
   try {
     const res = await fetch('/api/me');
     const { user } = await res.json();
     eacUser = user;
     if (user) {
+      // Logged-in: replace entire block with avatar + dropdown
       const initial = (user.name || user.email || '?')[0].toUpperCase();
       el.innerHTML = `
         <button class="header-user-btn" onclick="toggleDropdown(event)">
@@ -1835,11 +1845,10 @@ document.addEventListener('keydown', e => {
           <div class="dropdown-divider"></div>
           <button class="dropdown-item dropdown-logout" onclick="handleLogout()">Log out</button>
         </div>`;
-    } else {
-      el.innerHTML = `<span style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.45);white-space:nowrap;">EAC member?</span><a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
     }
+    // Unauthenticated: static HTML already shows "EAC member? / Log in" — nothing to do
   } catch {
-    if (el) el.innerHTML = `<span style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.45);white-space:nowrap;">EAC member?</span><a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
+    // Fetch failed: static HTML already visible, href already set above
   }
 })();
 
