@@ -1794,6 +1794,7 @@ async function nextQuestion() {
       buildResult(tier);
       showScreen('screen-result');
     } else {
+      document.querySelector('.q-footer').classList.remove('visible');
       showScreen('screen-email');
     }
   }
