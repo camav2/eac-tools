@@ -1741,7 +1741,9 @@ function selectAnswer(qNum, value) {
   gettingThereBtn.className = 'yn-btn' + (value === 'getting-there' ? ' selected-partial' : '');
   yesBtn.className          = 'yn-btn' + (value === 'yes'           ? ' selected-yes'     : '');
 
-  document.getElementById('btn-next').disabled = false;
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.disabled = false;
+  nextBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 async function nextQuestion() {
