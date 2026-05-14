@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Editor — EAC Tools</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy:   #00003D;
+      --yellow: #FFE64B;
+      --white:  #FFFFFF;
+      --grey:   #F5F5F7;
+      --font:   'Montserrat', sans-serif;
+      --bar:    56px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; font-family: var(--font); background: var(--grey); }
+
+    #splash {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 100vh; gap: 12px; color: var(--navy);
+    }
+    .splash-title { font-size: 17px; font-weight: 800; }
+    .splash-sub   { font-size: 13px; color: #9999AA; }
+    .splash-link  {
+      margin-top: 8px; background: var(--navy); color: var(--white);
+      font-family: var(--font); font-size: 12px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 10px 20px; border-radius: 999px; text-decoration: none;
+    }
+
+    #bar {
+      display: none; position: fixed; top: 0; left: 0; right: 0;
+      height: var(--bar); background: var(--navy);
+      align-items: center; justify-content: space-between;
+      padding: 0 20px; z-index: 9999; gap: 12px;
+    }
+    .bar-left  { display: flex; align-items: center; gap: 10px; }
+    .bar-logo  {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--white); text-decoration: none;
+    }
+    .bar-logo svg { width: 20px; height: 20px; }
+    .bar-div      { width: 1px; height: 18px; background: rgba(255,255,255,0.15); }
+    .bar-file     { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.55); }
+    .bar-right    { display: flex; align-items: center; gap: 10px; }
+    .bar-status   { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.35); }
+    .bar-status.unsaved { color: rgba(255,230,75,0.75); }
+    .bar-status.saving  { color: rgba(255,255,255,0.6); }
+    .bar-status.saved   { color: #4de880; }
+    .bar-status.error   { color: #ff6b6b; }
+    .btn-save {
+      background: var(--yellow); color: var(--navy);
+      font-family: var(--font); font-size: 12px; font-weight: 800;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 8px 18px; border-radius: 999px; border: none; cursor: pointer;
+    }
+    .btn-save:disabled            { opacity: 0.45; cursor: default; }
+    .btn-save:not(:disabled):hover { opacity: 0.85; }
+
+    #frame {
+      display: none; position: fixed;
+      top: var(--bar); left: 0; right: 0; bottom: 0;
+      width: 100%; height: calc(100vh - var(--bar)); border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="splash">
+    <div class="splash-title" id="splash-title">Loading editor…</div>
+    <div class="splash-sub"   id="splash-sub">Checking admin access</div>
+  </div>
+
+  <div id="bar">
+    <div class="bar-left">
+      <a class="bar-logo" href="/" target="_blank" rel="noopener">
+        <svg viewBox="0 0 53.3 53.3" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="32.1 53.3 0 53.3 0 21.2 21.1 0.1 53.2 32.2 32.1 53.3" fill="#FFE64B"/>
+          <polyline points="15.8 53.3 0 53.3 0 37.5" fill="#00003D"/>
+          <polygon points="46.6 25.4 33.2 38.8 26.6 32.3 40 19 33.9 13 20.6 26.3 14.4 20.1 27.9 6.7 21.2 0 0 21.2 32.1 53.3 53.3 32.1 46.6 25.4" fill="#00003D"/>
+        </svg>
+        EAC Tools
+      </a>
+      <div class="bar-div"></div>
+      <span class="bar-file">index.html</span>
+    </div>
+    <div class="bar-right">
+      <span class="bar-status" id="status"></span>
+      <button class="btn-save" id="btn-save" disabled>Save</button>
+    </div>
+  </div>
+
+  <iframe id="frame" sandbox="allow-same-origin" title="Page editor"></iframe>
+
+  <script>
+    const splash   = document.getElementById('splash')
+    const splashT  = document.getElementById('splash-title')
+    const splashS  = document.getElementById('splash-sub')
+    const bar      = document.getElementById('bar')
+    const frame    = document.getElementById('frame')
+    const btnSave  = document.getElementById('btn-save')
+    const statusEl = document.getElementById('status')
+
+    let currentSha = null
+    let isDirty    = false
+
+    function setStatus(text, cls) {
+      statusEl.className  = 'bar-status' + (cls ? ' ' + cls : '')
+      statusEl.textContent = text
+    }
+
+    function showError(title, sub, loginUrl) {
+      splashT.textContent = title
+      splashS.textContent = sub
+      if (loginUrl) {
+        const a = document.createElement('a')
+        a.className   = 'splash-link'
+        a.href        = loginUrl
+        a.textContent = 'Log in'
+        splash.appendChild(a)
+      }
+    }
+
+    async function init() {
+      try {
+        const res = await fetch('/api/content')
+
+        if (res.status === 403) {
+          showError(
+            'Admin access required',
+            'You need to be an EAC administrator to use this editor.',
+            'https://auth.expertauthor.community/login?redirect=' + encodeURIComponent(window.location.href)
+          )
+          return
+        }
+        if (!res.ok) throw new Error('Server error ' + res.status)
+
+        const { content, sha } = await res.json()
+        currentSha = sha
+
+        const doc = frame.contentDocument
+        doc.open()
+        doc.write(content)
+        doc.close()
+        doc.designMode = 'on'
+
+        doc.addEventListener('input', () => {
+          if (!isDirty) {
+            isDirty = true
+            btnSave.disabled = false
+            setStatus('Unsaved changes', 'unsaved')
+          }
+        })
+
+        splash.style.display = 'none'
+        bar.style.display    = 'flex'
+        frame.style.display  = 'block'
+
+      } catch (err) {
+        showError('Failed to load editor', err.message, null)
+      }
+    }
+
+    btnSave.addEventListener('click', async () => {
+      if (!isDirty || !currentSha) return
+
+      btnSave.disabled = true
+      setStatus('Saving…', 'saving')
+
+      try {
+        const doc     = frame.contentDocument
+        const content = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML
+
+        const res = await fetch('/api/content', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ content, sha: currentSha }),
+        })
+
+        if (!res.ok) {
+          const { error } = await res.json().catch(() => ({ error: 'Unknown error' }))
+          throw new Error(error)
+        }
+
+        const data = await res.json()
+        if (data.sha) currentSha = data.sha
+        isDirty = false
+        setStatus('Saved ✓', 'saved')
+        setTimeout(() => setStatus('', ''), 3000)
+      } catch (err) {
+        setStatus('Save failed — ' + err.message, 'error')
+        btnSave.disabled = false
+      }
+    })
+
+    init()
+  </script>
+</body>
+</html>
