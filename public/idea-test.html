@@ -1513,6 +1513,7 @@ let weightedScore = 0;
 let userName     = '';
 let ideaText     = '';
 let eacUser      = null;
+let contentMap   = {};
 
 /* ---- Weighted scoring ---- */
 const WEIGHTS = { 1: 0.75, 2: 1.5, 3: 1.5, 4: 1.0, 5: 0.75 };
@@ -1698,8 +1699,8 @@ function buildGapBlock(qNum) {
   const block = GAP_BLOCKS[qNum];
   const tone  = val === 'getting-there' ? 'advisory' : 'gap';
   const raw   = val === 'getting-there' ? block.gettingThere : block.notYet;
+  const copyKey = `idea-test/gap/${qNum}/${val}`;
 
-  // Convert double newlines to paragraph breaks
   const copyHtml = raw.trim().split(/\n\n+/).map(p => `<p>${p.trim()}</p>`).join('');
 
   let ctaHtml = '';
@@ -1717,19 +1718,18 @@ function buildGapBlock(qNum) {
     ctaHtml = `
       <div class="gap-block-member-cta">
         <a class="gap-block-lesson-link" href="${mc.lessonUrl}" target="_blank" rel="noopener">Go to lesson: ${mc.lessonLabel} &rarr;</a>
-        <p class="gap-block-lesson-copy">${mc.lessonCopy}</p>
+        <p class="gap-block-lesson-copy" data-content-key="idea-test/gap/${qNum}/member-cta-copy">${mc.lessonCopy}</p>
         ${recs ? `<div class="gap-block-recs">${recs}</div>` : ''}
         ${mc.clarityCallEscalation
           ? `<a class="gap-block-clarity" href="${withUtm(CLARITY_CALL_URL, getTier(weightedScore), buildPattern())}" target="_blank" rel="noopener">Book a Clarity Call with Kelly &rarr;</a>`
           : ''}
       </div>`;
   }
-  // nonMemberCta intentionally hidden until placeholder URLs are filled
 
   return `
     <div class="gap-block gap-block--${tone}">
       <div class="gap-block-label">Question ${qNum} — ${block.title}</div>
-      ${copyHtml}
+      <div data-content-key="${copyKey}">${copyHtml}</div>
       ${ctaHtml}
     </div>
   `;
@@ -1934,9 +1934,16 @@ function buildResult(tier) {
 
   // Hero
   document.getElementById('result-eyebrow').textContent  = `${hi}here's your result`;
-  document.getElementById('result-badge').textContent     = r.badge;
-  document.getElementById('result-headline').textContent  = r.headline;
-  document.getElementById('result-lead').textContent      = r.lead;
+
+  const badge    = document.getElementById('result-badge');
+  const headline = document.getElementById('result-headline');
+  const lead     = document.getElementById('result-lead');
+  badge.dataset.contentKey    = `idea-test/result/${tier}/badge`;
+  headline.dataset.contentKey = `idea-test/result/${tier}/headline`;
+  lead.dataset.contentKey     = `idea-test/result/${tier}/lead`;
+  badge.textContent    = r.badge;
+  headline.textContent = r.headline;
+  lead.textContent     = r.lead;
 
   // Score dots — three states
   const dotsEl = document.getElementById('score-dots');
@@ -1987,7 +1994,12 @@ function buildResult(tier) {
         <button class="btn-share" onclick="openModal()">⬡ Share this tool</button>
       </div>`;
 
-  document.getElementById('result-body').innerHTML = r.body + gapHtml + ctaBlock;
+  document.getElementById('result-body').innerHTML =
+    `<div data-content-key="idea-test/result/${tier}/body">${r.body}</div>` + gapHtml + ctaBlock;
+
+  // Apply stored overrides to newly created elements, then enable editing for admins
+  applyContent();
+  if (eacUser?.isAdmin) enableEditing();
 }
 
 /* ---- Share modal ---- */
@@ -2081,16 +2093,21 @@ function handleLogout() {
 async function loadContent() {
   try {
     const r = await fetch('/api/content?page=idea-test')
-    const map = await r.json()
-    Object.entries(map).forEach(([key, html]) => {
-      const el = document.querySelector(`[data-content-key="${key}"]`)
-      if (el && html) el.innerHTML = html
-    })
+    contentMap = await r.json()
+    applyContent()
   } catch {}
+}
+
+function applyContent() {
+  Object.entries(contentMap).forEach(([key, html]) => {
+    const el = document.querySelector(`[data-content-key="${key}"]`)
+    if (el && html) el.innerHTML = html
+  })
 }
 
 function enableEditing() {
   document.querySelectorAll('[data-content-key]').forEach(el => {
+    if (el.closest('.cms-region')) return
     const key = el.dataset.contentKey
     const wrap = document.createElement('div')
     wrap.className = 'cms-region'
