@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "devDependencies": {
-    "@vercel/node": "^3.0.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "@vercel/node": "^3.0.0"
+  },
+  "dependencies": {
+    "jose": "^6.2.3"
   }
 }

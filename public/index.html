@@ -97,6 +97,84 @@
     }
     .header-link:hover { color: var(--color-yellow); }
 
+    /* Auth area */
+    .header-auth {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .header-avatar-placeholder {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-white);
+      flex-shrink: 0;
+    }
+
+    .header-user-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn-header-logout {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: color var(--transition);
+      padding: 0;
+    }
+    .btn-header-logout:hover { color: rgba(255,255,255,0.75); }
+
+    .btn-header-login {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-navy);
+      background: var(--color-yellow);
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      transition: all var(--transition);
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-header-login:hover { background: #f5d800; }
+
     .beta-badge {
       display: inline-flex;
       align-items: center;
@@ -497,9 +575,9 @@
       </svg>
       <span class="header-logo-text">EAC Tools</span><span class="beta-badge">Beta</span>
     </div>
-    <a href="https://www.expertauthor.community" class="header-link" target="_blank" rel="noopener">
-      expertauthor.community →
-    </a>
+    <div class="header-auth" id="header-auth">
+      <!-- populated by JS -->
+    </div>
   </header>
 
   <!-- ── HERO ───────────────────────────────────────────────── -->
@@ -647,5 +725,36 @@
     </p>
   </footer>
 
+  <script>
+    (async function initAuth() {
+      const el = document.getElementById('header-auth');
+      try {
+        const res = await fetch('/api/me');
+        const { user } = await res.json();
+
+        if (user) {
+          const initial = (user.name || user.email || '?')[0].toUpperCase();
+          el.innerHTML = `
+            <div class="header-user">
+              ${user.avatarUrl
+                ? `<img class="header-avatar" src="${user.avatarUrl}" alt="${user.name}">`
+                : `<div class="header-avatar-placeholder">${initial}</div>`
+              }
+              <span class="header-user-name">${user.name || user.email}</span>
+            </div>
+            <button class="btn-header-logout" onclick="handleLogout()">Log out</button>
+          `;
+        } else {
+          el.innerHTML = `<a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
+        }
+      } catch {
+        el.innerHTML = `<a class="btn-header-login" href="https://auth.expertauthor.community/login?redirect=${encodeURIComponent(window.location.href)}">Log in</a>`;
+      }
+    })();
+
+    function handleLogout() {
+      window.location.href = `https://auth.expertauthor.community/api/auth/logout?redirect=${encodeURIComponent(window.location.href)}`;
+    }
+  </script>
 </body>
 </html>
