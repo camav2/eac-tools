@@ -1,15 +1,18 @@
 /*
  * Airtable API handler — Idea Test submissions
  *
- * Three-step write on every submission:
- *   1. Upsert People record (find by email or create; set Member/Non-member)
- *   2. Create Idea Test Results record linked to that person
- *   3. Append Activity Log entry linked to that person
+ * Write order (each step fails independently):
+ *   1. Circle: fetch access group for members
+ *   2. People: upsert record (find by email or create)
+ *   3. Idea Test Results: always written, linked to person if step 2 succeeded
+ *   4. Activity Log: written only if step 2 succeeded
  *
  * Env vars required:
- *   AIRTABLE_API_KEY      — personal access token
+ *   AIRTABLE_API_KEY      — personal access token (needs access to all 3 tables)
  *   AIRTABLE_BASE_ID      — appvucz2Xo0PLqN2k
  *   AIRTABLE_TABLE_ID     — Idea Test Results table ID (tblPU7kA0YMw58Uyg)
+ *   CIRCLE_API_TOKEN      — Circle v2 API token
+ *   CIRCLE_COMMUNITY_ID   — 9832
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
@@ -28,29 +31,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!email) return res.status(400).json({ error: 'Email required' })
 
-  try {
-    // 1. Fetch Circle access group for members (non-blocking — fails silently)
-    let accessGroup:   string | undefined
-    let accessGroupId: string | undefined
-    if (isMember && email) {
+  // ── Step 1: Circle access group (members only, best-effort) ──────────────
+  let accessGroup:   string | undefined
+  let accessGroupId: string | undefined
+  if (isMember && email) {
+    try {
       const group = await getCircleAccessGroup(email)
       if (group) {
         accessGroup   = group.name
         accessGroupId = String(group.id)
+        console.log('[circle] access group:', group.name, group.id)
+      } else {
+        console.log('[circle] no access group found for', email)
       }
+    } catch (err) {
+      console.error('[circle] failed:', err)
     }
+  }
 
-    // 2. Upsert People record
-    const personId = await upsertPerson({
+  // ── Step 2: Upsert People (best-effort) ──────────────────────────────────
+  let personId: string | undefined
+  try {
+    personId = await upsertPerson({
       email,
-      name:            firstName    || '',
-      isMember:        !!isMember,
-      circleMemberId:  circleUserId || undefined,
+      name:           firstName    || '',
+      isMember:       !!isMember,
+      circleMemberId: circleUserId || undefined,
       accessGroup,
       accessGroupId,
     })
+    console.log('[people] upserted:', personId)
+  } catch (err) {
+    console.error('[people] upsert failed:', err)
+  }
 
-    // 3. Create Idea Test Results record linked to person
+  // ── Step 3: Write Idea Test Results (always) ─────────────────────────────
+  try {
     const resultRes = await fetch(
       `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_ID}`,
       {
@@ -73,7 +89,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             'Q5 – Alignment':   q5,
             'Source Tool':      'idea-test',
             'Submitted At':     new Date().toISOString(),
-            'Person':           [{ id: personId }],
+            ...(personId ? { 'Person': [{ id: personId }] } : {}),
           },
         }),
       }
@@ -81,24 +97,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!resultRes.ok) {
       const err = await resultRes.json()
-      console.error('Airtable error (results):', err)
-      return res.status(500).json({ error: 'Airtable API error' })
+      console.error('[results] Airtable error:', JSON.stringify(err))
+      return res.status(500).json({ error: 'Airtable write failed' })
     }
 
     const { id: resultId } = await resultRes.json()
+    console.log('[results] written:', resultId)
 
-    // 4. Log activity
-    await logActivity({
-      personId,
-      actionType:  'tool-completion',
-      sourceTool:  'idea-test',
-      summary:     `Completed Idea Test — ${tier} (${Number(weightedScore).toFixed(1)})`,
-      referenceId: resultId,
-    })
+    // ── Step 4: Activity Log (only if we have a person) ───────────────────
+    if (personId) {
+      try {
+        await logActivity({
+          personId,
+          actionType:  'tool-completion',
+          sourceTool:  'idea-test',
+          summary:     `Completed Idea Test — ${tier} (${Number(weightedScore).toFixed(1)})`,
+          referenceId: resultId,
+        })
+        console.log('[activity] logged')
+      } catch (err) {
+        console.error('[activity] failed:', err)
+      }
+    }
 
     return res.status(200).json({ ok: true })
   } catch (err) {
-    console.error('Handler error:', err)
+    console.error('[results] handler error:', err)
     return res.status(500).json({ error: 'Internal error' })
   }
 }
