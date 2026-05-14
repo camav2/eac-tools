@@ -1822,6 +1822,7 @@ async function nextQuestion() {
         });
       } catch (_) { /* silent */ }
 
+      document.querySelector('.q-footer').classList.remove('visible');
       buildResult(tier);
       showScreen('screen-result');
     } else {
