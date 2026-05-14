@@ -1815,7 +1815,8 @@ async function nextQuestion() {
             weightedScore: parseFloat(weightedScore.toFixed(2)),
             tier:          getTierLabel(tier),
             q1: answers[1], q2: answers[2], q3: answers[3],
-            q4: answers[4], q5: answers[5]
+            q4: answers[4], q5: answers[5],
+            isMember:      true,
           })
         });
       } catch (_) { /* silent */ }
@@ -1862,7 +1863,8 @@ async function submitEmail(e) {
         weightedScore: parseFloat(weightedScore.toFixed(2)),
         tier:          getTierLabel(tier),
         q1: answers[1], q2: answers[2], q3: answers[3],
-        q4: answers[4], q5: answers[5]
+        q4: answers[4], q5: answers[5],
+        isMember:      false,
       })
     });
   } catch (_) { /* silent failure — result shows regardless */ }
