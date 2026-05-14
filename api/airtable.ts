@@ -67,6 +67,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // ── Step 3: Write Idea Test Results (always) ─────────────────────────────
   try {
+    const fields: Record<string, unknown> = {
+      'Email':            email,
+      'First Name':       firstName   || '',
+      'Idea Text':        ideaText    || '',
+      'Score':            weightedScore,
+      'Tier':             tier,
+      'Q1 – Persistence': q1,
+      'Q2 – Argument':    q2,
+      'Q3 – Reader':      q3,
+      'Q4 – Depth':       q4,
+      'Q5 – Alignment':   q5,
+      'Source Tool':      'idea-test',
+      'Submitted At':     new Date().toISOString(),
+    }
+    if (personId && typeof personId === 'string') {
+      fields['Person'] = [{ id: personId }]
+      console.log('[results] linking person:', personId)
+    }
+
     const resultRes = await fetch(
       `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_ID}`,
       {
@@ -75,23 +94,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           Authorization:  `Bearer ${process.env.AIRTABLE_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          fields: {
-            'Email':            email,
-            'First Name':       firstName   || '',
-            'Idea Text':        ideaText    || '',
-            'Score':            weightedScore,
-            'Tier':             tier,
-            'Q1 – Persistence': q1,
-            'Q2 – Argument':    q2,
-            'Q3 – Reader':      q3,
-            'Q4 – Depth':       q4,
-            'Q5 – Alignment':   q5,
-            'Source Tool':      'idea-test',
-            'Submitted At':     new Date().toISOString(),
-            ...(personId ? { 'Person': [{ id: personId }] } : {}),
-          },
-        }),
+        body: JSON.stringify({ fields }),
       }
     )
 

@@ -40,11 +40,10 @@ async function getCommunityMemberId(email: string): Promise<number | null> {
     email,
     community_id: process.env.CIRCLE_COMMUNITY_ID!,
   })
-  const data = await circleFetch(`community_members/search?${params}`)
+  const data = await circleFetch(`community_members?${params}`)
   if (!data) return null
-  // search returns an object with a matching member or an array
-  const member = Array.isArray(data) ? data[0] : data
-  return member?.id ?? null
+  const records = data.records ?? (Array.isArray(data) ? data : [data])
+  return records[0]?.id ?? null
 }
 
 /**
