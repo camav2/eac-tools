@@ -1485,10 +1485,10 @@ body { padding-top: 60px; }
      ============================================================ -->
 <script>
 // ── PLACEHOLDER URLS — fill before going live ──────────────────
-const CLARITY_CALL_URL   = 'PLACEHOLDER_CLARITY_CALL_URL';   // TODO: fill this URL
-const EAC_WAITLIST_URL   = 'PLACEHOLDER_EAC_WAITLIST_URL';   // TODO: fill this URL
-const FREE_RESOURCE_URL  = 'PLACEHOLDER_FREE_RESOURCE_URL';  // TODO: fill this URL
-const KELLY_LINKEDIN_URL = 'https://www.linkedin.com/in/kellyirving';
+const CLARITY_CALL_URL   = 'https://calendly.com/kellyirving/clarity-call';
+const EAC_WAITLIST_URL   = 'https://airtable.com/appBbiRbSbzEyRX5y/pagJlUnBpf4Doa4ih/form';
+const FREE_RESOURCE_URL  = 'https://www.kellyirving.com/resource/5-step-writing-formula';
+const EAC_LINKEDIN_URL   = 'https://www.linkedin.com/company/89798536/';
 const GAP_CTA_URLS = {
   1: 'PLACEHOLDER_URL_Q1', // TODO: fill this URL — link to content on persistence/idea validation
   2: 'PLACEHOLDER_URL_Q2', // TODO: fill this URL — link to content on finding your argument
@@ -2013,8 +2013,8 @@ function buildResult(tier) {
   } else {
     primaryUrl    = withUtm(FREE_RESOURCE_URL, tier, pattern);
     primaryLabel  = 'Get the free Idea Pressure Test →';
-    secondaryUrl  = withUtm(KELLY_LINKEDIN_URL, tier, pattern);
-    secondaryLabel = 'Follow Kelly on LinkedIn →';
+    secondaryUrl  = withUtm(EAC_LINKEDIN_URL, tier, pattern);
+    secondaryLabel = 'Follow the EAC on LinkedIn →';
   }
 
   const ctaBlock = eacUser
