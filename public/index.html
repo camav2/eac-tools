@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script type="application/json" id="page-content">{}</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EAC Tools — Expert Author Community</title>
@@ -792,10 +793,10 @@
     }
 
     /* ── CMS INLINE EDITOR (admin only) ── */
-    async function loadContent() {
+    function loadContent() {
       try {
-        const r = await fetch('/api/content?page=index')
-        contentMap = await r.json()
+        const raw = document.getElementById('page-content')?.textContent
+        if (raw) contentMap = JSON.parse(raw)
         applyContent()
       } catch {}
     }
