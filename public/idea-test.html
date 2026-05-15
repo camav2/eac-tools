@@ -83,12 +83,13 @@ body {
 /* ============================================================
    SCREEN SYSTEM
    ============================================================ */
-.screen { display: none; min-height: 100vh; animation: fadeUp 0.4s ease forwards; }
+.screen { display: none; min-height: 100vh; }
 .screen.active { display: flex; }
+.screen--transition { animation: fadeUp 0.4s ease forwards; }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ============================================================
@@ -1827,8 +1828,9 @@ const RESULTS = {
 
 /* ---- Navigation ---- */
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active', 'screen--transition'));
+  const next = document.getElementById(id);
+  next.classList.add('active', 'screen--transition');
   window.scrollTo(0, 0);
 }
 

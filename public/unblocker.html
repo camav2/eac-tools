@@ -86,13 +86,13 @@ body {
 .screen {
   display: none;
   min-height: 100vh;
-  animation: fadeUp 0.4s ease forwards;
 }
 .screen.active { display: flex; }
+.screen--transition { animation: fadeUp 0.4s ease forwards; }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ============================================================
@@ -1746,8 +1746,9 @@ function getCombinationKey(primary, secondary) {
    NAVIGATION
    ============================================================ */
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active', 'screen--transition'));
+  const next = document.getElementById(id);
+  next.classList.add('active', 'screen--transition');
   if (id !== 'screen-questions') {
     document.querySelector('.q-footer').classList.remove('visible');
   }
