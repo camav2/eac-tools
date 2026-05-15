@@ -36,7 +36,7 @@ export async function upsertPerson(params: {
   accessGroupId?:   string
 }): Promise<string> {
   const { email, name, isMember, circleMemberId, accessGroup, accessGroupId } = params
-  const category = isMember ? 'Member' : 'Non-member'
+  const category = isMember ? 'Member' : 'Non Member'
   const now = new Date().toISOString()
 
   const filter = encodeURIComponent(`{Email}="${email}"`)
