@@ -794,8 +794,6 @@ body {
 .gap-block--advisory .gap-block-cta { color: var(--color-blue); }
 .gap-block-cta:hover { opacity: 0.75; }
 .gap-block-member-cta { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
-.gap-block-lesson-link { font-size: 13px; font-weight: 700; color: var(--color-navy); text-decoration: underline; text-underline-offset: 3px; }
-.gap-block--advisory .gap-block-lesson-link { color: var(--color-blue); }
 .gap-block-lesson-copy { font-size: 13px; color: var(--color-grey-700); line-height: 1.65; margin: 0; }
 .gap-block-recs { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
 .gap-block-rec { font-size: 12px; font-weight: 600; color: var(--color-grey-700); text-decoration: underline; text-underline-offset: 2px; }
@@ -1580,13 +1578,20 @@ It doesn't mean the idea is wrong. It might mean it hasn't fully arrived yet —
 
 The most reliable test is time and writing. Sit with it for a few weeks. Write about it informally. If it keeps growing, it's real. If it fades when you stop pushing, it may need more time — or a different shape.`,
     memberCta: {
-      lessonLabel: 'STRATEGY – Ask Why',
-      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/strategy-ask-why',
-      lessonCopy:  'The Ask Why lesson was built for exactly this moment. Work through the Book Screening Canvas to get the idea out of your head and onto the page — and then use the Ranking Matrix to see how it holds up against the rest of your thinking.',
-      rec1Label:   'Watch: The Book Screening Canvas (Coaching Collective)',
-      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/the-book-screening-canvas-march-4-2021',
-      rec2Label:   'Watch: Connecting with Why (Coaching Collective)',
-      rec2Url:     'https://the.expertauthor.community/c/coaching-collective/connecting-with-why-july-31-2020',
+      notYet: {
+        recCopy:   `In this coaching session, Kelly works through the foundational WHY questions every author needs to return to — not just to start the book, but to keep going when doubt creeps in. You'll explore three questions designed to cut through the noise and reconnect you to the real reason this book needs to exist. If you're questioning whether your idea has enough internal pull to sustain a full book, this is where to start.`,
+        rec1Label: 'Coaching: Connecting With Your Why',
+        rec1Url:   'https://the.expertauthor.community/c/coaching-collective/connecting-with-why-july-31-2020',
+        rec2Label: 'Guest Expert: Joey Remenyi',
+        rec2Url:   'https://the.expertauthor.community/c/guest-experts-597139/guest-expert-joey-remenyi-04b2c1',
+      },
+      gettingThere: {
+        recCopy:   `Your conviction is building — now it's time to pressure-test it. In this session, Kelly introduces the Book Screening Canvas: a tool for stress-testing your idea before you invest further. You'll learn to oscillate between the big picture and the detail, and do the critical exercise of defining what your book is NOT (just as important as what it is). This is the session to confirm you're backing the right idea.`,
+        rec1Label: 'Coaching: Book Screening Canvas',
+        rec1Url:   'https://the.expertauthor.community/c/coaching-collective/the-book-screening-canvas-march-4-2021',
+        rec2Label: 'Guest Expert: Laetitia Andrac',
+        rec2Url:   'https://the.expertauthor.community/c/guest-experts-597139/guest-expert-w-laetitia-andrac-integrate-your-intuition-into-writing-publishing-and-marketing-your-book',
+      },
       clarityCallEscalation: false,
     },
     nonMemberCta: { label: 'Read: How to know if an idea is worth pursuing', url: GAP_CTA_URLS[1] }
@@ -1605,13 +1610,20 @@ The thing that turns a topic into a book is a clear argument — something you b
 
 Before you go further with this idea, it's worth spending time on one question: what is the specific thing you want to say? Not what the book is about. What it actually argues.`,
     memberCta: {
-      lessonLabel: 'STRATEGY – Know What',
-      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/strategy-know-what',
-      lessonCopy:  'Moving from a topic to an argument usually happens when you understand what else exists in your space — and where your thinking is genuinely different. The Know What lesson will take you through that. Start with the market worksheet, then come back to your idea with fresh eyes.',
-      rec1Label:   'Watch: How to get to the heart of your message (Coaching Collective)',
-      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/how-to-get-to-the-heart-of-your-message-may-8-2020',
-      rec2Label:   null,
-      rec2Url:     null,
+      notYet: {
+        recCopy:   `In this session, Kelly uses the "magic wand question" to help you cut to the heart of your book's most essential message. You'll work through three pivotal questions around your reader's deepest desire, the belief that's holding them back, and the obstacle standing in their way. This isn't about making your idea sound different — it's about finding where your real point of view lives. If you can't yet answer "what makes this mine?", this is the session to watch.`,
+        rec1Label: 'Coaching: Getting to the Heart of Your Message',
+        rec1Url:   'https://the.expertauthor.community/c/coaching-collective/how-to-get-to-the-heart-of-your-message-may-8-2020',
+        rec2Label: null,
+        rec2Url:   null,
+      },
+      gettingThere: {
+        recCopy:   `Your angle is starting to take shape — now let's test it against what's already out there. In this session, Kelly guides the group through the "bookshop exercise": an honest audit of what already exists and where your book would actually sit on the shelf. You'll explore how to find the gap between what's been said and what only you can say. If your idea feels distinct but you haven't stress-tested it against the real market yet, this session sharpens the edge.`,
+        rec1Label: 'Coaching: Understanding the Market',
+        rec1Url:   'https://the.expertauthor.community/c/coaching-collective/understanding-the-market',
+        rec2Label: null,
+        rec2Url:   null,
+      },
       clarityCallEscalation: false,
     },
     nonMemberCta: { label: 'Read: From topic to argument', url: GAP_CTA_URLS[2] }
@@ -1630,13 +1642,20 @@ This is not about narrowing your audience so much that the book feels small. It'
 
 The question to sit with: who is the person who most needs this idea right now? What are they struggling with? What have they already tried that hasn't worked? What would change for them if this book did its job properly? That person is your reader.`,
     memberCta: {
-      lessonLabel: 'STRATEGY – Find Who',
-      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/strategy-find-who',
-      lessonCopy:  'A book without a clear reader tends to say everything and reach no one. The Find Who lesson is where you build your Reader Profile — a specific, named person with real pain points — and then use the Bullseye Method to prioritise who matters most. Do this before you go any further.',
-      rec1Label:   "Watch: Taking a trip into your reader's mind (Coaching Collective)",
-      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/taking-a-trip-into-your-reader-s-mind-to-nail-who-you-re-writing-to-february-19-2021',
-      rec2Label:   null,
-      rec2Url:     null,
+      notYet: {
+        recCopy:   `In this session, Kelly introduces the WHO worksheet — a structured exercise to help you stop talking ABOUT your reader and start writing TO them. The session draws out a key insight that most authors miss: it's easy to describe your reader, but knowing them well enough to actually write for them is a different skill entirely. If you haven't yet sat inside your reader's head and felt what they feel, this is where to start.`,
+        rec1Label: "Coaching: A Trip Into Your Reader's Mind",
+        rec1Url:   'https://the.expertauthor.community/c/coaching-collective/taking-a-trip-into-your-reader-s-mind-to-nail-who-you-re-writing-to-february-19-2021',
+        rec2Label: null,
+        rec2Url:   null,
+      },
+      gettingThere: {
+        recCopy:   `You know who you're writing for — now it's time to map the journey. In this session, Scott MacMillan (Entrepreneur to Author) joins Kelly to work through the strategic layer of reader understanding: from the WHO worksheet to mapping the central question your reader arrives with, to building the Reader Journey that shows how your book moves them. If you know your reader but aren't yet sure how to design the whole reading experience around them, this session provides the architecture.`,
+        rec1Label: 'Coaching: From Strategy to Structure',
+        rec1Url:   'https://the.expertauthor.community/c/coaching-collective/from-strategy-to-structure-with-scott-macmillan-grammar-factory-february-18-2022',
+        rec2Label: 'Coaching: Sharing Your Story in a Stealth Help Book',
+        rec2Url:   'https://the.expertauthor.community/c/coaching-collective/sharing-your-story-in-a-stealth-help-book-october-15-2021',
+      },
       clarityCallEscalation: false,
     },
     nonMemberCta: { label: 'Read: How to define your reader', url: GAP_CTA_URLS[3] }
@@ -1655,13 +1674,20 @@ That is not a verdict on the idea. It may be an essay waiting to be written, a f
 
 The most useful thing you can do is write the shorter version first. Write the essay, the talk, the article. Let it show you what it is actually about. Some of the strongest books started exactly that way — as something smaller that kept insisting it wasn't finished.`,
     memberCta: {
-      lessonLabel: 'STRUCTURE – Build Book',
-      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/structure-build-book',
-      lessonCopy:  "The clearest way to test whether your idea has enough range for a book is to try to build the structure — and see what happens. The Build Book lesson walks you through the three-part framework and asks you to map out your own. If the idea opens up, the depth is there. If it keeps circling, you'll know what to work on first.",
-      rec1Label:   'Watch: Using the 5-step structure to articulate and validate your ideas (Coaching Collective)',
-      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/using-the-5-step-structure-to-articulate-and-validate-your-ideas-august-20-2021',
-      rec2Label:   null,
-      rec2Url:     null,
+      notYet: {
+        recCopy:   `In this session, Kelly coaches the group through the fundamental structure of a non-fiction book — how a strong three-part arc works, and how to test whether your idea genuinely fills a complete journey from start to finish. If your idea still feels like a collection of thoughts rather than a clear, complete arc, this session will help you figure out whether you have a book or whether you need to reshape what you've got.`,
+        rec1Label: 'Coaching: Book Structure Coaching',
+        rec1Url:   'https://the.expertauthor.community/c/coaching-collective/book-structure-coaching-october-11-2019',
+        rec2Label: null,
+        rec2Url:   null,
+      },
+      gettingThere: {
+        recCopy:   `Your idea is book-worthy — now you need to see how it holds together chapter by chapter. In this session, Kelly introduces the 5-step chapter structure (Story → What → Why → How → Pay Off) and shows how to apply it across your chapters to test whether each part earns its place. You'll also explore a powerful technique: writing a chapter as an article first, to pressure-test whether the idea has enough substance. This is the practical chapter-level guide you need.`,
+        rec1Label: 'Coaching: Using the 5-Step Structure',
+        rec1Url:   'https://the.expertauthor.community/c/coaching-collective/using-the-5-step-structure-to-articulate-and-validate-your-ideas-august-20-2021',
+        rec2Label: null,
+        rec2Url:   null,
+      },
       clarityCallEscalation: false,
     },
     nonMemberCta: { label: 'Read: Is this a book or an essay?', url: GAP_CTA_URLS[4] }
@@ -1680,14 +1706,21 @@ The question is not whether this is an interesting idea. It's whether writing th
 
 If the answer is no, or not yet, it may be worth pausing here — not to abandon the idea, but to get clearer on what your body of work is actually building toward. Often that clarity changes the book idea itself.`,
     memberCta: {
-      lessonLabel: 'STRATEGY – Ask Why',
-      lessonUrl:   'https://the.expertauthor.community/c/write-book-course/strategy-ask-why',
-      lessonCopy:  "A book that doesn't connect to the work you want to be known for can pull you sideways — even if the idea itself is good. The Ask Why lesson is where you work through the connection between your book and your bigger goals. Start there. If you work through it and still feel like the pieces don't connect, this is worth a conversation.",
-      rec1Label:   'Watch: What a book can really do for your brand and business (Coaching Collective)',
-      rec1Url:     'https://the.expertauthor.community/c/coaching-collective/what-a-book-can-really-do-for-your-brand-and-business-ask-an-author-w-donna-mcgeorge-kelly-irving',
-      rec2Label:   "Watch: Defining your book's business goals — Scott MacMillan (Guest Experts)",
-      rec2Url:     'https://the.expertauthor.community/c/guest-experts-597139/guest-expert-w-scott-macmillan-defining-your-book-s-business-goals-and-purpose',
-      clarityCallEscalation: true, // Also show Clarity Call CTA for this gap
+      notYet: {
+        recCopy:   `In this Ask an Author session, Kelly and author Donna McGeorge explore the question too many aspiring authors skip: what does a book actually do for your brand? You'll hear a real conversation about how a published book reshapes the way clients, audiences, and opportunities come to you — and why writing a book is often the most leveraged thing a thought leader can do. If you're not yet clear on why this book matters beyond the writing itself, watch this first.`,
+        rec1Label: 'Coaching: What a Book Can Really Do for Your Brand',
+        rec1Url:   'https://the.expertauthor.community/c/coaching-collective/what-a-book-can-really-do-for-your-brand-and-business-ask-an-author-w-donna-mcgeorge-kelly-irving',
+        rec2Label: 'Coaching: Analysing Your Author Platform',
+        rec2Url:   'https://the.expertauthor.community/c/coaching-collective/analysing-your-author-platform-november-11-2021',
+      },
+      gettingThere: {
+        recCopy:   `You can see the opportunity — now let's turn it into a strategy. In this session, Scott MacMillan (Entrepreneur to Author) guides members through the 8 business goals a book can serve, and a practical exercise to identify your North Star goal. You'll work through the tradeoffs that come from different goal priorities and explore how your book fits within your broader business ecosystem. If you understand the brand connection but haven't yet turned it into a clear direction, this session gives you the map.`,
+        rec1Label: 'Guest Expert: Scott MacMillan — Book Business Goals',
+        rec1Url:   'https://the.expertauthor.community/c/guest-experts-597139/guest-expert-w-scott-macmillan-defining-your-book-s-business-goals-and-purpose',
+        rec2Label: null,
+        rec2Url:   null,
+      },
+      clarityCallEscalation: true,
     },
     nonMemberCta: { label: 'Read: Positioning and the books that build authority', url: GAP_CTA_URLS[5] }
   }
@@ -1704,21 +1737,21 @@ function buildGapBlock(qNum) {
   const copyHtml = raw.trim().split(/\n\n+/).map(p => `<p>${p.trim()}</p>`).join('');
 
   let ctaHtml = '';
-  if (eacUser) {
+  if (eacUser && val !== 'yes') {
     const mc   = block.memberCta;
+    const slot = mc[val === 'not-yet' ? 'notYet' : 'gettingThere'];
     const recs = [
-      mc.rec1Label && mc.rec1Url
-        ? `<a class="gap-block-rec" href="${mc.rec1Url}" target="_blank" rel="noopener">${mc.rec1Label} &rarr;</a>`
+      slot.rec1Label && slot.rec1Url
+        ? `<a class="gap-block-rec" href="${slot.rec1Url}" target="_blank" rel="noopener">${slot.rec1Label} &rarr;</a>`
         : '',
-      mc.rec2Label && mc.rec2Url
-        ? `<a class="gap-block-rec" href="${mc.rec2Url}" target="_blank" rel="noopener">${mc.rec2Label} &rarr;</a>`
+      slot.rec2Label && slot.rec2Url
+        ? `<a class="gap-block-rec" href="${slot.rec2Url}" target="_blank" rel="noopener">${slot.rec2Label} &rarr;</a>`
         : '',
     ].filter(Boolean).join('');
 
     ctaHtml = `
       <div class="gap-block-member-cta">
-        <a class="gap-block-lesson-link" href="${mc.lessonUrl}" target="_blank" rel="noopener">Go to lesson: ${mc.lessonLabel} &rarr;</a>
-        <p class="gap-block-lesson-copy" data-content-key="idea-test/gap/${qNum}/member-cta-copy">${mc.lessonCopy}</p>
+        <p class="gap-block-lesson-copy" data-content-key="idea-test/gap/${qNum}/member-cta-copy">${slot.recCopy}</p>
         ${recs ? `<div class="gap-block-recs">${recs}</div>` : ''}
         ${mc.clarityCallEscalation
           ? `<a class="gap-block-clarity" href="${withUtm(CLARITY_CALL_URL, getTier(weightedScore), buildPattern())}" target="_blank" rel="noopener">Book a Clarity Call with Kelly &rarr;</a>`
