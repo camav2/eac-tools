@@ -1,0 +1,129 @@
+/*
+ * Book Canvas Results API
+ *
+ * Write order (each step fails independently):
+ *   1. Circle: fetch access group for members
+ *   2. People: upsert record
+ *   3. Book Canvas Results: always written, linked to person if step 2 succeeded
+ *   4. Activity Log: written only if step 2 succeeded
+ *
+ * Env vars required:
+ *   AIRTABLE_API_KEY, AIRTABLE_BASE_ID
+ *   CIRCLE_API_TOKEN, CIRCLE_COMMUNITY_ID
+ */
+
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { resolvePersonWithCircle, logActivity } from './_lib/airtable'
+
+const BOOK_CANVAS_TABLE = 'tblqezI9SqgelqJA5'
+
+async function atPost(fields: Record<string, unknown>) {
+  const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${BOOK_CANVAS_TABLE}`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization:  `Bearer ${process.env.AIRTABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ fields }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw json
+  return json
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  const {
+    email, firstName,
+    isMember, circleUserId,
+    answers, platformChecked, objectiveSelected,
+  } = req.body
+
+  if (!email) return res.status(400).json({ error: 'Email required' })
+
+  // ── Steps 1+2: Circle access group + People upsert (best-effort) ──────────
+  const personId = await resolvePersonWithCircle({
+    email,
+    name:         firstName    || '',
+    isMember:     !!isMember,
+    circleUserId: circleUserId ? String(circleUserId) : undefined,
+  })
+
+  // ── Step 3: Write Book Canvas Results (always) ───────────────────────────
+  try {
+    const a = answers || {}
+
+    // Summarise platform checkboxes as a readable string
+    const platformLabels: Record<string, string> = {
+      email:         'Email list',
+      podcast_own:   'Podcast (own)',
+      podcast_guest: 'Podcast (guest)',
+      speaking:      'Speaking',
+      corporate:     'Corporate clients',
+      association:   'Professional association',
+      community:     'Online community',
+      other:         'Other',
+    }
+    const platformCheckedMap: Record<string, boolean> = platformChecked || {}
+    const platformStr = Object.entries(platformCheckedMap)
+      .filter(([, checked]) => checked)
+      .map(([id]) => platformLabels[id] || id)
+      .join(', ')
+
+    // Count non-empty pillar answers
+    const pillarsCompleted = [
+      'purpose', 'positioning', 'audience', 'problem',
+      'marketfit', 'uniquevalue', 'platform', 'objective', 'strategy',
+    ].filter(k => {
+      if (k === 'platform') return Object.values(platformCheckedMap).some(Boolean)
+      if (k === 'objective') return Array.isArray(objectiveSelected) && objectiveSelected.length > 0
+      return a[k] && a[k] !== '?'
+    }).length
+
+    const fields: Record<string, unknown> = {
+      'Email':            email,
+      'First Name':       firstName         || '',
+      'Is Member':        !!isMember,
+      'Submitted At':     new Date().toISOString(),
+      'Source Tool':      'book-canvas',
+      'Pillars Completed': pillarsCompleted,
+      'Purpose':          a.purpose         || '',
+      'Positioning':      a.positioning     || '',
+      'Audience':         a.audience        || '',
+      'Problem / Need':   a.problem         || '',
+      'Market Fit':       a.marketfit       || '',
+      'Unique Value':     a.uniquevalue     || '',
+      'Platform':         platformStr,
+      'Objective':        Array.isArray(objectiveSelected) ? objectiveSelected.join(', ') : '',
+      'Strategy':         a.strategy        || '',
+    }
+
+    if (personId) fields['Person'] = [personId]
+
+    const { id: resultId } = await atPost(fields)
+    console.log('[book-canvas-results] written:', resultId)
+
+    // ── Step 4: Activity Log ─────────────────────────────────────────────
+    if (personId) {
+      try {
+        await logActivity({
+          personId,
+          actionType:  'Book Canvas Completed',
+          sourceTool:  'book-canvas',
+          summary:     `Completed Book Screening Canvas — ${pillarsCompleted}/9 pillars filled`,
+          referenceId: resultId,
+        })
+        console.log('[activity] logged')
+      } catch (err) {
+        console.error('[activity] failed:', err)
+      }
+    }
+
+    return res.status(200).json({ ok: true })
+  } catch (err) {
+    console.error('[book-canvas-results] handler error:', err)
+    return res.status(500).json({ error: 'Internal error' })
+  }
+}

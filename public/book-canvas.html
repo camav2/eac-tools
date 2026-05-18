@@ -1889,6 +1889,7 @@ function buildCanvasBox(idx) {
 
 function showAnalysis() {
   if (typeof eacUser !== 'undefined' && eacUser) {
+    logMemberCanvas();
     proceedToAnalysis();
   } else {
     showScreen('screen-gate');
@@ -1900,28 +1901,59 @@ function proceedToAnalysis() {
   showScreen('screen-analysis');
 }
 
+function buildCanvasPayload(email, firstName, isMember) {
+  return {
+    email,
+    firstName,
+    isMember:          !!isMember,
+    circleUserId:      isMember && eacUser ? eacUser.id : undefined,
+    answers:           answers,
+    platformChecked:   platformChecked,
+    objectiveSelected: objectiveSelected,
+  };
+}
+
 async function submitGate(e) {
   e.preventDefault();
-  const name     = document.getElementById('gate-name').value.trim();
-  const email    = document.getElementById('gate-email').value.trim();
-  const btn      = document.getElementById('gate-submit-btn');
-  const errEl    = document.getElementById('gate-error');
+  const firstName = document.getElementById('gate-name').value.trim();
+  const email     = document.getElementById('gate-email').value.trim();
+  const btn       = document.getElementById('gate-submit-btn');
+  const errEl     = document.getElementById('gate-error');
   errEl.style.display = 'none';
   btn.textContent = 'One moment…';
   btn.disabled    = true;
 
   try {
-    const r = await fetch('/api/subscribe', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ email, name, writingBlocker: 'book-canvas' }),
-    });
-    if (!r.ok) throw new Error();
+    await Promise.all([
+      fetch('/api/subscribe', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, name: firstName, writingBlocker: 'book-canvas' }),
+      }),
+      fetch('/api/book-canvas-results', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(buildCanvasPayload(email, firstName, false)),
+      }),
+    ]);
     proceedToAnalysis();
   } catch {
     errEl.style.display = 'block';
     btn.textContent = 'See my analysis →';
     btn.disabled    = false;
+  }
+}
+
+async function logMemberCanvas() {
+  if (!eacUser || !eacUser.email) return;
+  try {
+    await fetch('/api/book-canvas-results', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(buildCanvasPayload(eacUser.email, eacUser.name || '', true)),
+    });
+  } catch (err) {
+    console.error('[book-canvas] member log failed:', err);
   }
 }
 
