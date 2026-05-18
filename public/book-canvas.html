@@ -1767,12 +1767,20 @@ function renderAnalysis() {
     const el = document.createElement('div');
     el.className = `analysis-card ${card.type}`;
     el.style.animationDelay = `${i * 0.08}s`;
+    const keyAttr = card.key ? ` data-content-key="${card.key}"` : '';
     el.innerHTML = `
       <span class="analysis-pill pill-${card.type}">${card.label}</span>
-      <div class="analysis-card-text">${card.text}</div>
+      <div class="analysis-card-text"${keyAttr}>${card.text}</div>
       ${card.cta ? `<div class="analysis-cta">${card.cta}</div>` : ''}`;
     container.appendChild(el);
   });
+  if (typeof enableEditing === 'function' && typeof eacUser !== 'undefined' && eacUser && eacUser.isAdmin) {
+    enableEditing();
+  }
+}
+
+function analysisText(key, defaultText) {
+  return (typeof contentMap !== 'undefined' && contentMap[key]) || defaultText;
 }
 
 function generateAnalysis() {
@@ -1787,18 +1795,19 @@ function generateAnalysis() {
     cards.push({
       type: 'gap',
       label: 'Gap',
-      text: 'Your ideal reader could be more specific. The more clearly you can picture one real person, the more powerfully your book will speak to many. Give them a name — Sarah from NAB, Jeremy the overworked dentist. A named person on the page is a reader who feels seen.'
+      key: 'book-canvas/analysis/audience-gap',
+      text: analysisText('book-canvas/analysis/audience-gap', 'Your ideal reader could be more specific. The more clearly you can picture one real person, the more powerfully your book will speak to many. Give them a name — Sarah from NAB, Jeremy the overworked dentist. A named person on the page is a reader who feels seen.')
     });
   }
 
   // 2. Platform check
-  const platformAnswer = a.platform || '';
   const platformCount = (PILLARS[6].checkboxes || []).filter(cb => platformChecked[cb.id]).length;
   if (platformCount < 2) {
     cards.push({
       type: 'gap',
       label: 'Gap',
-      text: 'Your platform section is light — social media alone rarely drives meaningful book sales. This is the box most authors underinvest in before they start writing. Your audience needs a direct route to your work: an email list, a speaking circuit, corporate relationships, or a community you already own. Start building now, not after you publish.'
+      key: 'book-canvas/analysis/platform-gap',
+      text: analysisText('book-canvas/analysis/platform-gap', 'Your platform section is light — social media alone rarely drives meaningful book sales. This is the box most authors underinvest in before they start writing. Your audience needs a direct route to your work: an email list, a speaking circuit, corporate relationships, or a community you already own. Start building now, not after you publish.')
     });
   }
 
@@ -1809,7 +1818,8 @@ function generateAnalysis() {
     cards.push({
       type: 'alignment',
       label: 'Alignment',
-      text: 'Your Purpose and Strategy are both clear — you know why you\'re writing and where you want to go. That alignment is rarer than you\'d think. Most authors have a strong why or a strong where, but not both at once. This is what keeps authors going when the writing gets hard and the end feels distant. Hold onto it.'
+      key: 'book-canvas/analysis/purpose-strategy-alignment',
+      text: analysisText('book-canvas/analysis/purpose-strategy-alignment', 'Your Purpose and Strategy are both clear — you know why you\'re writing and where you want to go. That alignment is rarer than you\'d think. Most authors have a strong why or a strong where, but not both at once. This is what keeps authors going when the writing gets hard and the end feels distant. Hold onto it.')
     });
   }
 
@@ -1820,7 +1830,8 @@ function generateAnalysis() {
     cards.push({
       type: 'opportunity',
       label: 'Opportunity',
-      text: 'Your Unique Value describes something genuinely useful — but it doesn\'t have a name yet. Naming your method is one of the most powerful things you can do before you publish. "The Self-Fidelity Framework." "The Succession Blueprint." "The Hacking Happy Method." A named approach is what makes your expertise memorable, transferable, and searchable. You already have it — it just needs a label.'
+      key: 'book-canvas/analysis/unique-value-opportunity',
+      text: analysisText('book-canvas/analysis/unique-value-opportunity', 'Your Unique Value describes something genuinely useful — but it doesn\'t have a name yet. Naming your method is one of the most powerful things you can do before you publish. "The Self-Fidelity Framework." "The Succession Blueprint." "The Hacking Happy Method." A named approach is what makes your expertise memorable, transferable, and searchable. You already have it — it just needs a label.')
     });
   }
 
@@ -1829,7 +1840,8 @@ function generateAnalysis() {
     cards.push({
       type: 'strength',
       label: 'Strength',
-      text: 'Your Purpose statement is one of the most important things in this canvas. Authors who are clear on their why — not just their what — write better books, stay the course longer, and attract the right readers faster. Yours is worth revisiting when the project feels big or uncertain. It\'s your anchor.'
+      key: 'book-canvas/analysis/purpose-strength',
+      text: analysisText('book-canvas/analysis/purpose-strength', 'Your Purpose statement is one of the most important things in this canvas. Authors who are clear on their why — not just their what — write better books, stay the course longer, and attract the right readers faster. Yours is worth revisiting when the project feels big or uncertain. It\'s your anchor.')
     });
   }
 
@@ -1837,7 +1849,8 @@ function generateAnalysis() {
   cards.push({
     type: 'cta-card',
     label: 'Next Step',
-    text: 'Your canvas is a starting point, not a finished plan. The gaps are as useful as the answers — they show you exactly where to focus next. If you\'d like help thinking through any of these pillars, a Clarity Call with Kelly is a good next step.',
+    key: 'book-canvas/analysis/cta',
+    text: analysisText('book-canvas/analysis/cta', 'Your canvas is a starting point, not a finished plan. The gaps are as useful as the answers — they show you exactly where to focus next. If you\'d like help thinking through any of these pillars, a Clarity Call with Kelly is a good next step.'),
     cta: `<a class="btn btn-navy" href="https://tidycal.com/lea-eac/20-minute-meeting" target="_blank" rel="noopener">Book a Clarity Call &rarr;</a>
           <button class="btn btn-ghost" onclick="showCanvas()">Back to canvas</button>`
   });
