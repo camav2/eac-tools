@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script type="application/json" id="page-content">{}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Screening Canvas — Expert Author Community</title>
+<meta name="description" content="9 pillars. 15 minutes. Work through Kelly Irving's Book Screening Canvas to get your idea out of your head and onto the page.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://tools.expertauthor.community/book-canvas">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Expert Author Community">
+<meta property="og:url" content="https://tools.expertauthor.community/book-canvas">
+<meta property="og:title" content="Book Screening Canvas — Expert Author Community">
+<meta property="og:description" content="9 pillars. 15 minutes. Work through the Book Screening Canvas to get your idea out of your head and onto the page.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@kellyirvingwrites">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/eac.css">
+<style>
+  body {
+    font-family: var(--font);
+    background: var(--color-off-white);
+    color: var(--color-black);
+    padding-top: 60px;
+    min-height: 100vh;
+  }
+
+  /* SCREENS */
+  .screen {
+    display: none;
+    min-height: calc(100vh - 60px);
+    animation: fadeIn 0.3s ease;
+  }
+  .screen.active { display: block; }
+
+  /* reduced-motion handled globally at end of CSS */
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* BUTTONS — aligned to DS button patterns */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 32px;
+    border-radius: var(--radius-full);
+    font-family: var(--font);
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition);
+    text-decoration: none;
+  }
+  /* → btn-cta-primary equivalent */
+  .btn-primary {
+    background: var(--color-yellow);
+    color: var(--color-navy);
+    box-shadow: 0 4px 20px rgba(255,230,75,0.3);
+  }
+  .btn-primary:hover {
+    background: var(--color-yellow-light);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(255,230,75,0.45);
+  }
+  /* → btn-cta-secondary equivalent */
+  .btn-secondary {
+    background: transparent;
+    color: var(--color-navy);
+    border: 2px solid var(--color-navy);
+  }
+  .btn-secondary:hover {
+    background: var(--color-navy);
+    color: var(--color-white);
+    transform: translateY(-1px);
+  }
+  /* → btn-print equivalent */
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-grey-400);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 10px 22px;
+    border: 1.5px solid var(--color-grey-200);
+  }
+  .btn-ghost:hover {
+    color: var(--color-navy);
+    border-color: var(--color-grey-400);
+  }
+  /* → btn-submit equivalent */
+  .btn-navy {
+    background: var(--color-navy);
+    color: var(--color-white);
+  }
+  .btn-navy:hover {
+    background: #000055;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* ===================== */
+  /* INTRO SCREEN          */
+  /* ===================== */
+  #screen-intro {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+  }
+  .intro-card {
+    background: var(--color-white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    max-width: 640px;
+    width: 100%;
+    overflow: hidden;
+  }
+  .intro-header {
+    background: var(--color-navy);
+    padding: 40px 48px 32px;
+    position: relative;
+  }
+  .intro-eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-yellow);
+    background: rgba(255,230,75,0.12);
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    margin-bottom: 16px;
+  }
+  .intro-headline {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--color-white);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .intro-sub {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.03em;
+  }
+  .intro-accent {
+    position: absolute;
+    bottom: 0; right: 48px;
+    width: 80px; height: 4px;
+    background: var(--color-yellow);
+    border-radius: 4px 4px 0 0;
+  }
+  .intro-body {
+    padding: 40px 48px;
+  }
+  .intro-time-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-yellow-mid);
+    border-radius: var(--radius-full);
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-navy);
+    letter-spacing: 0.05em;
+    margin-bottom: 24px;
+  }
+  .intro-body p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--color-grey-700);
+    margin-bottom: 16px;
+  }
+  .intro-body p strong {
+    color: var(--color-navy);
+    font-weight: 700;
+  }
+  .intro-permissions {
+    background: var(--color-grey-100);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+  .intro-permissions p {
+    font-size: 13px;
+    color: var(--color-grey-700);
+    margin-bottom: 8px;
+  }
+  .intro-permissions p:last-child { margin-bottom: 0; }
+  .perm-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--color-grey-700);
+    margin-bottom: 10px;
+  }
+  .perm-item:last-child { margin-bottom: 0; }
+  .perm-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--color-yellow);
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+  .intro-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-grey-200);
+    margin-top: 8px;
+  }
+  .intro-signature {
+    font-size: 12px;
+    color: var(--color-grey-400);
+    font-weight: 500;
+  }
+
+  /* ===================== */
+  /* PILLAR SCREEN         */
+  /* ===================== */
+  #screen-pillar {
+    display: none;
+    padding: 32px 24px;
+  }
+  .pillar-layout {
+    max-width: 1140px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* Progress bar */
+  .progress-track {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .progress-bar-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--color-grey-200);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--color-yellow);
+    border-radius: var(--radius-full);
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-grey-400);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  /* Pillar input card */
+  .pillar-card {
+    background: var(--color-white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    transition: var(--transition);
+  }
+  .pillar-card-header {
+    background: var(--color-navy);
+    padding: 28px 36px 24px;
+  }
+  .pillar-number {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-yellow);
+    margin-bottom: 8px;
+  }
+  .pillar-name {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--color-white);
+    letter-spacing: -0.02em;
+  }
+  .pillar-card-body {
+    padding: 32px 36px;
+  }
+
+  /* Template input */
+  .template-wrap {
+    margin-bottom: 28px;
+  }
+  .template-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-grey-400);
+    margin-bottom: 12px;
+  }
+  .template-sentence {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--color-navy);
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+  /* Canvas extension — inline sentence template input */
+  .template-field {
+    display: inline;
+    background: none;
+    border: none;
+    border-bottom: 2px solid var(--color-yellow);
+    font-family: var(--font);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-navy);
+    outline: none;
+    padding: 2px 6px;
+    min-width: 120px;
+    transition: border-color var(--transition);
+  }
+  .template-field:focus {
+    border-bottom-color: var(--color-blue);
+    background: rgba(82,150,251,0.04);
+    border-radius: 2px 2px 0 0;
+  }
+  .template-field::placeholder {
+    color: var(--color-grey-400);
+    font-weight: 500;
+  }
+
+  /* Full textarea — DS form-input pattern */
+  .pillar-textarea {
+    width: 100%;
+    min-height: 120px;
+    border: 2px solid var(--color-grey-200);
+    border-radius: var(--radius-md);
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-black);
+    padding: 16px;
+    resize: vertical;
+    outline: none;
+    transition: border-color var(--transition);
+    line-height: 1.6;
+    background: var(--color-white);
+  }
+  .pillar-textarea:focus {
+    border-color: var(--color-blue);
+    box-shadow: 0 0 0 3px rgba(82,150,251,0.15);
+  }
+
+  /* Live preview */
+  .live-preview {
+    background: var(--color-grey-100);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-top: 16px;
+    min-height: 52px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--color-navy);
+    font-weight: 500;
+    border-left: 3px solid var(--color-yellow);
+    display: none;
+  }
+  .live-preview.visible { display: block; }
+  .live-preview em {
+    color: var(--color-grey-400);
+    font-style: normal;
+  }
+
+  /* Prompts section */
+  .prompts-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-blue);
+    letter-spacing: 0.05em;
+    padding: 0;
+    margin-top: 20px;
+  }
+  .prompts-toggle svg {
+    transition: transform var(--transition);
+  }
+  .prompts-toggle.open svg {
+    transform: rotate(180deg);
+  }
+  .prompts-panel {
+    display: none;
+    background: var(--color-grey-100);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-top: 12px;
+  }
+  .prompts-panel.open { display: block; }
+  .prompt-item {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-grey-700);
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-grey-200);
+    cursor: pointer;
+    transition: color var(--transition);
+  }
+  .prompt-item:last-child { border-bottom: none; }
+  .prompt-item:hover { color: var(--color-navy); }
+  .prompt-item::before {
+    content: "→ ";
+    color: var(--color-yellow);
+    font-weight: 700;
+  }
+
+  /* Examples toggle */
+  .examples-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-orange);
+    letter-spacing: 0.05em;
+    padding: 0;
+    margin-top: 10px;
+  }
+  .examples-panel {
+    display: none;
+    margin-top: 12px;
+  }
+  .examples-panel.open { display: block; }
+  .example-item {
+    background: var(--color-yellow-mid);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-navy);
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform var(--transition), box-shadow var(--transition);
+  }
+  .example-item:last-child { margin-bottom: 0; }
+  .example-item:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+  .example-link {
+    color: var(--color-navy);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: rgba(0,0,62,0.35);
+    transition: text-decoration-color var(--transition);
+  }
+  .example-link:hover {
+    text-decoration-color: var(--color-navy);
+  }
+  .example-name {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-orange);
+    margin-bottom: 4px;
+  }
+
+  /* Note box */
+  .pillar-note {
+    background: var(--color-yellow-mid);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    margin-top: 20px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-navy);
+    font-weight: 500;
+  }
+
+  /* Market Fit special inputs */
+  .market-steps { margin-bottom: 24px; }
+  .market-step {
+    margin-bottom: 20px;
+  }
+  .market-step-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-grey-700);
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--color-navy);
+    color: var(--color-white);
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .pillar-select, .pillar-input {
+    width: 100%;
+    border: 2px solid var(--color-grey-200);
+    border-radius: var(--radius-md);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-black);
+    padding: 12px 16px;
+    background: var(--color-white);
+    outline: none;
+    transition: border-color var(--transition);
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .pillar-select:focus, .pillar-input:focus {
+    border-color: var(--color-blue);
+    box-shadow: 0 0 0 3px rgba(82,150,251,0.15);
+  }
+  .select-wrap {
+    position: relative;
+  }
+  .select-wrap::after {
+    content: "▾";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-grey-400);
+    pointer-events: none;
+    font-size: 14px;
+  }
+
+  /* Checkboxes (Platform) */
+  .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 2px solid var(--color-grey-200);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition);
+  }
+  .checkbox-item:hover {
+    border-color: var(--color-grey-400);
+  }
+  .checkbox-item.checked {
+    border-color: var(--color-yellow);
+    background: var(--color-yellow-mid);
+  }
+  .checkbox-item input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: var(--color-navy);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .checkbox-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-navy);
+    flex: 1;
+  }
+  .checkbox-sub-input {
+    border: 1px solid var(--color-grey-200);
+    border-radius: var(--radius-md);
+    font-family: var(--font);
+    font-size: 12px;
+    color: var(--color-navy);
+    padding: 4px 10px;
+    width: 130px;
+    outline: none;
+  }
+  .checkbox-sub-input:focus {
+    border-color: var(--color-navy);
+  }
+
+  /* Multi-select chips (Objective) */
+  .chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .chip {
+    padding: 8px 16px;
+    border-radius: var(--radius-full);
+    border: 2px solid var(--color-grey-200);
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-grey-700);
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--color-white);
+    user-select: none;
+  }
+  .chip:hover {
+    border-color: var(--color-navy);
+    color: var(--color-navy);
+  }
+  .chip.selected {
+    background: var(--color-navy);
+    border-color: var(--color-navy);
+    color: var(--color-white);
+  }
+  .chip-limit-note {
+    font-size: 11px;
+    color: var(--color-grey-400);
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+
+  /* Pillar actions */
+  .pillar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 28px;
+    border-top: 1px solid var(--color-grey-200);
+    margin-top: 28px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .pillar-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ===================== */
+  /* MINI CANVAS SIDEBAR   */
+  /* ===================== */
+  .sidebar {
+    position: sticky;
+    top: 80px;
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+  .sidebar-header {
+    background: var(--color-navy);
+    padding: 16px 20px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-yellow);
+  }
+  .sidebar-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .mini-box {
+    border-radius: var(--radius-md);
+    border: 2px solid var(--color-grey-200);
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--color-white);
+  }
+  .mini-box:hover {
+    border-color: var(--color-grey-400);
+    transform: translateY(-1px);
+  }
+  .mini-box.current {
+    border-color: var(--color-yellow);
+    background: rgba(255,230,75,0.08);
+  }
+  .mini-box.completed {
+    border-color: var(--color-grey-200);
+    background: var(--color-grey-100);
+  }
+  .mini-box.completed:hover {
+    border-color: var(--color-navy);
+  }
+  .mini-box-name {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-grey-400);
+    margin-bottom: 4px;
+  }
+  .mini-box.current .mini-box-name {
+    color: var(--color-navy);
+  }
+  .mini-box-content {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-grey-700);
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mini-box-placeholder {
+    font-size: 11px;
+    color: var(--color-grey-400);
+  }
+  .mini-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* ===================== */
+  /* CANVAS REVIEW SCREEN  */
+  /* ===================== */
+  #screen-canvas {
+    padding: 40px 24px;
+  }
+  .canvas-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .canvas-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .canvas-headline {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--color-navy);
+    letter-spacing: -0.02em;
+  }
+  .canvas-sub {
+    font-size: 14px;
+    color: var(--color-grey-400);
+    font-weight: 500;
+    margin-top: 6px;
+  }
+  .canvas-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .canvas-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .canvas-row { display: grid; gap: 16px; }
+  .canvas-row-1 { grid-template-columns: 1fr; }
+  .canvas-row-2 { grid-template-columns: repeat(4, 1fr); }
+  .canvas-box {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    transition: var(--transition);
+  }
+  .canvas-box:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+  .canvas-box-header {
+    background: var(--color-navy);
+    padding: 12px 20px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-yellow);
+  }
+  .canvas-box-body {
+    padding: 20px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--color-navy);
+    font-weight: 500;
+    min-height: 80px;
+  }
+  .canvas-box-body.empty {
+    color: var(--color-grey-400);
+    font-style: italic;
+  }
+
+  /* ===================== */
+  /* ANALYSIS SCREEN       */
+  /* ===================== */
+  #screen-analysis {
+    padding: 40px 24px;
+  }
+  .analysis-wrap {
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .analysis-header {
+    margin-bottom: 36px;
+  }
+  .analysis-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-blue);
+    margin-bottom: 12px;
+  }
+  .analysis-headline {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--color-navy);
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .analysis-sub {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--color-grey-700);
+  }
+  .analysis-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .analysis-card {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 24px 28px;
+    border-left: 4px solid var(--color-navy);
+    animation: fadeIn 0.3s ease both;
+  }
+  .analysis-card.strength { border-left-color: #22C55E; }
+  .analysis-card.gap { border-left-color: var(--color-orange); }
+  .analysis-card.opportunity { border-left-color: var(--color-blue); }
+  .analysis-card.alignment { border-left-color: var(--color-yellow); }
+  .analysis-card.cta-card {
+    background: var(--color-yellow-mid);
+    border-left-color: var(--color-yellow);
+  }
+  .analysis-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .pill-strength { background: #DCFCE7; color: #16A34A; }
+  .pill-gap { background: #FFF0E0; color: var(--color-orange); }
+  .pill-opportunity { background: #EFF6FF; color: var(--color-blue); }
+  .pill-alignment { background: var(--color-yellow-mid); color: var(--color-navy); }
+  .analysis-card-text {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--color-navy);
+    font-weight: 500;
+  }
+  .analysis-cta {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .analysis-back {
+    margin-top: 32px;
+    text-align: center;
+  }
+  .analysis-back button {
+    background: none;
+    border: none;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-grey-400);
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    padding: 8px;
+  }
+  .analysis-back button:hover {
+    color: var(--color-navy);
+  }
+
+
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="site-header">
+  <a class="header-logo" href="https://tools.expertauthor.community">
+    <svg viewBox="0 0 53.3 53.3" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="32.1 53.3 0 53.3 0 21.2 21.1 0.1 53.2 32.2 32.1 53.3" fill="#FFE64B"/>
+      <polyline points="15.8 53.3 0 53.3 0 37.5" fill="#00003D"/>
+      <polygon points="46.6 25.4 33.2 38.8 26.6 32.3 40 19 33.9 13 20.6 26.3 14.4 20.1 27.9 6.7 21.2 0 0 21.2 32.1 53.3 53.3 32.1 46.6 25.4" fill="#00003D"/>
+    </svg>
+    <span class="header-logo-text">EAC Tools</span><span class="beta-badge">Beta</span>
+  </a>
+  <span class="navbar-tool-name">Book Screening Canvas</span>
+  <div class="header-auth" id="header-auth"></div>
+</header>
+
+<!-- ===================== -->
+<!-- INTRO SCREEN          -->
+<!-- ===================== -->
+<section id="screen-intro" class="screen active">
+  <div class="intro-card">
+    <div class="intro-header">
+      <div class="intro-eyebrow">Kelly Irving &mdash; Expert Author Community</div>
+      <h1 class="intro-headline">Your Book Screening Canvas</h1>
+      <div class="intro-sub">9 pillars. 15 minutes. A clearer book idea.</div>
+      <div class="intro-accent"></div>
+    </div>
+    <div class="intro-body">
+      <div class="intro-time-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        About 15 minutes
+      </div>
+      <p>This isn't a test. There are no right answers. <strong>A question mark is a perfectly good answer</strong> — it just tells you where your next thinking needs to go.</p>
+      <p>The Book Screening Canvas works through 9 strategic pillars. Each one asks something different about your book idea. Your job is to get something down — not to get it perfect.</p>
+      <div class="intro-permissions">
+        <div class="perm-item">
+          <span class="perm-dot"></span>
+          <span><strong>Messy is beautiful.</strong> First thoughts are better than polished nothing.</span>
+        </div>
+        <div class="perm-item">
+          <span class="perm-dot"></span>
+          <span><strong>You can skip anything.</strong> Hit "Not sure yet" and come back. The gaps are useful too.</span>
+        </div>
+        <div class="perm-item">
+          <span class="perm-dot"></span>
+          <span><strong>You can jump around.</strong> Click any pillar in the sidebar to revisit it any time.</span>
+        </div>
+        <div class="perm-item">
+          <span class="perm-dot"></span>
+          <span><strong>At the end:</strong> a completed canvas grid + a smart read of what it means.</span>
+        </div>
+      </div>
+      <div class="intro-footer">
+        <span class="intro-signature">Built for the EAC community &mdash; Kelly Irving</span>
+        <button class="btn btn-primary" onclick="startCanvas()">Let's begin &rarr;</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== -->
+<!-- PILLAR SCREEN         -->
+<!-- ===================== -->
+<section id="screen-pillar" class="screen">
+  <div class="pillar-layout">
+
+    <!-- Progress bar -->
+    <div class="progress-track">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill" style="width:11%"></div>
+      </div>
+      <span class="progress-label" id="progress-text">Pillar 1 of 9</span>
+    </div>
+
+    <!-- Main pillar card -->
+    <div id="pillar-card-container"></div>
+
+    <!-- Mini canvas sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">Your Canvas</div>
+      <div class="sidebar-body" id="sidebar-body"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===================== -->
+<!-- CANVAS REVIEW SCREEN  -->
+<!-- ===================== -->
+<section id="screen-canvas" class="screen">
+  <div class="canvas-wrap">
+    <div class="canvas-top">
+      <div>
+        <h2 class="canvas-headline">Your Completed Canvas</h2>
+        <p class="canvas-sub">9 pillars. All in one place.</p>
+      </div>
+      <div class="canvas-actions">
+        <button class="btn btn-secondary" onclick="window.print()">&#x2193; Download / Print</button>
+        <button class="btn btn-primary" onclick="showAnalysis()">See my analysis &rarr;</button>
+      </div>
+    </div>
+    <div class="canvas-grid" id="canvas-grid"></div>
+    <div style="margin-top:24px; display:flex; gap:12px; justify-content:flex-end; flex-wrap:wrap;">
+      <button class="btn btn-ghost" onclick="goToPillar(0)">Edit canvas</button>
+      <button class="btn btn-primary" onclick="showAnalysis()">See my analysis &rarr;</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== -->
+<!-- ANALYSIS SCREEN       -->
+<!-- ===================== -->
+<section id="screen-analysis" class="screen">
+  <div class="analysis-wrap">
+    <div class="analysis-header">
+      <div class="analysis-eyebrow">Smart Cross-Pillar Analysis</div>
+      <h2 class="analysis-headline">What your canvas is telling you</h2>
+      <p class="analysis-sub">This isn't a score. It's a read of how your nine answers fit together — where you're strong, where you're still finding your way, and what to pay attention to next.</p>
+    </div>
+    <div class="analysis-cards" id="analysis-cards"></div>
+    <div class="analysis-back">
+      <button onclick="showCanvas()">&larr; Back to canvas</button>
+    </div>
+  </div>
+</section>
+
+<script>
+// =====================
+// DATA: 9 PILLARS
+// =====================
+
+const PILLARS = [
+  {
+    id: 'purpose',
+    name: 'Purpose',
+    templateParts: [
+      'I want to write about ',
+      ' because ',
+      '.'
+    ],
+    templatePlaceholders: ['your topic', 'what drives you / what would be lost if you didn\'t'],
+    fieldCount: 2,
+    prompts: [
+      'What keeps you up at 3am that you wish someone had explained to you years ago?',
+      'If this idea stays stuck in your head forever, what gets lost?',
+      'What do you say in coaching sessions that you wish was already in a book?'
+    ],
+    examples: [
+      { name: 'Donna McGeorge — Red Brick Thinking', url: 'https://www.expertauthor.community/books/red-brick-thinking', text: '"I want to write about strategic simplicity because I\'ve watched smart leaders make everything harder than it needs to be — adding process when subtraction is what\'s needed."' },
+      { name: 'Fleur Marks — The Overachiever\'s Reset', url: 'https://www.expertauthor.community/books/the-overachievers-reset-a-better-way-to-succeed-without-losing-yourself', text: '"I want to write about redefining success because I collapsed from high-performing executive to a life-threatening health crisis — and I couldn\'t find a single book that addressed why driven people self-destruct."' },
+      { name: 'Clint Rahe — The Cognitive Athlete', url: 'https://www.expertauthor.community/books/the-cognitive-athlete-sustainable-peak-performance-for-leaders-thinkers-and-doers', text: '"I want to write about mental performance for leaders because elite athletes have had access to cognitive training for decades — and nobody had brought that system into the corporate world."' }
+    ]
+  },
+  {
+    id: 'positioning',
+    name: 'Positioning',
+    templateParts: [
+      'This book helps ',
+      ' achieve ',
+      ' without ',
+      '.'
+    ],
+    templatePlaceholders: ['specific reader', 'specific result', 'specific frustration, risk, or common mistake'],
+    fieldCount: 3,
+    prompts: [
+      'What do people always ask you about — the thing you explain better than anyone else?',
+      'What real experience (lived or professional) makes this story yours to tell?',
+      'What\'s the question your reader is asking that your book answers? Frame it as: "How can I [achieve X] without [Y]?"'
+    ],
+    examples: [
+      { name: 'Fleur Marks — The Overachiever\'s Reset', url: 'https://www.expertauthor.community/books/the-overachievers-reset-a-better-way-to-succeed-without-losing-yourself', text: '"This book helps high-performing executives redefine what success looks like without sacrificing their health, relationships, or sense of self."' },
+      { name: 'Sarah Gray — It\'s Not You, It\'s Perimenopause', url: 'https://www.expertauthor.community/books/its-not-you-its-perimenopause', text: '"This book helps women in perimenopause understand what\'s happening in their body and manage their symptoms without conflicting advice, guesswork, or feeling completely alone."' },
+      { name: 'Siobhán O\'Riordan — Reframe', url: 'https://www.expertauthor.community/books/reframe', text: '"This book helps multi-skilled professionals turn a wide-ranging career into a clear, confident value proposition — without having to pick one lane and abandon the rest."' }
+    ]
+  },
+  {
+    id: 'audience',
+    name: 'Audience',
+    templateParts: [
+      'My ideal reader is ',
+      ' who is currently ',
+      ' and wants ',
+      '.'
+    ],
+    templatePlaceholders: ['real, named type of person', 'their situation', 'what they want'],
+    fieldCount: 3,
+    prompts: [
+      'Give them a name. Sarah from NAB. Jeremy the overworked dentist. Get specific.',
+      'Who would you hand your very first copy to — and why them?',
+      'Is your reader you, a few years ago? What were you trying to figure out then?'
+    ],
+    examples: [
+      { name: 'Clint Rahe — The Cognitive Athlete', url: 'https://www.expertauthor.community/books/the-cognitive-athlete-sustainable-peak-performance-for-leaders-thinkers-and-doers', text: '"My ideal reader is Aiden, a senior leader in professional services who is performing at a high level but secretly running on fumes — and wants to sustain that performance without the inevitable crash."' },
+      { name: 'Sarah Gray — It\'s Not You, It\'s Perimenopause', url: 'https://www.expertauthor.community/books/its-not-you-its-perimenopause', text: '"My ideal reader is Kate, a 46-year-old professional who started waking at 3am, forgetting words mid-sentence, and feeling anxious for no reason — and has no idea perimenopause might be why."' },
+      { name: 'Siobhán O\'Riordan — Reframe', url: 'https://www.expertauthor.community/books/reframe', text: '"My ideal reader is Leila, a 39-year-old professional who has worked across six different industries and freezes every time someone asks what she specialises in — and wants to own her story instead of apologising for it."' }
+    ]
+  },
+  {
+    id: 'problem',
+    name: 'Problem / Need',
+    templateParts: [
+      'My reader is kept up at 3am by ',
+      '. They\'ve tried ',
+      ' but the real issue is ',
+      '.'
+    ],
+    templatePlaceholders: ['specific worry or question', 'what hasn\'t worked', 'root cause or deeper truth'],
+    fieldCount: 3,
+    prompts: [
+      'What would your reader Google at 11pm if they were being completely honest?',
+      'What\'s the question that feels too simple or obvious to say out loud? That\'s often the right one.',
+      'What have they already tried that hasn\'t fixed it?'
+    ],
+    examples: [
+      { name: 'Fleur Marks — The Overachiever\'s Reset', url: 'https://www.expertauthor.community/books/the-overachievers-reset-a-better-way-to-succeed-without-losing-yourself', text: '"My reader is kept up at 3am by the fear that if they slow down, everything they\'ve built will fall apart. They\'ve tried executive coaching and mindfulness apps, but the real issue is they genuinely believe rest is failure."' },
+      { name: 'Graeme Cowan — Great Leaders Care', url: 'https://www.expertauthor.community/books/great-leaders-care-developing-safe-resilient-and-successful-teams', text: '"My reader is kept up at 3am by the feeling their team is quietly crumbling — turnover is climbing, energy is flat — but they\'ve been told that caring and performance don\'t go together, so they don\'t know what to change."' },
+      { name: 'Penelope Barr — Win the Night to Win the Day', url: 'https://www.expertauthor.community/books/win-the-night-to-win-the-day', text: '"My reader is kept up at 3am by the irony that worrying about not sleeping is the very thing stopping them from sleeping. They\'ve tried melatonin and sleep tracking, but the real issue is nobody ever taught them to design their evening."' }
+    ]
+  },
+  {
+    id: 'marketfit',
+    name: 'Market Fit',
+    type: 'marketfit',
+    note: 'A busy shelf is a good sign — it means people are buying this topic. You\'re entering a conversation, not fighting for one slot. No one buys just one book on a subject they care about.',
+    examples: [
+      { name: 'Clint Rahe — The Cognitive Athlete', url: 'https://www.expertauthor.community/books/the-cognitive-athlete-sustainable-peak-performance-for-leaders-thinkers-and-doers', text: '"My book would sit next to \'Atomic Habits\' in the Self-Help section, but mine differs because it applies elite sports cognitive science specifically to leaders and high-stakes professional environments — not general habit formation."' },
+      { name: 'Penelope Barr — Win the Night to Win the Day', url: 'https://www.expertauthor.community/books/win-the-night-to-win-the-day', text: '"My book would sit next to \'Why We Sleep\' by Matthew Walker, but mine differs because it\'s an actionable evening design guide — not a scientific argument for why sleep matters that leaves readers unsure what to actually do."' },
+      { name: 'Siobhán O\'Riordan — Reframe', url: 'https://www.expertauthor.community/books/reframe', text: '"My book would sit next to \'Range\' by David Epstein, but mine differs because it gives generalists a practical CliftonStrengths-based framework to articulate their value — not just an argument for why breadth matters."' }
+    ]
+  },
+  {
+    id: 'uniquevalue',
+    name: 'Unique Value',
+    templateParts: [
+      'My ',
+      ' helps ',
+      ' go from ',
+      ' to ',
+      ' by ',
+      '.'
+    ],
+    templatePlaceholders: ['framework / method / system', 'reader', 'where they are now', 'where they want to be', 'your unique approach'],
+    fieldCount: 5,
+    prompts: [
+      'What steps do you walk every client through? That sequence is your framework.',
+      'You probably already have a method — you just haven\'t named it yet. What are the stages you take people through?',
+      'What\'s the thing you do in every engagement that others don\'t?'
+    ],
+    examples: [
+      { name: 'Clint Rahe — The Cognitive Athlete', url: 'https://www.expertauthor.community/books/the-cognitive-athlete-sustainable-peak-performance-for-leaders-thinkers-and-doers', text: '"My 4-Phase Cognitive Performance System helps ambitious leaders go from reactive exhaustion to sustainable peak performance — by applying the same mental conditioning framework used by elite athletes."' },
+      { name: 'Graeme Cowan — Great Leaders Care', url: 'https://www.expertauthor.community/books/great-leaders-care-developing-safe-resilient-and-successful-teams', text: '"My Self-Care / Crew-Care / Red Zone Care framework helps leaders go from high-pressure-but-disconnected teams to psychologically safe, high-performing ones — without sacrificing accountability for warmth."' },
+      { name: 'Donna McGeorge — Red Brick Thinking', url: 'https://www.expertauthor.community/books/red-brick-thinking', text: '"My strategic subtraction approach helps leaders go from complexity overload to smarter, simpler decisions — by removing what\'s weighing them down instead of adding another system on top."' }
+    ]
+  },
+  {
+    id: 'platform',
+    name: 'Platform',
+    type: 'platform',
+    note: 'Someone who buys a copy to give to their team is worth more than 50 individual sales. Think about who that person might be.',
+    checkboxes: [
+      { id: 'email', label: 'Email list', sub: 'approx. how many?' },
+      { id: 'podcast_own', label: 'Podcast — my own', sub: 'approx. listeners?' },
+      { id: 'podcast_guest', label: 'Podcast — regular guest appearances', sub: null },
+      { id: 'speaking', label: 'Speaking at conferences or events', sub: null },
+      { id: 'corporate', label: 'Corporate or organisational clients', sub: 'who could buy bulk copies?' },
+      { id: 'association', label: 'Professional association memberships', sub: null },
+      { id: 'community', label: 'Online community or membership', sub: null },
+      { id: 'other', label: 'Other', sub: 'describe' }
+    ]
+  },
+  {
+    id: 'objective',
+    name: 'Objective',
+    type: 'objective',
+    note: 'The real ROI often happens before the book is even finished — in the thinking, the clarity, the conversations it opens. Choose what would make the effort feel worthwhile even if sales were modest.',
+    chips: [
+      'Codify my thinking and methodology while I write',
+      'Increase my speaking fees or land more speaking opportunities',
+      'Design a new workshop, course, or programme',
+      'Open doors in a new market, industry, or geography',
+      'Win a specific type of client or organisation',
+      'Transition my career or reinvent my business',
+      'Raise the conversation on an issue I care deeply about',
+      'Leave a legacy — something that outlasts the work',
+      'Other'
+    ]
+  },
+  {
+    id: 'strategy',
+    name: 'Strategy',
+    templateParts: [
+      'Writing this book will help me become known as ',
+      ', and will let me ',
+      '.'
+    ],
+    templatePlaceholders: ['the go-to person for X', 'long-term business or life aspiration'],
+    fieldCount: 2,
+    prompts: [
+      'If the book achieved everything it possibly could, what does your business look like in 3 years?',
+      'Is there a keynote, a business redesign, a movement, or a market you want to build toward?',
+      'Who do you want to become through this process — not just what do you want to build?'
+    ],
+    examples: [
+      { name: 'Donna McGeorge — Red Brick Thinking', url: 'https://www.expertauthor.community/books/red-brick-thinking', text: '"Writing this book will help me become known as the go-to voice on strategic simplicity for leaders — and let me reposition from productivity coaching into a premium speaking career built around one counterintuitive idea."' },
+      { name: 'Graeme Cowan — Great Leaders Care', url: 'https://www.expertauthor.community/books/great-leaders-care-developing-safe-resilient-and-successful-teams', text: '"Writing this book will help me become known as Australia\'s leading voice on caring leadership — and turn my lived experience of severe depression into a credibility-building asset for every keynote I give."' },
+      { name: 'Fleur Marks — The Overachiever\'s Reset', url: 'https://www.expertauthor.community/books/the-overachievers-reset-a-better-way-to-succeed-without-losing-yourself', text: '"Writing this book will help me become known as the person who finally names the hidden cost of high performance — and give me the foundation to build a coaching practice that attracts C-suite leaders before they crash."' }
+    ]
+  }
+];
+
+// State
+const answers = {};
+let currentPillar = 0;
+const platformChecked = {};
+const platformSubs = {};
+let objectiveSelected = [];
+let objectiveFreeText = '';
+
+// =====================
+// NAVIGATION
+// =====================
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.style.display = 'none';
+    s.classList.remove('active');
+  });
+  const el = document.getElementById(id);
+  el.style.display = 'block';
+  setTimeout(() => el.classList.add('active'), 10);
+  window.scrollTo(0, 0);
+}
+
+function startCanvas() {
+  showScreen('screen-pillar');
+  renderPillar(0);
+  updateNavProgress();
+}
+
+function goToPillar(idx) {
+  currentPillar = idx;
+  showScreen('screen-pillar');
+  renderPillar(idx);
+  window.scrollTo(0, 0);
+}
+
+function nextPillar() {
+  saveCurrent();
+  if (currentPillar < 8) {
+    currentPillar++;
+    renderPillar(currentPillar);
+    window.scrollTo(0, 0);
+  } else {
+    showCanvas();
+  }
+}
+
+function prevPillar() {
+  saveCurrent();
+  if (currentPillar > 0) {
+    currentPillar--;
+    renderPillar(currentPillar);
+    window.scrollTo(0, 0);
+  }
+}
+
+function skipPillar() {
+  answers[PILLARS[currentPillar].id] = '?';
+  nextPillar();
+}
+
+function updateNavProgress() {
+  // Progress shown in .progress-track on the pillar screen; no navbar counter needed.
+}
+
+// =====================
+// SAVE CURRENT ANSWER
+// =====================
+
+function saveCurrent() {
+  const p = PILLARS[currentPillar];
+  if (p.type === 'platform') {
+    const parts = [];
+    p.checkboxes.forEach(cb => {
+      if (platformChecked[cb.id]) {
+        let line = cb.label;
+        if (platformSubs[cb.id]) line += ` (${platformSubs[cb.id]})`;
+        parts.push(line);
+      }
+    });
+    answers[p.id] = parts.length ? parts.join(', ') : '';
+  } else if (p.type === 'objective') {
+    let val = objectiveSelected.join(', ');
+    if (objectiveFreeText) val += (val ? '. ' : '') + 'Priority: ' + objectiveFreeText;
+    answers[p.id] = val;
+  } else if (p.type === 'marketfit') {
+    const genre = document.getElementById('mf-genre')?.value || '';
+    const next = document.getElementById('mf-next')?.value || '';
+    const differs = document.getElementById('mf-differs')?.value || '';
+    let val = '';
+    if (genre) val += `Section: ${genre}. `;
+    if (next) val += `Sits next to: ${next}. `;
+    if (differs) val += `Differs because: ${differs}.`;
+    answers[p.id] = val.trim();
+  } else {
+    // Template based
+    const fields = document.querySelectorAll('.template-field');
+    if (fields.length) {
+      let parts = [...p.templateParts];
+      let result = parts[0];
+      fields.forEach((f, i) => {
+        result += (f.value || `[${p.templatePlaceholders[i]}]`);
+        result += parts[i + 1] || '';
+      });
+      answers[p.id] = result;
+    }
+  }
+}
+
+// =====================
+// RENDER PILLAR
+// =====================
+
+function renderPillar(idx) {
+  currentPillar = idx;
+  const p = PILLARS[idx];
+
+  // Update progress
+  const pct = Math.round(((idx + 1) / 9) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `Pillar ${idx + 1} of 9`;
+  updateNavProgress();
+
+  // Render sidebar
+  renderSidebar(idx);
+
+  // Render card
+  const container = document.getElementById('pillar-card-container');
+  container.innerHTML = buildPillarCard(p, idx);
+
+  // Bind events after render
+  bindPillarEvents(p, idx);
+}
+
+function buildPillarCard(p, idx) {
+  let inner = '';
+
+  if (p.type === 'marketfit') {
+    inner = buildMarketFitCard(p);
+  } else if (p.type === 'platform') {
+    inner = buildPlatformCard(p);
+  } else if (p.type === 'objective') {
+    inner = buildObjectiveCard(p);
+  } else {
+    inner = buildTemplateCard(p);
+  }
+
+  return `
+    <div class="pillar-card">
+      <div class="pillar-card-header">
+        <div class="pillar-number">Pillar ${idx + 1} of 9</div>
+        <div class="pillar-name">${p.name}</div>
+      </div>
+      <div class="pillar-card-body">
+        ${inner}
+        <div class="pillar-actions">
+          <button class="btn btn-ghost" onclick="skipPillar()">Not sure yet — I'll come back</button>
+          <div class="pillar-actions-right">
+            ${idx > 0 ? `<button class="btn btn-secondary" onclick="prevPillar()">&larr; Back</button>` : ''}
+            <button class="btn btn-primary" onclick="nextPillar()">${idx < 8 ? 'Next pillar →' : 'See my canvas →'}</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildTemplateCard(p) {
+  const existingAnswer = answers[p.id] && answers[p.id] !== '?' ? answers[p.id] : null;
+  let existingParts = [];
+  if (existingAnswer) {
+    // Try to extract existing field values from answer
+    existingParts = extractFieldValues(p, existingAnswer);
+  }
+
+  let templateHTML = `
+    <div class="template-wrap">
+      <div class="template-label">Complete this sentence</div>
+      <div class="template-sentence" id="template-sentence">`;
+
+  p.templateParts.forEach((part, i) => {
+    templateHTML += escHtml(part);
+    if (i < p.fieldCount) {
+      const val = existingParts[i] || '';
+      templateHTML += `<input class="template-field" type="text" data-idx="${i}" placeholder="${escAttr(p.templatePlaceholders[i])}" value="${escAttr(val)}" autocomplete="off">`;
+    }
+  });
+  templateHTML += `</div></div>`;
+  templateHTML += `<div class="live-preview" id="live-preview"></div>`;
+
+  templateHTML += buildPromptsSection(p);
+  templateHTML += buildExamplesSection(p);
+
+  return templateHTML;
+}
+
+function extractFieldValues(p, answer) {
+  // Simple extraction — split by fixed parts
+  const parts = [];
+  let remaining = answer;
+  for (let i = 0; i < p.fieldCount; i++) {
+    const startPart = p.templateParts[i];
+    const endPart = p.templateParts[i + 1] || '';
+    if (remaining.startsWith(startPart)) {
+      remaining = remaining.slice(startPart.length);
+    }
+    const endIdx = endPart ? remaining.indexOf(endPart) : remaining.length;
+    if (endIdx >= 0) {
+      parts.push(remaining.slice(0, endIdx));
+      remaining = remaining.slice(endIdx);
+    } else {
+      parts.push(remaining);
+      remaining = '';
+    }
+  }
+  return parts;
+}
+
+function buildMarketFitCard(p) {
+  const answer = answers[p.id] || '';
+  const sectionMatch = answer.match(/Section: ([^.]+)/);
+  const nextMatch = answer.match(/Sits next to: ([^.]+)/);
+  const differsMatch = answer.match(/Differs because: (.+)\.?/);
+
+  return `
+    <div class="market-steps">
+      <div class="market-step">
+        <div class="market-step-label"><span class="step-num">1</span> If I walked into a bookshop, my book would be in the…</div>
+        <div class="select-wrap">
+          <select class="pillar-select" id="mf-genre">
+            <option value="">Select a section</option>
+            ${['Business','Leadership','Self-help','Health & Wellbeing','Memoir & Biography','Parenting','Finance','Other'].map(g =>
+              `<option value="${g}" ${sectionMatch && sectionMatch[1]===g?'selected':''}>${g}</option>`
+            ).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="market-step">
+        <div class="market-step-label"><span class="step-num">2</span> It would sit next to…</div>
+        <input class="pillar-input" id="mf-next" type="text" placeholder="Book title or author name" value="${escAttr(nextMatch ? nextMatch[1] : '')}">
+      </div>
+      <div class="market-step">
+        <div class="market-step-label"><span class="step-num">3</span> But mine differs because…</div>
+        <textarea class="pillar-textarea" id="mf-differs" placeholder="What makes your angle, audience, or approach different?">${escHtml(differsMatch ? differsMatch[1].replace(/\.$/, '') : '')}</textarea>
+      </div>
+    </div>
+    <div class="pillar-note">${escHtml(p.note)}</div>
+    ${buildExamplesSection(p)}`;
+}
+
+function buildPlatformCard(p) {
+  let html = `<div style="font-size:13px;font-weight:600;color:var(--color-grey-700);margin-bottom:16px;">Think beyond social media. How do you already reach people directly?</div>
+    <div class="checkbox-group">`;
+
+  p.checkboxes.forEach(cb => {
+    const checked = platformChecked[cb.id] || false;
+    const sub = platformSubs[cb.id] || '';
+    html += `
+      <label class="checkbox-item ${checked ? 'checked' : ''}" id="cb-label-${cb.id}">
+        <input type="checkbox" id="cb-${cb.id}" ${checked ? 'checked' : ''} onchange="toggleCheck('${cb.id}')">
+        <span class="checkbox-label">${escHtml(cb.label)}</span>
+        ${cb.sub ? `<input class="checkbox-sub-input" type="text" placeholder="${escAttr(cb.sub)}" id="cb-sub-${cb.id}" value="${escAttr(sub)}" onclick="event.stopPropagation()">` : ''}
+      </label>`;
+  });
+
+  html += `</div><div class="pillar-note">${escHtml(p.note)}</div>`;
+  return html;
+}
+
+function buildObjectiveCard(p) {
+  const chipsHTML = p.chips.map(c => `
+    <span class="chip ${objectiveSelected.includes(c) ? 'selected' : ''}" onclick="toggleChip('${escAttr(c)}')">${escHtml(c)}</span>
+  `).join('');
+
+  return `
+    <div style="font-size:13px;font-weight:600;color:var(--color-grey-700);margin-bottom:8px;">What do you want this book to help you accomplish? Select up to 3.</div>
+    <div class="chip-limit-note" id="chip-limit-note">Select up to 3 — choose what resonates, even before you finish writing.</div>
+    <div class="chip-group">${chipsHTML}</div>
+    <div style="margin-top:4px;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--color-grey-700);letter-spacing:0.05em;">The one I care about most right now:</div>
+    <textarea class="pillar-textarea" id="objective-free" placeholder="Even one sentence is enough." style="min-height:80px;">${escHtml(objectiveFreeText)}</textarea>
+    <div class="pillar-note">${escHtml(p.note)}</div>`;
+}
+
+function buildPromptsSection(p) {
+  if (!p.prompts) return '';
+  const items = p.prompts.map(pr =>
+    `<div class="prompt-item" onclick="usePrompt(this)">${escHtml(pr)}</div>`
+  ).join('');
+  return `
+    <button class="prompts-toggle" id="prompts-toggle" onclick="toggleSection('prompts-panel','prompts-toggle')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Not sure where to start?
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="prompts-panel" id="prompts-panel">${items}</div>`;
+}
+
+function buildExamplesSection(p) {
+  if (!p.examples) return '';
+  const items = p.examples.map(ex => {
+    const nameHtml = ex.url
+      ? `<a class="example-link" href="${escAttr(ex.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${escHtml(ex.name)}</a>`
+      : escHtml(ex.name);
+    return `<div class="example-item" onclick="useExample(this, '${escAttr(ex.text)}')">
+      <div class="example-name">${nameHtml}</div>
+      ${escHtml(ex.text)}
+    </div>`;
+  }).join('');
+  return `
+    <button class="examples-toggle" id="examples-toggle" onclick="toggleSection('examples-panel','examples-toggle')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Show me an example
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="examples-panel" id="examples-panel">${items}</div>`;
+}
+
+// =====================
+// BIND EVENTS
+// =====================
+
+function bindPillarEvents(p, idx) {
+  if (p.type === 'objective') {
+    const freeEl = document.getElementById('objective-free');
+    if (freeEl) freeEl.addEventListener('input', () => { objectiveFreeText = freeEl.value; });
+    return;
+  }
+  if (p.type === 'platform' || p.type === 'marketfit') return;
+
+  // Template fields — update live preview
+  const fields = document.querySelectorAll('.template-field');
+  const preview = document.getElementById('live-preview');
+  if (!fields.length || !preview) return;
+
+  function updatePreview() {
+    const vals = [...fields].map(f => f.value.trim());
+    const hasAny = vals.some(v => v.length > 0);
+    if (!hasAny) { preview.classList.remove('visible'); return; }
+    preview.classList.add('visible');
+    let result = p.templateParts[0];
+    vals.forEach((v, i) => {
+      result += v ? `<strong>${escHtml(v)}</strong>` : `<em>[${escHtml(p.templatePlaceholders[i])}]</em>`;
+      result += escHtml(p.templateParts[i + 1] || '');
+    });
+    preview.innerHTML = result;
+  }
+
+  fields.forEach(f => f.addEventListener('input', updatePreview));
+  updatePreview();
+}
+
+function toggleSection(panelId, toggleId) {
+  const panel = document.getElementById(panelId);
+  const toggle = document.getElementById(toggleId);
+  if (!panel) return;
+  panel.classList.toggle('open');
+  if (toggle) toggle.classList.toggle('open');
+}
+
+function toggleCheck(id) {
+  const cb = document.getElementById('cb-' + id);
+  const label = document.getElementById('cb-label-' + id);
+  platformChecked[id] = cb.checked;
+  if (cb.checked) label.classList.add('checked');
+  else label.classList.remove('checked');
+  // save sub input
+  const sub = document.getElementById('cb-sub-' + id);
+  if (sub) platformSubs[id] = sub.value;
+}
+
+function toggleChip(val) {
+  const chips = document.querySelectorAll('.chip');
+  if (objectiveSelected.includes(val)) {
+    objectiveSelected = objectiveSelected.filter(v => v !== val);
+  } else {
+    if (objectiveSelected.length >= 3) {
+      document.getElementById('chip-limit-note').style.color = 'var(--color-orange)';
+      setTimeout(() => { document.getElementById('chip-limit-note').style.color = ''; }, 1200);
+      return;
+    }
+    objectiveSelected.push(val);
+  }
+  chips.forEach(c => {
+    if (c.textContent.trim() === val) c.classList.toggle('selected', objectiveSelected.includes(val));
+  });
+}
+
+function usePrompt(el) {
+  const text = el.textContent.replace(/^→ /, '');
+  const fields = document.querySelectorAll('.template-field');
+  if (fields.length && fields[0]) {
+    if (!fields[0].value) fields[0].value = '';
+    fields[0].focus();
+    fields[0].placeholder = text;
+  }
+  toggleSection('prompts-panel', 'prompts-toggle');
+}
+
+function useExample(el, exampleText) {
+  const p = PILLARS[currentPillar];
+  if (p.type === 'marketfit') return;
+  const cleaned = exampleText.replace(/^"/, '').replace(/"$/, '');
+  const fields = document.querySelectorAll('.template-field');
+  if (!fields.length) return;
+  // Distribute example across fields — just populate first field for inspiration
+  fields[0].value = cleaned;
+  fields[0].dispatchEvent(new Event('input'));
+  fields[0].focus();
+}
+
+// =====================
+// RENDER SIDEBAR
+// =====================
+
+function renderSidebar(currentIdx) {
+  const body = document.getElementById('sidebar-body');
+  if (!body) return;
+  body.innerHTML = '';
+
+  // Purpose — full width
+  body.appendChild(buildMiniBox(0, currentIdx, false));
+
+  // Row of 4: 1-4
+  const row1 = document.createElement('div');
+  row1.className = 'mini-row';
+  for (let i = 1; i <= 4; i++) row1.appendChild(buildMiniBox(i, currentIdx, true));
+  body.appendChild(row1);
+
+  // Row of 4: 5-8
+  const row2 = document.createElement('div');
+  row2.className = 'mini-row';
+  for (let i = 5; i <= 8; i++) row2.appendChild(buildMiniBox(i, currentIdx, true));
+  body.appendChild(row2);
+}
+
+function buildMiniBox(idx, currentIdx, small) {
+  const p = PILLARS[idx];
+  const answer = answers[p.id];
+  const isCurrent = idx === currentIdx;
+  const isCompleted = answer && answer !== '?';
+  const isSkipped = answer === '?';
+
+  const box = document.createElement('div');
+  box.className = 'mini-box' + (isCurrent ? ' current' : '') + (isCompleted || isSkipped ? ' completed' : '');
+  box.onclick = () => goToPillar(idx);
+  box.style.cursor = 'pointer';
+
+  let content = '';
+  if (isCompleted) {
+    const truncated = answer.length > 60 ? answer.slice(0, 57) + '…' : answer;
+    content = `<div class="mini-box-content">${escHtml(truncated)}</div>`;
+  } else if (isSkipped) {
+    content = `<div class="mini-box-placeholder">— (skipped)</div>`;
+  } else {
+    content = `<div class="mini-box-placeholder">—</div>`;
+  }
+
+  box.innerHTML = `<div class="mini-box-name">${escHtml(p.name)}</div>${content}`;
+  return box;
+}
+
+// =====================
+// CANVAS SCREEN
+// =====================
+
+function showCanvas() {
+  saveCurrent();
+  renderCanvas();
+  showScreen('screen-canvas');
+  document.getElementById('nav-progress').textContent = '';
+}
+
+function renderCanvas() {
+  const grid = document.getElementById('canvas-grid');
+  grid.innerHTML = '';
+
+  // Row 1: Purpose
+  const row1 = document.createElement('div');
+  row1.className = 'canvas-row canvas-row-1';
+  row1.appendChild(buildCanvasBox(0));
+  grid.appendChild(row1);
+
+  // Row 2: Pillars 1-4
+  const row2 = document.createElement('div');
+  row2.className = 'canvas-row canvas-row-2';
+  for (let i = 1; i <= 4; i++) row2.appendChild(buildCanvasBox(i));
+  grid.appendChild(row2);
+
+  // Row 3: Pillars 5-8
+  const row3 = document.createElement('div');
+  row3.className = 'canvas-row canvas-row-2';
+  for (let i = 5; i <= 8; i++) row3.appendChild(buildCanvasBox(i));
+  grid.appendChild(row3);
+}
+
+function buildCanvasBox(idx) {
+  const p = PILLARS[idx];
+  const answer = answers[p.id];
+  const isEmpty = !answer || answer === '?';
+
+  const box = document.createElement('div');
+  box.className = 'canvas-box';
+  box.innerHTML = `
+    <div class="canvas-box-header">${escHtml(p.name)}</div>
+    <div class="canvas-box-body ${isEmpty ? 'empty' : ''}">${isEmpty ? 'Not yet filled in.' : escHtml(answer)}</div>`;
+  return box;
+}
+
+// =====================
+// ANALYSIS SCREEN
+// =====================
+
+function showAnalysis() {
+  renderAnalysis();
+  showScreen('screen-analysis');
+}
+
+function renderAnalysis() {
+  const container = document.getElementById('analysis-cards');
+  container.innerHTML = '';
+  const cards = generateAnalysis();
+  cards.forEach((card, i) => {
+    const el = document.createElement('div');
+    el.className = `analysis-card ${card.type}`;
+    el.style.animationDelay = `${i * 0.08}s`;
+    el.innerHTML = `
+      <span class="analysis-pill pill-${card.type}">${card.label}</span>
+      <div class="analysis-card-text">${card.text}</div>
+      ${card.cta ? `<div class="analysis-cta">${card.cta}</div>` : ''}`;
+    container.appendChild(el);
+  });
+}
+
+function generateAnalysis() {
+  const cards = [];
+  const a = answers;
+
+  // 1. Audience specificity
+  const audience = a.audience || '';
+  const audienceWords = audience.split(/\s+/).filter(Boolean).length;
+  const hasName = /\b[A-Z][a-z]+\b/.test(audience);
+  if (!audience || audienceWords < 25 || !hasName) {
+    cards.push({
+      type: 'gap',
+      label: 'Gap',
+      text: 'Your ideal reader could be more specific. The more clearly you can picture one real person, the more powerfully your book will speak to many. Give them a name — Sarah from NAB, Jeremy the overworked dentist. A named person on the page is a reader who feels seen.'
+    });
+  }
+
+  // 2. Platform check
+  const platformAnswer = a.platform || '';
+  const platformCount = (PILLARS[6].checkboxes || []).filter(cb => platformChecked[cb.id]).length;
+  if (platformCount < 2) {
+    cards.push({
+      type: 'gap',
+      label: 'Gap',
+      text: 'Your platform section is light — social media alone rarely drives meaningful book sales. This is the box most authors underinvest in before they start writing. Your audience needs a direct route to your work: an email list, a speaking circuit, corporate relationships, or a community you already own. Start building now, not after you publish.'
+    });
+  }
+
+  // 3. Purpose-Strategy alignment
+  const purpose = a.purpose || '';
+  const strategy = a.strategy || '';
+  if (purpose && purpose !== '?' && strategy && strategy !== '?') {
+    cards.push({
+      type: 'alignment',
+      label: 'Alignment',
+      text: 'Your Purpose and Strategy are both clear — you know why you\'re writing and where you want to go. That alignment is rarer than you\'d think. Most authors have a strong why or a strong where, but not both at once. This is what keeps authors going when the writing gets hard and the end feels distant. Hold onto it.'
+    });
+  }
+
+  // 4. Unique Value naming
+  const uv = a.uniquevalue || '';
+  const hasMethodWord = /\b(method|framework|system|approach|steps|blueprint|model|process|formula|way)\b/i.test(uv);
+  if (uv && uv !== '?' && !hasMethodWord) {
+    cards.push({
+      type: 'opportunity',
+      label: 'Opportunity',
+      text: 'Your Unique Value describes something genuinely useful — but it doesn\'t have a name yet. Naming your method is one of the most powerful things you can do before you publish. "The Self-Fidelity Framework." "The Succession Blueprint." "The Hacking Happy Method." A named approach is what makes your expertise memorable, transferable, and searchable. You already have it — it just needs a label.'
+    });
+  }
+
+  // 5. Strengths — purpose filled
+  if (purpose && purpose !== '?') {
+    cards.push({
+      type: 'strength',
+      label: 'Strength',
+      text: 'Your Purpose statement is one of the most important things in this canvas. Authors who are clear on their why — not just their what — write better books, stay the course longer, and attract the right readers faster. Yours is worth revisiting when the project feels big or uncertain. It\'s your anchor.'
+    });
+  }
+
+  // 6. Always: closing CTA
+  cards.push({
+    type: 'cta-card',
+    label: 'Next Step',
+    text: 'Your canvas is a starting point, not a finished plan. The gaps are as useful as the answers — they show you exactly where to focus next. If you\'d like help thinking through any of these pillars, a Clarity Call with Kelly is a good next step.',
+    cta: `<a class="btn btn-navy" href="https://tidycal.com/lea-eac/20-minute-meeting" target="_blank" rel="noopener">Book a Clarity Call &rarr;</a>
+          <button class="btn btn-ghost" onclick="showCanvas()">Back to canvas</button>`
+  });
+
+  return cards;
+}
+
+// =====================
+// UTILS
+// =====================
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function escAttr(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Sub-input tracking for platform
+document.addEventListener('input', (e) => {
+  if (e.target && e.target.id && e.target.id.startsWith('cb-sub-')) {
+    const id = e.target.id.replace('cb-sub-', '');
+    platformSubs[id] = e.target.value;
+  }
+});
+
+// Init
+document.getElementById('screen-intro').style.display = 'flex';
+</script>
+<script src="/eac.js"></script>
+</body>
+</html>

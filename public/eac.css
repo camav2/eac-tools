@@ -1,0 +1,358 @@
+/* ============================================================
+   EAC TOOLS — SHARED STYLESHEET  v1.0
+   Loaded by every tool page via <link rel="stylesheet" href="/eac.css">
+   Covers: design tokens · base reset · navbar · CMS editor · accessibility
+   DO NOT put tool-specific styles here.
+   ============================================================ */
+
+
+/* ============================================================
+   1. DESIGN TOKENS
+   ============================================================ */
+:root {
+  /* Brand */
+  --color-navy:         #00003D;
+  --color-yellow:       #FFE64B;
+  --color-yellow-light: #FFF3A5;
+  --color-yellow-mid:   #FFF3A5; /* alias → yellow-light */
+  --color-blue:         #5296FB;
+  --color-blue-light:   #97C0FD;
+  --color-orange:       #FE8D17;
+
+  /* Neutral */
+  --color-white:        #FFFFFF;
+  --color-off-white:    #F9F9FB;
+  --color-grey-100:     #F2F2F5;
+  --color-grey-200:     #E4E4EA;
+  --color-grey-400:     #9999B0;
+  --color-grey-600:     #666677;
+  --color-grey-700:     #444455;
+  --color-black:        #0A0A1A;
+
+  /* Semantic */
+  --color-navy-light:   #E8E8F0;
+
+  /* Typography */
+  --font: 'Montserrat', sans-serif;
+
+  /* Radii */
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-md: 0 4px 12px rgba(0,0,61,0.10);
+  --shadow-lg: 0 8px 32px rgba(0,0,61,0.14);
+
+  /* Motion */
+  --transition: 0.2s ease;
+}
+
+
+/* ============================================================
+   2. BASE RESET
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+
+/* ============================================================
+   3. NAVBAR COMPONENT
+   Shared across all tool pages. Pages that use auth must include
+   <div class="header-auth" id="header-auth"></div> in their header.
+   ============================================================ */
+
+.site-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 60px;
+  background: var(--color-navy);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  z-index: 1000;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.header-logo svg { width: 26px; height: 26px; flex-shrink: 0; }
+.header-logo-text {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-white);
+}
+
+.beta-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: var(--color-orange);
+  color: var(--color-white);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  line-height: 1;
+  margin-left: 6px;
+  position: relative;
+  top: -1px;
+}
+
+/* Centre slot — optional tool name / progress shown between logo and auth */
+.navbar-tool-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.04em;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.navbar-progress {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.05em;
+}
+
+/* Auth slot — right side of navbar, populated by eac.js */
+.header-auth {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Member login button (unauthenticated state) */
+.btn-member-login {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  background: var(--color-yellow);
+  color: var(--color-navy);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 8px 16px 8px 12px;
+  border-radius: 999px;
+  text-decoration: none;
+  white-space: nowrap;
+  border: none;
+  cursor: pointer;
+}
+.btn-member-login::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -80%;
+  width: 55%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45) 50%, transparent);
+  animation: btn-shimmer 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes btn-shimmer { 0% { left: -80%; } 100% { left: 150%; } }
+.btn-member-login .lock-icon {
+  width: 13px; height: 13px;
+  margin-right: 7px;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+.btn-member-login .login-divider {
+  width: 0; height: 14px;
+  background: rgba(0,0,61,0.2);
+  margin: 0; flex-shrink: 0;
+  transition: width 0.25s ease, margin 0.25s ease;
+}
+.btn-member-login .login-dashboard {
+  max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.02em; text-transform: none;
+  transition: max-width 0.3s ease, opacity 0.2s ease;
+}
+.btn-member-login:hover .lock-icon        { transform: rotate(-15deg); }
+.btn-member-login:hover .login-divider    { width: 1px; margin: 0 10px; }
+.btn-member-login:hover .login-dashboard  { max-width: 120px; opacity: 1; }
+
+/* User button (authenticated state) */
+.header-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  padding: 4px 8px 4px 4px;
+  border-radius: 999px;
+  transition: background 0.18s ease;
+}
+.header-user-btn:hover { background: rgba(255,255,255,0.08); }
+
+.header-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+.header-avatar-placeholder {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-white);
+  flex-shrink: 0;
+}
+.header-user-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.header-chevron { color: rgba(255,255,255,0.4); flex-shrink: 0; }
+
+/* Dropdown */
+.header-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px); right: 0;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,62,0.18);
+  min-width: 180px;
+  overflow: hidden;
+  z-index: 300;
+}
+.header-dropdown.open { display: block; }
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  text-align: left;
+  transition: background 0.15s ease;
+  text-decoration: none;
+}
+.dropdown-item:hover         { background: #f5f5f8; }
+.dropdown-item.disabled      { color: #aaa; cursor: default; }
+.dropdown-item.disabled:hover { background: none; }
+.dropdown-soon {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #fff; background: #bbb; padding: 2px 6px; border-radius: 999px;
+}
+.dropdown-divider  { height: 1px; background: #eee; }
+.dropdown-logout   { color: #c0392b; }
+.dropdown-logout:hover { background: #fff5f5 !important; }
+
+
+/* ============================================================
+   4. CMS INLINE EDITOR  (admin-only, injected by eac.js)
+   ============================================================ */
+.cms-region { position: relative; }
+
+.cms-edit-btn {
+  position: absolute; top: 6px; right: 6px;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--color-yellow); color: var(--color-navy);
+  font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 4px 10px; border-radius: 999px; border: none; cursor: pointer;
+  opacity: 0; transition: opacity 0.15s ease; z-index: 20; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.cms-region:hover .cms-edit-btn { opacity: 1; }
+
+.cms-editor-wrap {
+  background: var(--color-white);
+  border: 2px solid var(--color-yellow);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin: 4px 0;
+}
+.cms-editable {
+  min-height: 80px;
+  font-family: var(--font) !important;
+  font-size: 15px;
+  color: var(--color-black);
+  padding: 14px 16px;
+  border: none !important;
+  outline: none;
+  box-shadow: none !important;
+  background: #fff;
+}
+.cms-toolbar {
+  display: flex; gap: 4px; padding: 8px 12px;
+  border-bottom: 1px solid var(--color-grey-200);
+  background: var(--color-grey-100);
+}
+.cms-tb-btn {
+  font-family: var(--font); font-size: 12px;
+  padding: 4px 10px; border: 1px solid var(--color-grey-200);
+  border-radius: 4px; background: #fff; cursor: pointer;
+}
+.cms-actions {
+  display: flex; gap: 8px; padding: 10px 12px;
+  border-top: 1px solid var(--color-grey-200);
+  background: var(--color-grey-100);
+}
+.cms-save-btn {
+  background: var(--color-navy); color: var(--color-white);
+  font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 8px 18px; border-radius: 999px; border: none; cursor: pointer;
+}
+.cms-save-btn:hover    { background: #000055; }
+.cms-save-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.cms-cancel-btn {
+  background: transparent; color: var(--color-grey-700);
+  font-family: var(--font); font-size: 11px; font-weight: 600;
+  padding: 8px 16px; border-radius: 999px;
+  border: 2px solid var(--color-grey-200); cursor: pointer;
+}
+.cms-cancel-btn:hover { border-color: var(--color-grey-400); }
+
+
+/* ============================================================
+   5. ACCESSIBILITY
+   ============================================================ */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--color-yellow);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
