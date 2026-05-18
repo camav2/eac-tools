@@ -15,9 +15,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const PAGE_FILES: Record<string, string> = {
-  'index':     'public/index.html',
-  'idea-test': 'public/idea-test.html',
-  'unblocker': 'public/unblocker.html',
+  'index':       'public/index.html',
+  'idea-test':   'public/idea-test.html',
+  'unblocker':   'public/unblocker.html',
+  'book-canvas': 'public/book-canvas.html',
 }
 
 const CONTENT_BLOCK_RE = /<script type="application\/json" id="page-content">([\s\S]*?)<\/script>/
