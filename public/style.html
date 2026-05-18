@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EAC Tools — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+
+/* ============================================================
+   EAC DESIGN TOKENS — canonical, copied from idea-test.html
+   ============================================================ */
+:root {
+  --color-navy:         #00003D;
+  --color-yellow:       #FFE64B;
+  --color-yellow-light: #FFF3A5;
+  --color-blue:         #5296FB;
+  --color-blue-light:   #97C0FD;
+  --color-orange:       #FE8D17;
+  --color-white:        #FFFFFF;
+  --color-off-white:    #F9F9FB;
+  --color-grey-100:     #F2F2F5;
+  --color-grey-200:     #E4E4EA;
+  --color-grey-400:     #9999B0;
+  --color-grey-700:     #444455;
+  --color-black:        #0A0A1A;
+  --font:               'Montserrat', sans-serif;
+  --radius-md:          8px;
+  --radius-lg:          12px;
+  --radius-xl:          16px;
+  --radius-full:        9999px;
+  --shadow-md:          0 4px 12px rgba(0,0,61,0.10);
+  --shadow-lg:          0 8px 32px rgba(0,0,61,0.14);
+  --transition:         0.2s ease;
+}
+
+/* ============================================================
+   DESIGN SYSTEM SHELL (not part of component library)
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: #F0F0F4;
+  color: var(--color-black);
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.ds-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--color-navy);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+  padding: 28px 0 40px;
+  z-index: 100;
+}
+.ds-sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 16px;
+}
+.ds-sidebar-logo svg { width: 24px; flex-shrink: 0; }
+.ds-sidebar-logo-text {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-yellow);
+  line-height: 1.3;
+}
+.ds-sidebar-section {
+  padding: 8px 20px 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  margin-top: 12px;
+}
+.ds-nav-link {
+  display: block;
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+  border-left: 2px solid transparent;
+}
+.ds-nav-link:hover,
+.ds-nav-link.active {
+  color: var(--color-white);
+  background: rgba(255,255,255,0.05);
+  border-left-color: var(--color-yellow);
+}
+
+/* Main content */
+.ds-main {
+  margin-left: 220px;
+  flex: 1;
+  padding: 48px 48px 80px;
+  max-width: calc(100% - 220px);
+}
+
+/* Section */
+.ds-section {
+  margin-bottom: 72px;
+  scroll-margin-top: 32px;
+}
+.ds-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-grey-400);
+  margin-bottom: 6px;
+}
+.ds-section-heading {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-navy);
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.ds-section-desc {
+  font-size: 14px;
+  color: var(--color-grey-700);
+  line-height: 1.65;
+  margin-bottom: 32px;
+  max-width: 600px;
+}
+.ds-section-divider {
+  border: none;
+  border-top: 1px solid var(--color-grey-200);
+  margin-bottom: 48px;
+}
+
+/* Sub-group */
+.ds-group {
+  margin-bottom: 40px;
+}
+.ds-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-grey-400);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-grey-200);
+}
+
+/* Preview canvas */
+.ds-canvas {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-grey-200);
+}
+.ds-canvas--dark {
+  background: var(--color-navy);
+}
+.ds-canvas--grey {
+  background: var(--color-off-white);
+}
+
+/* Class name tag */
+.ds-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-blue);
+  background: rgba(82,150,251,0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  margin-bottom: 10px;
+}
+
+/* Row flex util */
+.ds-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+}
+.ds-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ============================================================
+   1. TOKEN DISPLAY HELPERS
+   ============================================================ */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.color-chip {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.color-swatch {
+  height: 64px;
+}
+.color-info {
+  background: var(--color-white);
+  padding: 10px 12px;
+}
+.color-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-navy);
+  letter-spacing: 0.02em;
+  margin-bottom: 2px;
+  font-family: 'Courier New', monospace;
+}
+.color-hex {
+  font-size: 11px;
+  color: var(--color-grey-400);
+  font-family: 'Courier New', monospace;
+}
+
+.radius-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.radius-demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.radius-box {
+  background: var(--color-navy);
+  width: 64px;
+  height: 64px;
+}
+.radius-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-grey-400);
+  text-align: center;
+  font-family: 'Courier New', monospace;
+}
+
+.shadow-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.shadow-demo {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.type-scale {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.type-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+.type-meta {
+  width: 100px;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-grey-400);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+}
+
+/* ============================================================
+   COMPONENTS — exact CSS from idea-test.html
+   ============================================================ */
+
+/* --- Buttons --- */
+.btn-start {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--color-yellow); color: var(--color-navy);
+  font-family: var(--font); font-size: 14px; font-weight: 800;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 16px 36px; border-radius: var(--radius-full);
+  border: none; cursor: pointer; transition: all var(--transition);
+  text-decoration: none; box-shadow: 0 4px 20px rgba(255,230,75,0.3);
+}
+.btn-start:hover { background: var(--color-yellow-light); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,230,75,0.4); }
+
+.btn-next {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--color-yellow); color: var(--color-navy);
+  font-family: var(--font); font-size: 13px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 14px 40px; border-radius: var(--radius-full);
+  border: none; cursor: pointer;
+  transition: background var(--transition), box-shadow var(--transition);
+  justify-content: center;
+}
+.btn-next:hover { background: var(--color-yellow-light); box-shadow: var(--shadow-md); }
+
+.btn-submit {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  background: var(--color-navy); color: var(--color-white);
+  font-family: var(--font); font-size: 13px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 16px 24px; border-radius: var(--radius-full);
+  border: none; cursor: pointer; transition: all var(--transition);
+}
+.btn-submit:hover { background: #000055; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn-submit:disabled { background: var(--color-grey-400); cursor: not-allowed; transform: none; }
+
+.btn-cta-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  background: var(--color-yellow); color: var(--color-navy);
+  font-family: var(--font); font-size: 14px; font-weight: 800;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 18px 32px; border-radius: var(--radius-full);
+  border: none; cursor: pointer; text-decoration: none;
+  transition: all var(--transition); box-shadow: 0 4px 20px rgba(255,230,75,0.35);
+}
+.btn-cta-primary:hover { background: var(--color-yellow-light); transform: translateY(-1px); box-shadow: 0 8px 28px rgba(255,230,75,0.45); }
+
+.btn-cta-secondary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  background: transparent; color: var(--color-navy);
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 16px 32px; border-radius: var(--radius-full);
+  border: 2px solid var(--color-navy); text-decoration: none;
+  transition: all var(--transition);
+}
+.btn-cta-secondary:hover { background: var(--color-navy); color: var(--color-white); transform: translateY(-1px); }
+
+.btn-share {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: transparent; color: var(--color-grey-700);
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 12px 24px; border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-grey-200); cursor: pointer; transition: all var(--transition);
+}
+.btn-share:hover { border-color: var(--color-grey-400); color: var(--color-navy); }
+
+.btn-print {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: transparent; color: var(--color-grey-400);
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  border: 1.5px solid var(--color-grey-200); border-radius: var(--radius-full);
+  padding: 10px 22px; cursor: pointer; transition: all var(--transition);
+}
+.btn-print:hover { color: var(--color-navy); border-color: var(--color-grey-400); }
+
+.btn-copy {
+  padding: 12px 18px; background: var(--color-navy); color: var(--color-white);
+  border: none; border-radius: var(--radius-md);
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer; transition: all var(--transition); white-space: nowrap;
+}
+.btn-copy:hover { background: #000055; }
+.btn-copy.copied { background: #2ECC71; }
+
+/* Member login shimmer */
+.btn-member-login {
+  position: relative; display: inline-flex; align-items: center;
+  overflow: hidden;
+  background: var(--color-yellow); color: var(--color-navy);
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 8px 16px 8px 12px; border-radius: 999px;
+  text-decoration: none; white-space: nowrap; border: none; cursor: pointer;
+}
+.btn-member-login::before {
+  content: ''; position: absolute; top: 0; left: -80%;
+  width: 55%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45) 50%, transparent);
+  animation: btn-shimmer 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes btn-shimmer { 0% { left: -80%; } 100% { left: 150%; } }
+
+/* --- Badges & Labels --- */
+.intro-eyebrow {
+  display: inline-block;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--color-yellow); background: rgba(255,230,75,0.12);
+  padding: 6px 14px; border-radius: var(--radius-full);
+}
+.q-number-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--color-navy); background: var(--color-yellow);
+  padding: 5px 12px; border-radius: var(--radius-full);
+}
+.result-badge {
+  display: inline-block;
+  font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--color-yellow); color: var(--color-navy);
+  padding: 6px 18px; border-radius: var(--radius-full);
+}
+.result-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--color-yellow);
+}
+.beta-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; background: var(--color-orange); color: var(--color-white);
+  font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+  border-radius: 999px; line-height: 1;
+}
+.dropdown-soon {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #fff; background: #bbb; padding: 2px 6px; border-radius: 999px;
+}
+
+/* --- Answer buttons --- */
+.yn-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+}
+.yn-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 16px 10px;
+  border: 2px solid var(--color-grey-200); border-radius: var(--radius-xl);
+  font-family: var(--font); font-size: 13px; font-weight: 800;
+  color: var(--color-grey-700); background: var(--color-white);
+  cursor: pointer; transition: all var(--transition);
+  letter-spacing: 0.03em; box-shadow: var(--shadow-md); text-align: center; line-height: 1.3;
+}
+.yn-btn:hover { border-color: var(--color-blue); color: var(--color-navy); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.yn-btn.selected-yes { background: var(--color-yellow); border-color: var(--color-yellow); color: var(--color-navy); transform: scale(1.02); box-shadow: 0 4px 16px rgba(255,230,75,0.4); }
+.yn-btn.selected-partial { background: var(--color-blue); border-color: var(--color-blue); color: var(--color-white); transform: scale(1.02); box-shadow: 0 4px 16px rgba(82,150,251,0.35); }
+.yn-btn.selected-no { background: var(--color-navy); border-color: var(--color-navy); color: var(--color-white); transform: scale(1.02); box-shadow: 0 4px 16px rgba(0,0,61,0.2); }
+
+/* --- Progress --- */
+.progress-wrap { display: flex; align-items: center; gap: 12px; }
+.progress-track { flex: 1; height: 6px; background: var(--color-grey-200); border-radius: var(--radius-full); overflow: hidden; }
+.progress-fill { height: 100%; background: var(--color-yellow); border-radius: var(--radius-full); transition: width 0.4s ease; }
+.progress-label { font-size: 12px; font-weight: 700; color: var(--color-grey-400); white-space: nowrap; letter-spacing: 0.04em; }
+
+/* --- Score dots --- */
+.score-dots { display: flex; gap: 10px; }
+.score-dot { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: background 0.3s ease; }
+.score-dot.yes { background: var(--color-yellow); }
+.score-dot.partial { background: var(--color-blue-light); }
+.score-dot.no { background: rgba(255,255,255,0.15); }
+
+/* --- Form inputs --- */
+.form-field { margin-bottom: 16px; text-align: left; }
+.form-label {
+  display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--color-navy); margin-bottom: 6px;
+}
+.form-input {
+  width: 100%; padding: 14px 16px;
+  border: 2px solid var(--color-grey-200); border-radius: var(--radius-md);
+  font-family: var(--font); font-size: 15px; color: var(--color-black);
+  background: var(--color-white); transition: border-color var(--transition); appearance: none;
+}
+.form-input:focus { outline: none; border-color: var(--color-blue); box-shadow: 0 0 0 3px rgba(82,150,251,0.15); }
+.form-input::placeholder { color: var(--color-grey-400); }
+.form-privacy { font-size: 12px; color: var(--color-grey-400); margin-top: 16px; line-height: 1.5; }
+
+/* --- Question context card --- */
+.question-context {
+  background: var(--color-white); border-radius: var(--radius-xl);
+  padding: 20px 24px; box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-grey-200);
+}
+.question-context-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--color-grey-400); margin-bottom: 12px;
+}
+.question-context p { font-size: 14px; color: var(--color-grey-700); line-height: 1.7; margin-bottom: 12px; }
+.question-tests { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.question-tests li { font-size: 14px; color: var(--color-navy); line-height: 1.5; padding-left: 20px; position: relative; }
+.question-tests li::before { content: '→'; position: absolute; left: 0; color: var(--color-blue); font-weight: 700; }
+
+/* --- Question main heading --- */
+.question-main { font-size: clamp(20px, 3.5vw, 26px); font-weight: 800; color: var(--color-navy); line-height: 1.3; letter-spacing: -0.01em; margin-bottom: 20px; }
+
+/* --- Email card --- */
+.email-card {
+  background: var(--color-white); border-radius: 24px; padding: 48px 40px;
+  max-width: 500px; width: 100%; box-shadow: var(--shadow-lg); text-align: center;
+}
+.email-icon {
+  width: 64px; height: 64px; background: var(--color-yellow); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 24px; font-size: 28px;
+}
+.email-title { font-size: 26px; font-weight: 800; color: var(--color-navy); letter-spacing: -0.02em; margin-bottom: 12px; }
+.email-sub { font-size: 15px; color: var(--color-grey-700); line-height: 1.6; margin-bottom: 32px; }
+
+/* --- Result hero --- */
+.result-hero {
+  background: var(--color-navy); padding: 48px 40px; text-align: center;
+  position: relative; overflow: hidden; border-radius: var(--radius-xl);
+}
+.result-hero::before {
+  content: ''; position: absolute; top: -60px; right: -60px;
+  width: 200px; height: 200px; background: rgba(255,230,75,0.07); border-radius: 50%;
+}
+.result-hero-inner { position: relative; z-index: 1; }
+.result-headline { font-size: clamp(22px, 3.5vw, 32px); font-weight: 800; color: var(--color-white); letter-spacing: -0.02em; line-height: 1.2; margin: 12px 0; }
+.result-lead { font-size: 16px; color: rgba(255,255,255,0.75); line-height: 1.65; }
+
+/* --- Result next step card --- */
+.result-next-step {
+  background: var(--color-yellow-light); border: 2px solid var(--color-yellow);
+  border-radius: var(--radius-xl); padding: 28px;
+}
+.result-next-step h4 { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-navy); margin-bottom: 10px; }
+.result-next-step p { font-size: 15px; color: var(--color-black); line-height: 1.7; }
+
+/* --- Result mid CTA --- */
+.result-cta-mid { background: var(--color-navy); border-radius: var(--radius-xl); padding: 36px 32px; text-align: center; }
+.result-cta-mid-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-yellow); margin-bottom: 10px; }
+.result-cta-mid-title { font-size: 22px; font-weight: 800; color: var(--color-white); letter-spacing: -0.01em; line-height: 1.3; margin-bottom: 12px; }
+.result-cta-mid-body { font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.65; margin-bottom: 24px; }
+
+/* --- Gap blocks --- */
+.gap-block { border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px; border-left: 4px solid transparent; }
+.gap-block--gap { background: rgba(254,141,23,0.07); border-left-color: var(--color-orange); }
+.gap-block--advisory { background: rgba(151,192,253,0.12); border-left-color: var(--color-blue-light); }
+.gap-block-label { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-grey-400); margin-bottom: 10px; }
+.gap-block p { font-size: 15px; color: var(--color-black); line-height: 1.75; margin-bottom: 12px; }
+.gap-block-cta { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: var(--color-navy); text-decoration: underline; text-underline-offset: 3px; transition: color var(--transition); }
+.gap-block--gap .gap-block-cta { color: var(--color-orange); }
+.gap-block--advisory .gap-block-cta { color: var(--color-blue); }
+.gap-block-cta:hover { opacity: 0.75; }
+
+/* --- Result soft close --- */
+.result-soft-close { font-size: 16px; font-style: italic; color: var(--color-grey-700); line-height: 1.7; text-align: center; }
+
+/* --- Navbar --- */
+.site-header {
+  background: var(--color-navy); padding: 0 24px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.07); border-radius: var(--radius-xl);
+}
+.header-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.header-logo svg { width: 26px; height: 26px; flex-shrink: 0; }
+.header-logo-text { font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-white); }
+.header-auth { display: flex; align-items: center; gap: 12px; }
+.header-user-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: none; border: none; cursor: pointer; font-family: var(--font);
+  padding: 4px 8px 4px 4px; border-radius: 999px; transition: background 0.18s ease;
+}
+.header-user-btn:hover { background: rgba(255,255,255,0.08); }
+.header-avatar-placeholder {
+  width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--color-white); flex-shrink: 0;
+}
+.header-user-name { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85); }
+.header-chevron { color: rgba(255,255,255,0.4); }
+
+/* --- Dropdown --- */
+.header-dropdown {
+  background: #fff; border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,62,0.18);
+  min-width: 180px; overflow: hidden;
+}
+.dropdown-item {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 12px 16px;
+  font-size: 13px; font-weight: 600; color: #1a1a2e;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font); text-align: left;
+  transition: background 0.15s ease; text-decoration: none;
+}
+.dropdown-item:hover { background: #f5f5f8; }
+.dropdown-item.disabled { color: #aaa; cursor: default; }
+.dropdown-item.disabled:hover { background: none; }
+.dropdown-divider { height: 1px; background: #eee; }
+.dropdown-logout { color: #c0392b; }
+.dropdown-logout:hover { background: #fff5f5 !important; }
+
+/* --- Modal --- */
+.modal-overlay {
+  display: flex; position: relative;
+  background: rgba(0,0,61,0.55);
+  backdrop-filter: blur(4px);
+  align-items: center; justify-content: center;
+  padding: 24px; border-radius: var(--radius-xl);
+}
+.modal {
+  background: var(--color-white); border-radius: 24px; padding: 40px 36px;
+  max-width: 460px; width: 100%; box-shadow: var(--shadow-lg); position: relative;
+}
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: none; background: var(--color-grey-100); color: var(--color-grey-700);
+  font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background var(--transition);
+}
+.modal-close:hover { background: var(--color-grey-200); }
+.modal-title { font-size: 22px; font-weight: 800; color: var(--color-navy); letter-spacing: -0.01em; margin-bottom: 6px; }
+.modal-sub { font-size: 14px; color: var(--color-grey-700); margin-bottom: 28px; line-height: 1.5; }
+
+.share-btns { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+.share-btn {
+  display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+  border-radius: var(--radius-lg); border: 2px solid var(--color-grey-200);
+  background: var(--color-white); font-family: var(--font); font-size: 13px;
+  font-weight: 700; color: var(--color-navy); text-decoration: none;
+  cursor: pointer; transition: all var(--transition); letter-spacing: 0.02em;
+}
+.share-btn:hover { border-color: var(--color-navy); background: var(--color-grey-100); }
+.share-btn-icon {
+  width: 36px; height: 36px; border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 16px;
+}
+.share-btn-icon.linkedin { background: #0077B5; color: #fff; }
+.share-btn-icon.twitter  { background: #000; color: #fff; }
+.share-btn-icon.email-ico { background: var(--color-blue); color: #fff; }
+
+.share-url-row { display: flex; gap: 8px; align-items: center; }
+.share-url-input {
+  flex: 1; padding: 12px 14px; border: 2px solid var(--color-grey-200);
+  border-radius: var(--radius-md); font-family: var(--font); font-size: 13px;
+  color: var(--color-grey-700); background: var(--color-grey-100);
+}
+
+/* --- Intro screen preview --- */
+.intro-preview {
+  background: var(--color-navy); border-radius: var(--radius-xl); padding: 48px 40px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.intro-preview::after {
+  content: ''; position: absolute; bottom: -60px; left: -40px;
+  width: 280px; height: 280px; background: rgba(82,150,251,0.05); border-radius: 50%;
+}
+.intro-title { font-size: clamp(22px, 3.5vw, 36px); font-weight: 800; color: var(--color-white); line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 16px; }
+.intro-title span { color: var(--color-yellow); }
+.intro-subtitle { font-size: 16px; color: rgba(255,255,255,0.75); line-height: 1.65; margin-bottom: 32px; }
+.intro-meta { margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.35); display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+/* --- Q header preview --- */
+.q-header-preview {
+  background: var(--color-white); border-bottom: 1px solid var(--color-grey-200); padding: 16px 24px;
+  border-radius: var(--radius-xl);
+}
+
+/* --- Dog-ear --- */
+.dog-ear-demo {
+  width: 80px; height: 80px; position: relative; overflow: hidden;
+  display: inline-block;
+}
+
+/* --- CMS edit button --- */
+.cms-region { position: relative; display: inline-block; }
+.cms-edit-btn {
+  position: absolute; top: 6px; right: 6px;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--color-yellow); color: var(--color-navy);
+  font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 4px 10px; border-radius: 999px; border: none; cursor: pointer;
+  opacity: 0; transition: opacity 0.15s ease; z-index: 20; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.cms-region:hover .cms-edit-btn { opacity: 1; }
+
+/* DS-specific layout helpers */
+.state-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--color-grey-400); margin-bottom: 6px;
+}
+.ds-state-group {
+  display: flex; flex-direction: column; gap: 6px; align-items: flex-start;
+}
+.screen-map {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.screen-step {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--color-white); border: 1px solid var(--color-grey-200);
+  border-radius: var(--radius-lg); padding: 14px 20px;
+}
+.screen-step-num {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--color-yellow);
+  color: var(--color-navy); font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.screen-step-name { font-size: 13px; font-weight: 700; color: var(--color-navy); }
+.screen-step-desc { font-size: 12px; color: var(--color-grey-400); margin-top: 2px; }
+.screen-step-detail { flex: 1; }
+.screen-step-class { font-size: 10px; font-family: 'Courier New', monospace; color: var(--color-blue); background: rgba(82,150,251,0.1); padding: 2px 6px; border-radius: 4px; margin-left: auto; white-space: nowrap; }
+.screen-arrow { text-align: center; color: var(--color-grey-400); font-size: 18px; line-height: 1; padding: 4px 0 4px 40px; }
+
+/* Motion demo */
+.motion-demo-box {
+  width: 60px; height: 60px; background: var(--color-yellow);
+  border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--color-navy); text-align: center;
+  line-height: 1.2; cursor: pointer;
+}
+.motion-demo-box.run-fadeup { animation: fadeUp 0.4s ease forwards; }
+@keyframes fadeUp { from { opacity: 0; } to { opacity: 1; } }
+
+.motion-row { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+.motion-item { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.motion-item-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-grey-400); text-align: center; }
+
+/* Accessibility demo */
+button:focus-visible, a:focus-visible, input:focus-visible {
+  outline: 3px solid var(--color-yellow); outline-offset: 2px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     SIDEBAR
+     ============================================================ -->
+<nav class="ds-sidebar">
+  <div class="ds-sidebar-logo">
+    <svg viewBox="0 0 53.3 53.3" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="32.1 53.3 0 53.3 0 21.2 21.1 0.1 53.2 32.2 32.1 53.3" fill="#FFE64B"/>
+      <polyline points="15.8 53.3 0 53.3 0 37.5" fill="#00003D"/>
+      <polygon points="46.6 25.4 33.2 38.8 26.6 32.3 40 19 33.9 13 20.6 26.3 14.4 20.1 27.9 6.7 21.2 0 0 21.2 32.1 53.3 53.3 32.1 46.6 25.4" fill="#00003D"/>
+    </svg>
+    <div class="ds-sidebar-logo-text">EAC Tools<br>Design System</div>
+  </div>
+
+  <div class="ds-sidebar-section">Foundations</div>
+  <a class="ds-nav-link" href="#tokens-colour">Colour Tokens</a>
+  <a class="ds-nav-link" href="#tokens-type">Typography</a>
+  <a class="ds-nav-link" href="#tokens-space">Radii & Shadows</a>
+
+  <div class="ds-sidebar-section">Components</div>
+  <a class="ds-nav-link" href="#buttons">Buttons</a>
+  <a class="ds-nav-link" href="#badges">Badges & Labels</a>
+  <a class="ds-nav-link" href="#answer-buttons">Answer Buttons</a>
+  <a class="ds-nav-link" href="#forms">Form Inputs</a>
+  <a class="ds-nav-link" href="#progress">Progress & Score</a>
+  <a class="ds-nav-link" href="#cards">Cards</a>
+  <a class="ds-nav-link" href="#navbar">Navbar</a>
+  <a class="ds-nav-link" href="#modal">Modal & Share</a>
+  <a class="ds-nav-link" href="#cms">CMS Layer</a>
+
+  <div class="ds-sidebar-section">Patterns</div>
+  <a class="ds-nav-link" href="#screens">Screen Architecture</a>
+  <a class="ds-nav-link" href="#motion">Motion</a>
+  <a class="ds-nav-link" href="#accessibility">Accessibility</a>
+</nav>
+
+<!-- ============================================================
+     MAIN
+     ============================================================ -->
+<main class="ds-main">
+
+  <div style="margin-bottom: 48px;">
+    <div class="ds-section-title">EAC Tools</div>
+    <h1 class="ds-section-heading" style="font-size:36px;">Design System</h1>
+    <p class="ds-section-desc">The canonical component reference for <strong>tools.expertauthor.community</strong>. All class names, tokens, states and patterns are sourced from <code style="font-size:12px;background:var(--color-grey-100);padding:2px 6px;border-radius:4px;">idea-test.html</code> — the archetype tool. Use these names consistently across every tool.</p>
+  </div>
+
+  <hr class="ds-section-divider">
+
+  <!-- ============================================================
+       COLOUR TOKENS
+       ============================================================ -->
+  <section class="ds-section" id="tokens-colour">
+    <div class="ds-section-title">Foundations</div>
+    <h2 class="ds-section-heading">Colour Tokens</h2>
+    <p class="ds-section-desc">All colours are defined in <code style="font-size:12px;background:var(--color-grey-100);padding:2px 6px;border-radius:4px;">:root</code> on every tool page. Never use raw hex values in component code — always reference the token.</p>
+
+    <div class="ds-group">
+      <div class="ds-group-label">Brand</div>
+      <div class="color-grid">
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#00003D;"></div>
+          <div class="color-info"><div class="color-name">--color-navy</div><div class="color-hex">#00003D</div></div>
+        </div>
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#FFE64B;"></div>
+          <div class="color-info"><div class="color-name">--color-yellow</div><div class="color-hex">#FFE64B</div></div>
+        </div>
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#FFF3A5;"></div>
+          <div class="color-info"><div class="color-name">--color-yellow-light</div><div class="color-hex">#FFF3A5</div></div>
+        </div>
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#FE8D17;"></div>
+          <div class="color-info"><div class="color-name">--color-orange</div><div class="color-hex">#FE8D17</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">Interactive & State</div>
+      <div class="color-grid">
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#5296FB;"></div>
+          <div class="color-info"><div class="color-name">--color-blue</div><div class="color-hex">#5296FB</div></div>
+        </div>
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#97C0FD;"></div>
+          <div class="color-info"><div class="color-name">--color-blue-light</div><div class="color-hex">#97C0FD</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">Neutral</div>
+      <div class="color-grid">
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#FFFFFF; border-bottom:1px solid #eee;"></div>
+          <div class="color-info"><div class="color-name">--color-white</div><div class="color-hex">#FFFFFF</div></div>
+        </div>
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#F9F9FB;"></div>
+          <div class="color-info"><div class="color-name">--color-off-white</div><div class="color-hex">#F9F9FB</div></div>
+        </div>
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#F2F2F5;"></div>
+          <div class="color-info"><div class="color-name">--color-grey-100</div><div class="color-hex">#F2F2F5</div></div>
+        </div>
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#E4E4EA;"></div>
+          <div class="color-info"><div class="color-name">--color-grey-200</div><div class="color-hex">#E4E4EA</div></div>
+        </div>
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#9999B0;"></div>
+          <div class="color-info"><div class="color-name">--color-grey-400</div><div class="color-hex">#9999B0</div></div>
+        </div>
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#444455;"></div>
+          <div class="color-info"><div class="color-name">--color-grey-700</div><div class="color-hex">#444455</div></div>
+        </div>
+        <div class="color-chip">
+          <div class="color-swatch" style="background:#0A0A1A;"></div>
+          <div class="color-info"><div class="color-name">--color-black</div><div class="color-hex">#0A0A1A</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">Semantic Usage</div>
+      <div class="ds-canvas">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;">
+          <div style="padding:12px;background:var(--color-grey-100);border-radius:var(--radius-md);"><strong>Navy</strong> — page backgrounds (dark screens), navbar, primary text, CTA fill</div>
+          <div style="padding:12px;background:var(--color-grey-100);border-radius:var(--radius-md);"><strong>Yellow</strong> — primary CTAs, selected state (Yes), badges, progress fill, highlights</div>
+          <div style="padding:12px;background:var(--color-grey-100);border-radius:var(--radius-md);"><strong>Blue</strong> — focus ring, partial/getting-there state, advisory content, test list arrows</div>
+          <div style="padding:12px;background:var(--color-grey-100);border-radius:var(--radius-md);"><strong>Orange</strong> — beta badge, gap/warning blocks, not-yet state accents</div>
+          <div style="padding:12px;background:var(--color-grey-100);border-radius:var(--radius-md);"><strong>Off-white</strong> — default page background (light screens)</div>
+          <div style="padding:12px;background:var(--color-grey-100);border-radius:var(--radius-md);"><strong>Grey-200</strong> — default input borders, dividers, card borders</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       TYPOGRAPHY
+       ============================================================ -->
+  <section class="ds-section" id="tokens-type">
+    <div class="ds-section-title">Foundations</div>
+    <h2 class="ds-section-heading">Typography</h2>
+    <p class="ds-section-desc">One typeface — <strong>Montserrat</strong> — across all weights. Loaded from Google Fonts. The token is <code style="font-size:12px;background:var(--color-grey-100);padding:2px 6px;border-radius:4px;">--font</code>.</p>
+
+    <div class="ds-canvas">
+      <div class="type-scale">
+        <div class="type-row">
+          <span class="type-meta">900 / 46px</span>
+          <span style="font-size:46px;font-weight:900;color:var(--color-navy);letter-spacing:-0.02em;line-height:1;">Expert Author</span>
+        </div>
+        <div class="type-row">
+          <span class="type-meta">800 / 36px</span>
+          <span style="font-size:36px;font-weight:800;color:var(--color-navy);letter-spacing:-0.02em;line-height:1;">Strong Potential</span>
+        </div>
+        <div class="type-row">
+          <span class="type-meta">800 / 26px</span>
+          <span style="font-size:26px;font-weight:800;color:var(--color-navy);letter-spacing:-0.01em;">Is this a topic — or an argument?</span>
+        </div>
+        <div class="type-row">
+          <span class="type-meta">700 / 17px</span>
+          <span style="font-size:17px;font-weight:700;color:var(--color-navy);">Not every idea should become a book.</span>
+        </div>
+        <div class="type-row">
+          <span class="type-meta">400 / 16px</span>
+          <span style="font-size:16px;font-weight:400;color:var(--color-grey-700);line-height:1.65;">A strong book idea rarely appears once and disappears. It tends to follow you — in conversations, client work, frustrations.</span>
+        </div>
+        <div class="type-row">
+          <span class="type-meta">400 / 14px</span>
+          <span style="font-size:14px;font-weight:400;color:var(--color-grey-700);line-height:1.7;">A topic is not yet a book. "Leadership." "Burnout." These are territories, not positions.</span>
+        </div>
+        <div class="type-row">
+          <span class="type-meta">700 / 11px CAPS</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-navy);">Free Thinking Tool</span>
+        </div>
+        <div class="type-row">
+          <span class="type-meta">700 / 10px CAPS</span>
+          <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-grey-400);">A useful test</span>
+        </div>
+        <div class="type-row">
+          <span class="type-meta">400i / 16px</span>
+          <span style="font-size:16px;font-style:italic;color:var(--color-grey-700);">Sometimes the most useful thing is to give it more shape before more speed.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       RADII & SHADOWS
+       ============================================================ -->
+  <section class="ds-section" id="tokens-space">
+    <div class="ds-section-title">Foundations</div>
+    <h2 class="ds-section-heading">Radii & Shadows</h2>
+
+    <div class="ds-group">
+      <div class="ds-group-label">Border Radius</div>
+      <div class="ds-canvas">
+        <div class="radius-row">
+          <div class="radius-demo">
+            <div class="radius-box" style="border-radius:var(--radius-md);"></div>
+            <div class="radius-label">--radius-md<br>8px</div>
+            <div class="radius-label" style="color:var(--color-grey-700);">inputs, copy btn</div>
+          </div>
+          <div class="radius-demo">
+            <div class="radius-box" style="border-radius:var(--radius-lg);"></div>
+            <div class="radius-label">--radius-lg<br>12px</div>
+            <div class="radius-label" style="color:var(--color-grey-700);">gap blocks, dropdown</div>
+          </div>
+          <div class="radius-demo">
+            <div class="radius-box" style="border-radius:var(--radius-xl);"></div>
+            <div class="radius-label">--radius-xl<br>16px</div>
+            <div class="radius-label" style="color:var(--color-grey-700);">cards, question-context</div>
+          </div>
+          <div class="radius-demo">
+            <div class="radius-box" style="border-radius:24px;"></div>
+            <div class="radius-label">24px (hard-coded)<br>&nbsp;</div>
+            <div class="radius-label" style="color:var(--color-grey-700);">email-card, modal</div>
+          </div>
+          <div class="radius-demo">
+            <div class="radius-box" style="border-radius:var(--radius-full);width:64px;"></div>
+            <div class="radius-label">--radius-full<br>9999px</div>
+            <div class="radius-label" style="color:var(--color-grey-700);">all CTAs, badges, pills</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">Shadows</div>
+      <div class="ds-canvas" style="background:var(--color-grey-100);">
+        <div class="shadow-row">
+          <div class="shadow-demo" style="box-shadow:var(--shadow-md);">
+            <div class="radius-label">--shadow-md</div>
+            <div class="radius-label" style="color:var(--color-grey-700);">Cards, inputs, answer btns</div>
+          </div>
+          <div class="shadow-demo" style="box-shadow:var(--shadow-lg);">
+            <div class="radius-label">--shadow-lg</div>
+            <div class="radius-label" style="color:var(--color-grey-700);">Email card, modal, dropdown</div>
+          </div>
+          <div class="shadow-demo" style="box-shadow:0 4px 20px rgba(255,230,75,0.35);">
+            <div class="radius-label">Yellow glow</div>
+            <div class="radius-label" style="color:var(--color-grey-700);">Primary CTA buttons</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       BUTTONS
+       ============================================================ -->
+  <section class="ds-section" id="buttons">
+    <div class="ds-section-title">Components</div>
+    <h2 class="ds-section-heading">Buttons</h2>
+    <p class="ds-section-desc">All buttons use <code style="font-size:12px;background:var(--color-grey-100);padding:2px 6px;border-radius:4px;">--radius-full</code> (pill shape), <code style="font-size:12px;background:var(--color-grey-100);padding:2px 6px;border-radius:4px;">--font</code>, uppercase tracking, and 800 weight. Hover over each to see the transition state.</p>
+
+    <div class="ds-group">
+      <div class="ds-group-label">Primary CTAs — yellow fill</div>
+      <div class="ds-canvas">
+        <div class="ds-col">
+          <div>
+            <div class="ds-tag">.btn-start</div>
+            <div><button class="btn-start">Test My Idea →</button></div>
+            <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">Intro screen entry point. Yellow with yellow-glow shadow.</p>
+          </div>
+          <div>
+            <div class="ds-tag">.btn-next</div>
+            <div><button class="btn-next" style="max-width:280px;">Next Question →</button></div>
+            <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">Lives in sticky <code>.q-footer</code>. Full width up to 400px.</p>
+          </div>
+          <div>
+            <div class="ds-tag">.btn-cta-primary</div>
+            <div><button class="btn-cta-primary">Book a Clarity Call →</button></div>
+            <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">Used in result screen CTA stack. Same as btn-start, slightly larger padding.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">Secondary CTAs — navy fill or outline</div>
+      <div class="ds-canvas">
+        <div class="ds-col">
+          <div>
+            <div class="ds-tag">.btn-submit</div>
+            <div class="ds-row">
+              <button class="btn-submit">See My Result →</button>
+              <button class="btn-submit" disabled>One moment…</button>
+            </div>
+            <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">Email form submit. Navy fill. Disabled state: <code>--color-grey-400</code> background.</p>
+          </div>
+          <div>
+            <div class="ds-tag">.btn-cta-secondary</div>
+            <div><button class="btn-cta-secondary">Join the EAC →</button></div>
+            <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">Transparent with navy border. Inverts to navy fill on hover.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">Tertiary / Ghost buttons</div>
+      <div class="ds-canvas">
+        <div class="ds-row" style="align-items:flex-start;gap:24px;flex-wrap:wrap;">
+          <div>
+            <div class="ds-tag">.btn-share</div>
+            <button class="btn-share">↗ Share Your Result</button>
+            <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">Grey border, grey text. Used below result CTAs.</p>
+          </div>
+          <div>
+            <div class="ds-tag">.btn-print</div>
+            <button class="btn-print">⬇ Save as PDF</button>
+            <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">Lightest button. Bottom of result screen.</p>
+          </div>
+          <div>
+            <div class="ds-tag">.btn-copy</div>
+            <div class="ds-col">
+              <button class="btn-copy">Copy Link</button>
+              <button class="btn-copy copied">Copied ✓</button>
+            </div>
+            <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">Inside share modal URL row. <code>.copied</code> state: green.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">Navbar buttons</div>
+      <div class="ds-canvas--dark ds-canvas">
+        <div class="ds-row">
+          <div>
+            <div class="ds-tag" style="color:#97C0FD;background:rgba(82,150,251,0.15);">.btn-member-login</div>
+            <button class="btn-member-login">🔒 Member Login</button>
+            <p style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:8px;">Yellow pill with continuous shimmer animation. Unauthenticated state.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       BADGES & LABELS
+       ============================================================ -->
+  <section class="ds-section" id="badges">
+    <div class="ds-section-title">Components</div>
+    <h2 class="ds-section-heading">Badges & Labels</h2>
+    <p class="ds-section-desc">Small typographic elements used for context, status, and section labelling. Always uppercase, always tight letter-spacing.</p>
+
+    <div class="ds-group">
+      <div class="ds-group-label">On dark backgrounds (navy)</div>
+      <div class="ds-canvas--dark ds-canvas">
+        <div class="ds-col" style="gap:20px;align-items:flex-start;">
+          <div>
+            <div class="ds-tag" style="color:#97C0FD;background:rgba(82,150,251,0.15);">.intro-eyebrow</div>
+            <div class="intro-eyebrow">Free Thinking Tool</div>
+            <p style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:8px;">Yellow text on yellow-12% bg pill. Intro screen only.</p>
+          </div>
+          <div>
+            <div class="ds-tag" style="color:#97C0FD;background:rgba(82,150,251,0.15);">.result-eyebrow</div>
+            <div class="result-eyebrow">Your Result</div>
+            <p style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:8px;">Yellow text, no background. Above result-badge.</p>
+          </div>
+          <div>
+            <div class="ds-tag" style="color:#97C0FD;background:rgba(82,150,251,0.15);">.result-badge</div>
+            <div><span class="result-badge">Strong Potential</span></div>
+            <p style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:8px;">Yellow pill, navy text. The result tier label.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">On light backgrounds</div>
+      <div class="ds-canvas">
+        <div class="ds-col" style="gap:20px;align-items:flex-start;">
+          <div>
+            <div class="ds-tag">.q-number-badge</div>
+            <span class="q-number-badge">Question 1 of 5</span>
+            <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">Yellow bg, navy text. Above each question-main heading.</p>
+          </div>
+          <div>
+            <div class="ds-tag">.beta-badge</div>
+            <span class="beta-badge">Beta</span>
+            <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">Orange bg. Sits after the EAC Tools wordmark in the navbar.</p>
+          </div>
+          <div>
+            <div class="ds-tag">.dropdown-soon</div>
+            <span class="dropdown-soon">Soon</span>
+            <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">Grey pill inside dropdown-item for unreleased features.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       ANSWER BUTTONS
+       ============================================================ -->
+  <section class="ds-section" id="answer-buttons">
+    <div class="ds-section-title">Components</div>
+    <h2 class="ds-section-heading">Answer Buttons</h2>
+    <p class="ds-section-desc">The core interaction pattern in Idea Test. Three options in a 3-column grid (<code>.yn-row</code>). Click to see selected states.</p>
+
+    <div class="ds-canvas--grey ds-canvas">
+      <div class="ds-group-label" style="margin-bottom:20px;">All states — click to toggle</div>
+
+      <div style="max-width:400px;">
+        <div class="yn-row">
+          <button class="yn-btn" onclick="toggleYn(this,'selected-no')">Not yet</button>
+          <button class="yn-btn" onclick="toggleYn(this,'selected-partial')">Getting there</button>
+          <button class="yn-btn" onclick="toggleYn(this,'selected-yes')">Yes, clearly</button>
+        </div>
+      </div>
+
+      <div style="margin-top:32px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:560px;">
+        <div class="ds-state-group">
+          <div class="state-label">Default</div>
+          <button class="yn-btn" style="pointer-events:none;">Not yet</button>
+        </div>
+        <div class="ds-state-group">
+          <div class="state-label">Hover</div>
+          <button class="yn-btn" style="border-color:var(--color-blue);color:var(--color-navy);transform:translateY(-2px);box-shadow:var(--shadow-lg);pointer-events:none;">Getting there</button>
+        </div>
+        <div class="ds-state-group">
+          <div class="state-label">.selected-yes</div>
+          <button class="yn-btn selected-yes" style="pointer-events:none;">Yes, clearly</button>
+        </div>
+        <div class="ds-state-group">
+          <div class="state-label">.selected-partial</div>
+          <button class="yn-btn selected-partial" style="pointer-events:none;">Getting there</button>
+        </div>
+        <div class="ds-state-group">
+          <div class="state-label">.selected-no</div>
+          <button class="yn-btn selected-no" style="pointer-events:none;">Not yet</button>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;font-size:12px;color:var(--color-grey-400);">Answer values: <code>yes</code> · <code>getting-there</code> · <code>not-yet</code> &nbsp;|&nbsp; Set by <code>selectAnswer(qNum, value)</code></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FORM INPUTS
+       ============================================================ -->
+  <section class="ds-section" id="forms">
+    <div class="ds-section-title">Components</div>
+    <h2 class="ds-section-heading">Form Inputs</h2>
+    <p class="ds-section-desc">Used in the email capture screen. Click into the fields to see focus state.</p>
+
+    <div class="ds-canvas">
+      <div style="max-width:480px;">
+        <div class="form-field">
+          <label class="form-label">First name</label>
+          <input class="form-input" type="text" placeholder="Your first name">
+        </div>
+        <div class="form-field">
+          <label class="form-label">Email address</label>
+          <input class="form-input" type="email" placeholder="your@email.com">
+        </div>
+        <div class="form-field">
+          <label class="form-label">What's your book idea? (1–2 sentences)</label>
+          <textarea class="form-input" rows="3" placeholder="e.g. A book for mid-career professionals who feel successful but stuck…" style="resize:vertical;"></textarea>
+          <p style="font-size:12px;color:var(--color-grey-400);margin-top:6px;">Optional — but the more specific, the more useful your result.</p>
+        </div>
+        <p class="form-privacy">No spam, ever. We'll use this to send you your result and occasional thinking from Kelly about writing, ideas, and books.</p>
+      </div>
+
+      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--color-grey-200);font-size:13px;color:var(--color-grey-700);">
+        <strong>Focus state:</strong> 2px <code>--color-blue</code> border + <code>3px rgba(82,150,251,0.15)</code> ring<br>
+        <strong>Placeholder:</strong> <code>--color-grey-400</code><br>
+        <strong>Radius:</strong> <code>--radius-md</code> (8px) — note: inputs use md, not xl like cards
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PROGRESS & SCORE
+       ============================================================ -->
+  <section class="ds-section" id="progress">
+    <div class="ds-section-title">Components</div>
+    <h2 class="ds-section-heading">Progress & Score Dots</h2>
+
+    <div class="ds-group">
+      <div class="ds-group-label">Progress bar — .progress-track / .progress-fill / .progress-label</div>
+      <div class="ds-canvas">
+        <div style="max-width:500px;display:flex;flex-direction:column;gap:20px;">
+          <div>
+            <div class="state-label">Question 1 of 5 (20%)</div>
+            <div class="progress-wrap">
+              <div class="progress-track"><div class="progress-fill" style="width:20%;"></div></div>
+              <span class="progress-label">Question 1 of 5</span>
+            </div>
+          </div>
+          <div>
+            <div class="state-label">Question 3 of 5 (60%)</div>
+            <div class="progress-wrap">
+              <div class="progress-track"><div class="progress-fill" style="width:60%;"></div></div>
+              <span class="progress-label">Question 3 of 5</span>
+            </div>
+          </div>
+          <div>
+            <div class="state-label">Complete (100%)</div>
+            <div class="progress-wrap">
+              <div class="progress-track"><div class="progress-fill" style="width:100%;"></div></div>
+              <span class="progress-label">Question 5 of 5</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">Score dots — .score-dots / .score-dot (.yes / .partial / .no)</div>
+      <div class="ds-canvas--dark ds-canvas">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <div class="state-label" style="color:rgba(255,255,255,0.4);margin-bottom:8px;">Strong — all yes</div>
+            <div class="score-dots">
+              <div class="score-dot yes"></div>
+              <div class="score-dot yes"></div>
+              <div class="score-dot yes"></div>
+              <div class="score-dot yes"></div>
+              <div class="score-dot yes"></div>
+            </div>
+          </div>
+          <div>
+            <div class="state-label" style="color:rgba(255,255,255,0.4);margin-bottom:8px;">Developing — mixed</div>
+            <div class="score-dots">
+              <div class="score-dot yes"></div>
+              <div class="score-dot partial"></div>
+              <div class="score-dot yes"></div>
+              <div class="score-dot partial"></div>
+              <div class="score-dot no"></div>
+            </div>
+          </div>
+          <div>
+            <div class="state-label" style="color:rgba(255,255,255,0.4);margin-bottom:8px;">Not yet — mostly no</div>
+            <div class="score-dots">
+              <div class="score-dot no"></div>
+              <div class="score-dot no"></div>
+              <div class="score-dot partial"></div>
+              <div class="score-dot no"></div>
+              <div class="score-dot no"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CARDS
+       ============================================================ -->
+  <section class="ds-section" id="cards">
+    <div class="ds-section-title">Components</div>
+    <h2 class="ds-section-heading">Cards</h2>
+    <p class="ds-section-desc">Structural content containers. Each has a distinct visual role in the result flow.</p>
+
+    <div class="ds-group">
+      <div class="ds-group-label">.question-context — used per question, explains the test</div>
+      <div class="ds-canvas--grey ds-canvas">
+        <div style="max-width:560px;">
+          <div class="q-number-badge" style="margin-bottom:16px;">Question 2 of 5</div>
+          <div class="question-main">Is this a topic — or an argument?</div>
+          <div class="question-context">
+            <div class="question-context-label">A useful test</div>
+            <p>A topic is not yet a book. "Leadership." "Burnout." These are territories, not positions. A stronger book idea usually contains an argument, a tension, a challenge, or a reframing.</p>
+            <ul class="question-tests">
+              <li>Can you explain what you believe about this idea in one or two sentences?</li>
+              <li>Is there a clear point of view inside it?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">.email-card — centred gate card for email capture</div>
+      <div class="ds-canvas--grey ds-canvas">
+        <div style="display:flex;justify-content:center;">
+          <div class="email-card">
+            <div class="email-icon">📖</div>
+            <h2 class="email-title">Where should we send your result?</h2>
+            <p class="email-sub">Enter your name and email to see how your idea tested — and get your personalised next step.</p>
+            <button class="btn-submit" style="width:100%;">See My Result →</button>
+            <p class="form-privacy">No spam, ever.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">.result-hero — full-width navy band at top of result screen</div>
+      <div class="result-hero" style="margin-bottom:0;border-radius:var(--radius-xl);">
+        <div class="result-hero-inner">
+          <div class="result-eyebrow">Your Result</div>
+          <span class="result-badge">Strong Potential</span>
+          <h2 class="result-headline">Your idea has real book potential.</h2>
+          <p class="result-lead">The raw material is there. It may still need shaping — but something genuine is already alive in this idea.</p>
+          <div class="score-dots" style="justify-content:center;margin-top:24px;">
+            <div class="score-dot yes"></div>
+            <div class="score-dot yes"></div>
+            <div class="score-dot partial"></div>
+            <div class="score-dot yes"></div>
+            <div class="score-dot yes"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">.result-next-step — yellow highlight card for the recommended action</div>
+      <div class="ds-canvas">
+        <div style="max-width:560px;">
+          <div class="result-next-step">
+            <h4>A useful next step</h4>
+            <p>Do not rush into a full book proposal. Instead, write one page — what your book is really about, who it is for, and the three things you most want a reader to walk away with.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">.result-cta-mid — navy inline CTA card within result body</div>
+      <div class="ds-canvas--grey ds-canvas">
+        <div style="max-width:560px;">
+          <div class="result-cta-mid">
+            <div class="result-cta-mid-eyebrow">Ready to go deeper?</div>
+            <div class="result-cta-mid-title">Turn this idea into a book with the Expert Author Community.</div>
+            <div class="result-cta-mid-body">A home for serious writers. Structured support, live coaching, and a community of people doing the same thing.</div>
+            <button class="btn-cta-primary">Express Interest →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">.gap-block — surfaced when a question scores not-yet or getting-there</div>
+      <div class="ds-canvas">
+        <div style="max-width:560px;">
+          <div class="gap-block gap-block--gap">
+            <div class="gap-block-label">Question 2 — On having an argument</div>
+            <p>This idea, right now, reads more like a topic than a position. That is solvable — but it means the real work is to find the argument inside the territory you are drawn to.</p>
+            <a class="gap-block-cta" href="#">Read: How to find the argument in your idea →</a>
+          </div>
+          <div class="gap-block gap-block--advisory">
+            <div class="gap-block-label">Question 4 — On depth and range</div>
+            <p>The idea has real substance — but you're not yet sure it has enough range to sustain a full manuscript. The most honest test: when you stay with this idea, does it open up — or does it keep circling back?</p>
+            <a class="gap-block-cta" href="#">Coaching: Book Structure Coaching →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">.result-soft-close — italic closing sentiment</div>
+      <div class="ds-canvas">
+        <p class="result-soft-close">Sometimes the most useful thing you can do with a strong idea is give it a little more shape before you give it more speed.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       NAVBAR
+       ============================================================ -->
+  <section class="ds-section" id="navbar">
+    <div class="ds-section-title">Components</div>
+    <h2 class="ds-section-heading">Navbar</h2>
+    <p class="ds-section-desc">Fixed at top of every tool page. Height: 60px. Sets <code>body { padding-top: 60px }</code>. Rendered into <code>#header-auth</code> by JS based on auth state.</p>
+
+    <div class="ds-group">
+      <div class="ds-group-label">.site-header — unauthenticated state</div>
+      <div class="site-header">
+        <a class="header-logo" href="#">
+          <svg viewBox="0 0 53.3 53.3" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="32.1 53.3 0 53.3 0 21.2 21.1 0.1 53.2 32.2 32.1 53.3" fill="#FFE64B"/>
+            <polyline points="15.8 53.3 0 53.3 0 37.5" fill="#00003D"/>
+            <polygon points="46.6 25.4 33.2 38.8 26.6 32.3 40 19 33.9 13 20.6 26.3 14.4 20.1 27.9 6.7 21.2 0 0 21.2 32.1 53.3 53.3 32.1 46.6 25.4" fill="#00003D"/>
+          </svg>
+          <span class="header-logo-text">EAC Tools</span><span class="beta-badge">Beta</span>
+        </a>
+        <div class="header-auth">
+          <button class="btn-member-login">🔒 Member Login</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-group">
+      <div class="ds-group-label">.site-header — authenticated state with .header-dropdown</div>
+      <div class="site-header">
+        <a class="header-logo" href="#">
+          <svg viewBox="0 0 53.3 53.3" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="32.1 53.3 0 53.3 0 21.2 21.1 0.1 53.2 32.2 32.1 53.3" fill="#FFE64B"/>
+            <polyline points="15.8 53.3 0 53.3 0 37.5" fill="#00003D"/>
+            <polygon points="46.6 25.4 33.2 38.8 26.6 32.3 40 19 33.9 13 20.6 26.3 14.4 20.1 27.9 6.7 21.2 0 0 21.2 32.1 53.3 53.3 32.1 46.6 25.4" fill="#00003D"/>
+          </svg>
+          <span class="header-logo-text">EAC Tools</span><span class="beta-badge">Beta</span>
+        </a>
+        <div class="header-auth" style="position:relative;">
+          <button class="header-user-btn" onclick="toggleDropdown(this)">
+            <div class="header-avatar-placeholder">KI</div>
+            <span class="header-user-name">Kelly Irving</span>
+            <svg class="header-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="header-dropdown" id="demo-dropdown">
+            <a class="dropdown-item" href="#">Idea Test</a>
+            <a class="dropdown-item" href="#">Unblocker</a>
+            <div class="dropdown-item disabled">Dashboard <span class="dropdown-soon">Soon</span></div>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item dropdown-logout">Log out</button>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">Click the user button to toggle dropdown.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       MODAL
+       ============================================================ -->
+  <section class="ds-section" id="modal">
+    <div class="ds-section-title">Components</div>
+    <h2 class="ds-section-heading">Modal & Share Sheet</h2>
+    <p class="ds-section-desc">Triggered by <code>.btn-share</code> on the result screen. Overlay uses <code>backdrop-filter: blur(4px)</code>.</p>
+
+    <div class="ds-group">
+      <div class="ds-group-label">.modal-overlay + .modal (shown inline for reference)</div>
+      <div class="modal-overlay">
+        <div class="modal">
+          <button class="modal-close" aria-label="Close">✕</button>
+          <h2 class="modal-title">Share your result</h2>
+          <p class="modal-sub">Let others know what you discovered — or save the link to come back later.</p>
+          <div class="share-btns">
+            <a class="share-btn" href="#">
+              <span class="share-btn-icon linkedin">in</span>
+              Share on LinkedIn
+            </a>
+            <a class="share-btn" href="#">
+              <span class="share-btn-icon twitter">𝕏</span>
+              Share on X / Twitter
+            </a>
+            <a class="share-btn" href="#">
+              <span class="share-btn-icon email-ico">✉</span>
+              Share via Email
+            </a>
+          </div>
+          <div class="share-url-row">
+            <div class="share-url-input">https://tools.expertauthor.community/idea-test</div>
+            <button class="btn-copy" onclick="this.classList.toggle('copied');this.textContent=this.classList.contains('copied')?'Copied ✓':'Copy'">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CMS LAYER
+       ============================================================ -->
+  <section class="ds-section" id="cms">
+    <div class="ds-section-title">Components</div>
+    <h2 class="ds-section-heading">CMS Layer</h2>
+    <p class="ds-section-desc">Admin-only inline editing. Visible only to <code>isAdmin</code> users. Hover over the content block below to see the edit trigger appear.</p>
+
+    <div class="ds-canvas">
+      <div class="cms-region" style="border-radius:var(--radius-lg);border:1px dashed var(--color-grey-200);padding:20px;background:var(--color-grey-100);">
+        <button class="cms-edit-btn">✎ Edit</button>
+        <p style="font-size:15px;color:var(--color-black);line-height:1.7;" data-content-key="idea-test/q1/main">Does this idea keep returning to you?</p>
+      </div>
+      <p style="font-size:12px;color:var(--color-grey-400);margin-top:12px;">Elements with <code>data-content-key</code> attributes are CMS-editable regions. The <code>.cms-edit-btn</code> appears on hover, opacity 0 → 1.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SCREEN ARCHITECTURE
+       ============================================================ -->
+  <section class="ds-section" id="screens">
+    <div class="ds-section-title">Patterns</div>
+    <h2 class="ds-section-heading">Screen Architecture</h2>
+    <p class="ds-section-desc">All tools use the same screen system. <code>.screen</code> is hidden by default; <code>.screen.active</code> sets <code>display:flex</code>. Navigation is driven by <code>showScreen(id)</code>.</p>
+
+    <div class="ds-canvas">
+      <div class="screen-map">
+        <div class="screen-step">
+          <div class="screen-step-num">1</div>
+          <div class="screen-step-detail">
+            <div class="screen-step-name">Intro</div>
+            <div class="screen-step-desc">Entry point. Always first. Dark navy background.</div>
+          </div>
+          <div class="screen-step-class">#screen-intro</div>
+        </div>
+        <div class="screen-arrow">↓ <code style="font-size:11px;">startTool()</code></div>
+
+        <div class="screen-step">
+          <div class="screen-step-num">2</div>
+          <div class="screen-step-detail">
+            <div class="screen-step-name">Questions</div>
+            <div class="screen-step-desc">Sequential panels. One <code>.question-panel.active</code> at a time. Sticky header + sticky footer.</div>
+          </div>
+          <div class="screen-step-class">#screen-questions</div>
+        </div>
+        <div class="screen-arrow">↓ <code style="font-size:11px;">nextQuestion()</code> — after final Q</div>
+
+        <div class="screen-step">
+          <div class="screen-step-num">3</div>
+          <div class="screen-step-detail">
+            <div class="screen-step-name">Email Gate</div>
+            <div class="screen-step-desc">Skipped if <code>eacUser</code> is set (already authenticated). Captures name, email, optional idea text.</div>
+          </div>
+          <div class="screen-step-class">#screen-email</div>
+        </div>
+        <div class="screen-arrow">↓ <code style="font-size:11px;">submitEmail()</code></div>
+
+        <div class="screen-step">
+          <div class="screen-step-num">4</div>
+          <div class="screen-step-detail">
+            <div class="screen-step-name">Result</div>
+            <div class="screen-step-desc">Personalised output. Built by <code>buildResult(tier)</code>. Tier: <code>strong</code> / <code>developing</code> / <code>notyet</code>.</div>
+          </div>
+          <div class="screen-step-class">#screen-result</div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--color-grey-200);font-size:13px;color:var(--color-grey-700);line-height:1.7;">
+        <strong>State variables:</strong> <code>answers {}</code>, <code>currentQ</code>, <code>weightedScore</code>, <code>eacUser</code>, <code>userName</code>, <code>ideaText</code><br>
+        <strong>Transition:</strong> <code>showScreen(id)</code> strips all screens, adds <code>.active.screen--transition</code> to target, scrolls to top.<br>
+        <strong>Auth:</strong> Fetched via <code>GET /api/me</code> on load. If present, email screen skipped, <code>isMember:true</code> sent to Airtable.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       MOTION
+       ============================================================ -->
+  <section class="ds-section" id="motion">
+    <div class="ds-section-title">Patterns</div>
+    <h2 class="ds-section-heading">Motion</h2>
+    <p class="ds-section-desc">All transitions use <code>--transition: 0.2s ease</code>. Animations respect <code>prefers-reduced-motion</code> — all durations collapse to <code>0.01ms</code> when set.</p>
+
+    <div class="ds-canvas">
+      <div class="motion-row">
+
+        <div class="motion-item">
+          <div class="motion-demo-box" id="fadebox" onclick="replayFade()" title="Click to replay">Click<br>me</div>
+          <div class="motion-item-label">fadeUp<br>Screen / panel entry<br>0.4s ease</div>
+        </div>
+
+        <div class="motion-item">
+          <div style="width:200px;">
+            <div class="progress-track" style="height:8px;"><div class="progress-fill" id="prog-demo" style="width:0%;transition:width 0.4s ease;"></div></div>
+          </div>
+          <button onclick="animateProg()" style="margin-top:8px;font-size:11px;padding:6px 14px;border:1.5px solid var(--color-grey-200);border-radius:999px;background:none;cursor:pointer;font-family:var(--font);font-weight:700;">Replay</button>
+          <div class="motion-item-label">Progress fill<br>width 0→100%<br>0.4s ease</div>
+        </div>
+
+        <div class="motion-item">
+          <button class="btn-member-login" style="position:relative;">🔒 Member Login</button>
+          <div class="motion-item-label">btn-shimmer<br>Continuous sweep<br>2.8s ease-in-out ∞</div>
+        </div>
+
+        <div class="motion-item">
+          <button class="yn-btn selected-yes" style="pointer-events:none;width:100px;">Yes, clearly</button>
+          <div class="motion-item-label">Answer select<br>scale(1.02)<br>0.2s ease</div>
+        </div>
+
+        <div class="motion-item">
+          <button class="btn-cta-primary" style="pointer-events:none;transform:translateY(-2px);">Book a Call →</button>
+          <div class="motion-item-label">CTA hover lift<br>translateY(-2px)<br>+ shadow increase</div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--color-grey-200);">
+        <table style="font-size:12px;color:var(--color-grey-700);border-collapse:collapse;width:100%;">
+          <tr style="border-bottom:1px solid var(--color-grey-200);">
+            <td style="padding:8px 12px 8px 0;font-weight:700;color:var(--color-navy);">fadeUp</td>
+            <td style="padding:8px 12px;">Screen + panel entry</td>
+            <td style="padding:8px 12px;font-family:monospace;font-size:11px;">opacity 0→1 · 0.4s ease</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--color-grey-200);">
+            <td style="padding:8px 12px 8px 0;font-weight:700;color:var(--color-navy);">q-footer slide</td>
+            <td style="padding:8px 12px;">Sticky footer appears after answer</td>
+            <td style="padding:8px 12px;font-family:monospace;font-size:11px;">translateY(100%→0) · 0.25s ease</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--color-grey-200);">
+            <td style="padding:8px 12px 8px 0;font-weight:700;color:var(--color-navy);">progress-fill</td>
+            <td style="padding:8px 12px;">Width on question advance</td>
+            <td style="padding:8px 12px;font-family:monospace;font-size:11px;">width · 0.4s ease</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--color-grey-200);">
+            <td style="padding:8px 12px 8px 0;font-weight:700;color:var(--color-navy);">btn-shimmer</td>
+            <td style="padding:8px 12px;">Member login button pseudo-element</td>
+            <td style="padding:8px 12px;font-family:monospace;font-size:11px;">left -80%→150% · 2.8s ∞</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 12px 8px 0;font-weight:700;color:var(--color-navy);">--transition</td>
+            <td style="padding:8px 12px;">All interactive state changes</td>
+            <td style="padding:8px 12px;font-family:monospace;font-size:11px;">0.2s ease (global token)</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       ACCESSIBILITY
+       ============================================================ -->
+  <section class="ds-section" id="accessibility">
+    <div class="ds-section-title">Patterns</div>
+    <h2 class="ds-section-heading">Accessibility</h2>
+
+    <div class="ds-canvas">
+      <div style="display:flex;flex-direction:column;gap:16px;max-width:480px;">
+        <div>
+          <div class="ds-group-label">Focus visible ring — Tab to this button:</div>
+          <button class="btn-cta-primary">Book a Clarity Call →</button>
+          <p style="font-size:12px;color:var(--color-grey-400);margin-top:8px;">3px <code>--color-yellow</code> outline, 2px offset. Applies to all <code>button</code>, <code>a</code>, <code>input</code> via <code>:focus-visible</code>.</p>
+        </div>
+        <div>
+          <div class="ds-group-label">Reduced motion:</div>
+          <p style="font-size:14px;color:var(--color-grey-700);line-height:1.65;"><code>@media (prefers-reduced-motion: reduce)</code> collapses all animation and transition durations to <code>0.01ms</code>. No behaviour changes — only motion is suppressed.</p>
+        </div>
+        <div>
+          <div class="ds-group-label">aria-label usage:</div>
+          <p style="font-size:14px;color:var(--color-grey-700);line-height:1.65;">Answer buttons carry <code>aria-label</code> matching their visible text. Score dots container carries <code>aria-label="Your answers"</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// Answer button toggle demo
+function toggleYn(btn, selectedClass) {
+  const row = btn.closest('.yn-row');
+  row.querySelectorAll('.yn-btn').forEach(b => b.className = 'yn-btn');
+  btn.className = 'yn-btn ' + selectedClass;
+}
+
+// Navbar dropdown toggle
+function toggleDropdown(btn) {
+  const dd = document.getElementById('demo-dropdown');
+  dd.classList.toggle('open');
+  document.addEventListener('click', function close(e) {
+    if (!btn.contains(e.target) && !dd.contains(e.target)) {
+      dd.classList.remove('open');
+      document.removeEventListener('click', close);
+    }
+  });
+}
+
+// fadeUp replay
+function replayFade() {
+  const box = document.getElementById('fadebox');
+  box.classList.remove('run-fadeup');
+  void box.offsetWidth;
+  box.classList.add('run-fadeup');
+}
+
+// Progress bar animation
+function animateProg() {
+  const bar = document.getElementById('prog-demo');
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      bar.style.transition = 'width 1.2s ease';
+      bar.style.width = '100%';
+    });
+  });
+}
+
+// Active nav highlighting on scroll
+const sections = document.querySelectorAll('.ds-section');
+const navLinks = document.querySelectorAll('.ds-nav-link');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const link = document.querySelector(`.ds-nav-link[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { threshold: 0.3 });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
