@@ -835,6 +835,119 @@
   }
 
   /* ===================== */
+  /* GATE SCREEN           */
+  /* ===================== */
+  #screen-gate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+  }
+  .gate-card {
+    background: var(--color-white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    max-width: 520px;
+    width: 100%;
+    overflow: hidden;
+  }
+  .gate-header {
+    background: var(--color-navy);
+    padding: 36px 48px 28px;
+  }
+  .gate-eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-yellow);
+    background: rgba(255,230,75,0.12);
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+    margin-bottom: 14px;
+  }
+  .gate-headline {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--color-white);
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+  .gate-sub {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.6;
+  }
+  .gate-body {
+    padding: 36px 48px 40px;
+  }
+  .gate-field {
+    margin-bottom: 16px;
+  }
+  .gate-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-navy);
+    margin-bottom: 7px;
+  }
+  .gate-field input {
+    width: 100%;
+    padding: 12px 16px;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-navy);
+    background: var(--color-grey-100);
+    border: 2px solid var(--color-grey-200);
+    border-radius: var(--radius-md);
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  .gate-field input:focus {
+    border-color: var(--color-yellow);
+    background: var(--color-white);
+  }
+  .gate-field input::placeholder { color: var(--color-grey-400); }
+  .gate-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-top: 24px;
+  }
+  .gate-submit {
+    width: 100%;
+  }
+  .gate-skip {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-grey-400);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    padding: 0;
+  }
+  .gate-skip:hover { color: var(--color-grey-700); }
+  .gate-error {
+    color: #c0392b;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 10px;
+    display: none;
+  }
+  @media (max-width: 560px) {
+    .gate-header, .gate-body { padding-left: 28px; padding-right: 28px; }
+  }
+
+  /* ===================== */
   /* ANALYSIS SCREEN       */
   /* ===================== */
   #screen-analysis {
@@ -1042,6 +1155,36 @@
     <div style="margin-top:24px; display:flex; gap:12px; justify-content:flex-end; flex-wrap:wrap;">
       <button class="btn btn-ghost" onclick="goToPillar(0)">Edit canvas</button>
       <button class="btn btn-primary" onclick="showAnalysis()">See my analysis &rarr;</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== -->
+<!-- GATE SCREEN           -->
+<!-- ===================== -->
+<section id="screen-gate" class="screen">
+  <div class="gate-card">
+    <div class="gate-header">
+      <div class="gate-eyebrow">Almost there</div>
+      <h2 class="gate-headline">Where should we send your results?</h2>
+      <p class="gate-sub">Enter your details to unlock your cross-pillar analysis. We'll also send you a copy to revisit later.</p>
+    </div>
+    <div class="gate-body">
+      <form id="gate-form" onsubmit="submitGate(event)">
+        <div class="gate-field">
+          <label for="gate-name">First name</label>
+          <input type="text" id="gate-name" placeholder="Your first name" autocomplete="given-name">
+        </div>
+        <div class="gate-field">
+          <label for="gate-email">Email address</label>
+          <input type="email" id="gate-email" placeholder="you@example.com" autocomplete="email" required>
+        </div>
+        <div class="gate-actions">
+          <button type="submit" class="btn btn-primary gate-submit" id="gate-submit-btn">See my analysis &rarr;</button>
+          <button type="button" class="gate-skip" onclick="proceedToAnalysis()">Skip for now</button>
+        </div>
+        <p class="gate-error" id="gate-error">Something went wrong — please try again.</p>
+      </form>
     </div>
   </div>
 </section>
@@ -1759,8 +1902,41 @@ function buildCanvasBox(idx) {
 // =====================
 
 function showAnalysis() {
+  if (typeof eacUser !== 'undefined' && eacUser) {
+    proceedToAnalysis();
+  } else {
+    showScreen('screen-gate');
+  }
+}
+
+function proceedToAnalysis() {
   renderAnalysis();
   showScreen('screen-analysis');
+}
+
+async function submitGate(e) {
+  e.preventDefault();
+  const name     = document.getElementById('gate-name').value.trim();
+  const email    = document.getElementById('gate-email').value.trim();
+  const btn      = document.getElementById('gate-submit-btn');
+  const errEl    = document.getElementById('gate-error');
+  errEl.style.display = 'none';
+  btn.textContent = 'One moment…';
+  btn.disabled    = true;
+
+  try {
+    const r = await fetch('/api/subscribe', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, name, writingBlocker: 'book-canvas' }),
+    });
+    if (!r.ok) throw new Error();
+    proceedToAnalysis();
+  } catch {
+    errEl.style.display = 'block';
+    btn.textContent = 'See my analysis →';
+    btn.disabled    = false;
+  }
 }
 
 function renderAnalysis() {
