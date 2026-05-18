@@ -15,7 +15,47 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { resolvePersonWithCircle, logActivity } from './_lib/airtable'
 
-const BOOK_CANVAS_TABLE = 'tblqezI9SqgelqJA5'
+const BOOK_CANVAS_TABLE    = 'tblqezI9SqgelqJA5'
+const ACTIVITY_LOG_TABLE   = 'tblgK9bOiRsjfzvdM'
+const ACTION_TYPE_FIELD_ID = 'fld7imPa3v3yvyLJY'
+
+const EXISTING_ACTION_CHOICES = [
+  { id: 'selopOD3Eq1wvZMr1', name: 'Login',                       color: 'grayLight1'   },
+  { id: 'selJWSQ9tIHqmN3hc', name: 'Idea Test Completed',         color: 'blueBright'   },
+  { id: 'selzketAS0dU9bBJF', name: 'Co-writing Session Created',  color: 'tealBright'   },
+  { id: 'selsALzV7eEoh4iMI', name: 'Co-writing Session Attended', color: 'cyanBright'   },
+  { id: 'sel7Ag7iM8PesZFHy', name: 'Writing Unblock Completed',   color: 'purpleBright' },
+]
+
+let actionTypePatched = false
+
+async function ensureBookCanvasActionType() {
+  if (actionTypePatched) return
+  try {
+    await fetch(
+      `https://api.airtable.com/v0/meta/bases/${process.env.AIRTABLE_BASE_ID}/tables/${ACTIVITY_LOG_TABLE}/fields/${ACTION_TYPE_FIELD_ID}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization:  `Bearer ${process.env.AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          options: {
+            choices: [
+              ...EXISTING_ACTION_CHOICES,
+              { name: 'Book Canvas Completed', color: 'yellowBright' },
+            ],
+          },
+        }),
+      }
+    )
+    actionTypePatched = true
+    console.log('[book-canvas-results] Action Type choice ensured')
+  } catch (err) {
+    console.error('[book-canvas-results] ensureActionType failed:', err)
+  }
+}
 
 async function atPost(fields: Record<string, unknown>) {
   const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${BOOK_CANVAS_TABLE}`
@@ -107,6 +147,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── Step 4: Activity Log ─────────────────────────────────────────────
     if (personId) {
+      await ensureBookCanvasActionType()
       try {
         await logActivity({
           personId,
