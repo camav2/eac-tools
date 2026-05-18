@@ -1386,13 +1386,15 @@ let objectiveFreeText = '';
 // NAVIGATION
 // =====================
 
+const SCREEN_DISPLAY = { 'screen-gate': 'flex', 'screen-intro': 'flex' };
+
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => {
     s.style.display = 'none';
     s.classList.remove('active');
   });
   const el = document.getElementById(id);
-  el.style.display = 'block';
+  el.style.display = SCREEN_DISPLAY[id] || 'block';
   setTimeout(() => el.classList.add('active'), 10);
   window.scrollTo(0, 0);
 }
