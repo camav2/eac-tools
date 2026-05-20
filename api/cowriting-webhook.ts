@@ -87,9 +87,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   console.log('[cowriting-webhook] raw:', JSON.stringify(req.body))
 
-  const body = req.body ?? {}
-  const type = (body.type ?? '') as string
-  const data = body.data ?? {}
+  const raw     = req.body ?? {}
+  // Circle wraps its payload: { body: { type, data } }
+  const payload = (raw.body && raw.body.type) ? raw.body : raw
+  const type    = (payload.type ?? '') as string
+  const data    = payload.data ?? {}
 
   const circleEventId  = String(data.event_id  ?? '')
   const circleMemberId = String(data.community_member_id ?? '')
