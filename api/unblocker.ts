@@ -17,7 +17,7 @@ import { addContactToList, sendResultsEmail } from './_lib/brevo'
 // -- Helpers ------------------------------------------------------------------
 
 function parseCookie(cookieHeader: string, name: string): string | null {
-  const match = cookieHeader.match(new RegExp((?:^|;\\s*)${name}=([^;]+)))
+  const match = cookieHeader.match(new RegExp(`(?:^|;\s*)${name}=([^;]+)`))
   return match ? decodeURIComponent(match[1]) : null
 }
 
@@ -36,9 +36,9 @@ async function getSessionEmail(req: VercelRequest): Promise<string | null> {
 
 async function atGet(path: string) {
   const tableId = encodeURIComponent(process.env.AIRTABLE_UNBLOCKER_TABLE_ID!)
-  const url = https://api.airtable.com/v0/ + process.env.AIRTABLE_BASE_ID + / + tableId + path
+  const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${tableId}${path}`
   const res = await fetch(url, {
-    headers: { Authorization: Bearer  + process.env.AIRTABLE_API_KEY },
+    headers: { Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}` },
   })
   const json = await res.json()
   if (!res.ok) throw json
