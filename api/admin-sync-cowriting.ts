@@ -32,8 +32,8 @@ async function circleGet(path: string) {
     headers: { Authorization: `Token ${process.env.CIRCLE_API_TOKEN}` },
   })
   if (!res.ok) {
-    console.error('[circle] GET failed:', path, res.status)
-    return null
+    const body = await res.text()
+    throw new Error(`Circle ${res.status} — ${body.slice(0, 300)}`)
   }
   return res.json()
 }
@@ -117,12 +117,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!email || !isAdmin(email)) return res.status(403).json({ error: 'Forbidden' })
 
   try {
-    // Probe Circle API and surface errors clearly
+    // Probe first page to validate Circle connectivity
     const debugParams = new URLSearchParams({ community_id: CIRCLE_COMMUNITY, per_page: '5', page: '1' })
     const debugRaw = await circleGet(`events?${debugParams}`)
-    if (!debugRaw) {
-      return res.status(500).json({ error: 'Circle API returned null — check CIRCLE_API_TOKEN and CIRCLE_COMMUNITY_ID in Vercel env vars' })
-    }
     console.log('[sync-cowriting] raw Circle response:', JSON.stringify(debugRaw).slice(0, 500))
 
     const events = await fetchCowritingEvents()
