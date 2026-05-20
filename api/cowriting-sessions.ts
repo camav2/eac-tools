@@ -42,8 +42,8 @@ async function fetchAllSessions(): Promise<AirtableRecord[]> {
 async function enrichWithPeople(records: AirtableRecord[]) {
   const allIds = new Set<string>()
   for (const r of records) {
-    for (const a of (r.fields['Attendees'] as Array<{ id: string }> || [])) allIds.add(a.id)
-    for (const h of (r.fields['Host']      as Array<{ id: string }> || [])) allIds.add(h.id)
+    for (const id of (r.fields['Attendees'] as string[] || [])) allIds.add(id)
+    for (const id of (r.fields['Host']      as string[] || [])) allIds.add(id)
   }
   const peopleMap = new Map<string, { name: string; linkedinUrl: string | null }>()
   if (allIds.size > 0) {
@@ -62,13 +62,12 @@ async function enrichWithPeople(records: AirtableRecord[]) {
 }
 
 function mapRecord(r: AirtableRecord, peopleMap: Map<string, { name: string; linkedinUrl: string | null }>) {
-  const hostLinks     = (r.fields['Host']      as Array<{ id: string }>) || []
-  const attendeeLinks = (r.fields['Attendees'] as Array<{ id: string }>) || []
-  const hostIds       = new Set(hostLinks.map(h => h.id))
+  const hostIds     = new Set((r.fields['Host']      as string[]) || [])
+  const attendeeIds =         (r.fields['Attendees'] as string[]) || []
 
-  const attendees = attendeeLinks.map(a => ({
-    ...(peopleMap.get(a.id) ?? { name: '', linkedinUrl: null }),
-    isHost: hostIds.has(a.id),
+  const attendees = attendeeIds.map(id => ({
+    ...(peopleMap.get(id) ?? { name: '', linkedinUrl: null }),
+    isHost: hostIds.has(id),
   }))
 
   return {
@@ -103,10 +102,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const allRecords = await fetchAllSessions()
     const hostedRecords   = allRecords.filter((r: AirtableRecord) =>
-      ((r.fields['Host']      as Array<{ id: string }>) || []).some(h => h.id === personId)
+      ((r.fields['Host']      as string[]) || []).includes(personId)
     )
     const attendedRecords = allRecords.filter((r: AirtableRecord) =>
-      ((r.fields['Attendees'] as Array<{ id: string }>) || []).some(a => a.id === personId)
+      ((r.fields['Attendees'] as string[]) || []).includes(personId)
     )
 
     // Deduplicate: sessions already in hosted shouldn't appear in attended
