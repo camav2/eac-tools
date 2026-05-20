@@ -56,12 +56,12 @@ export async function addContactToList(params: {
       }),
     })
 
-    // 201 = created, 204 = updated — both are success
-    if (res.status !== 201 && res.status !== 204) {
-      const err = await res.json()
-      console.error(`[brevo] addContactToList (${tool}) error:`, err)
+    // 201 = created, 204 = updated, 200 = ok — all success
+    if (res.ok) {
+      console.log(`[brevo] contact added to list ${listId} (${tool}) — status ${res.status}`)
     } else {
-      console.log(`[brevo] contact added to list ${listId} (${tool})`)
+      const err = await res.json().catch(() => ({ status: res.status }))
+      console.error(`[brevo] addContactToList (${tool}) error ${res.status}:`, JSON.stringify(err))
     }
   } catch (err) {
     console.error(`[brevo] addContactToList (${tool}) failed:`, err)
