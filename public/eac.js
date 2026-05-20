@@ -9,7 +9,8 @@
 var eacUser = null;
 
 /* ── AUTH INIT ── */
-(async function initAuth() {
+var eacAuthReady;
+eacAuthReady = (async function initAuth() {
   const el = document.getElementById('header-auth');
   if (!el) return;
 

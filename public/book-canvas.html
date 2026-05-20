@@ -1888,7 +1888,8 @@ function buildCanvasBox(idx) {
 // ANALYSIS SCREEN
 // =====================
 
-function showAnalysis() {
+async function showAnalysis() {
+  if (typeof eacAuthReady !== 'undefined') await eacAuthReady;
   if (typeof eacUser !== 'undefined' && eacUser) {
     logMemberCanvas();
     proceedToAnalysis();
