@@ -7,9 +7,9 @@
  *   unblocker   : 64
  *
  * Template IDs:
- *   book-canvas : 543
- *   idea-test   : 544
- *   unblocker   : 545
+ *   book-canvas : 546
+ *   idea-test   : 547
+ *   unblocker   : 548
  */
 
 export const BREVO_LISTS = {
@@ -19,9 +19,9 @@ export const BREVO_LISTS = {
 } as const
 
 export const BREVO_TEMPLATES = {
-  'book-canvas': 543,
-  'idea-test':   544,
-  'unblocker':   545,
+  'book-canvas': 546,
+  'idea-test':   547,
+  'unblocker':   548,
 } as const
 
 /**
