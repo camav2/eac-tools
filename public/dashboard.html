@@ -185,15 +185,18 @@ async function loadIdeaResults() {
   }
 }
 async function initDashboard() {
-  await new Promise(function(resolve) { setTimeout(resolve, 350); });
-  if (typeof eacUser === 'undefined' || !eacUser) {
+  // Fetch auth directly so we never race against eac.js
+  var meRes = await fetch('/api/me');
+  var meData = await meRes.json();
+  var user = meData.user;
+  if (!user) {
     document.getElementById('auth-gate').style.display = 'flex';
     var redirect = encodeURIComponent(window.location.href);
     document.getElementById('login-link').href = 'https://auth.expertauthor.community/login?redirect=' + redirect;
     return;
   }
   document.getElementById('dashboard-main').style.display = 'block';
-  var name = eacUser.name ? eacUser.name.split(' ')[0] : '';
+  var name = user.name ? user.name.split(' ')[0] : '';
   if (name) document.getElementById('welcome-title').textContent = 'Welcome back, ' + name;
   try {
     var res = await fetch('/api/book-canvas-results');
