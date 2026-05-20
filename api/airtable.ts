@@ -120,6 +120,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!email) return res.status(400).json({ error: 'Email required' })
 
+  // ── Email helpers ──────────────────────────────────────────────────────────
+  function answerLabel(val: string): string {
+    if (val === 'yes')            return 'Yes, clearly'
+    if (val === 'getting-there')  return 'Getting there'
+    return 'Not yet'
+  }
+
+  function tierDesc(t: string): string {
+    if (t === 'Strong')     return 'Your idea has the depth, tension, and staying power to go the distance.'
+    if (t === 'Developing') return 'Your idea has real potential — it needs sharper framing or more development before it\'s ready.'
+    return 'Some ideas need to find their form first — an essay, a talk, or a shorter piece before a full book.'
+  }
+
   const personId = await resolvePersonWithCircle({
     email,
     name:         firstName    || '',
@@ -174,15 +187,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         to:   { email, name: firstName || email },
         tool: 'idea-test',
         templateParams: {
-          FIRSTNAME: firstName || '',
-          SCORE:     Number(weightedScore).toFixed(1),
-          TIER:      tier         || '',
-          IDEA_TEXT: ideaText     || '',
-          Q1:        q1           || '',
-          Q2:        q2           || '',
-          Q3:        q3           || '',
-          Q4:        q4           || '',
-          Q5:        q5           || '',
+          FIRSTNAME:  firstName || '',
+          SCORE:      Number(weightedScore).toFixed(1),
+          SCORE_MAX:  '5.5',
+          TIER:       tier || '',
+          TIER_DESC:  tierDesc(tier || ''),
+          IDEA_TEXT:  ideaText || '',
+          Q1_LABEL:   answerLabel(q1 || ''),
+          Q2_LABEL:   answerLabel(q2 || ''),
+          Q3_LABEL:   answerLabel(q3 || ''),
+          Q4_LABEL:   answerLabel(q4 || ''),
+          Q5_LABEL:   answerLabel(q5 || ''),
         },
       }),
     ])
