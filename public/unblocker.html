@@ -2341,6 +2341,44 @@ function finishEdit(key, html) {
 }
 
 loadContent();
+
+// Check for ?load=<recordId> -- restore a saved unblocker result
+(async function initPage() {
+  var params = new URLSearchParams(window.location.search);
+  var loadId = params.get('load');
+  if (!loadId) return;
+  try {
+    var res = await fetch('/api/unblocker?id=' + encodeURIComponent(loadId));
+    if (res.status === 401) {
+      window.location.href = 'https://auth.expertauthor.community/login?redirect=' + encodeURIComponent(window.location.href);
+      return;
+    }
+    if (res.status === 403) return;
+    if (!res.ok) throw new Error('API error');
+    var data = await res.json();
+    // Reconstruct answers array from stored scores so showResult() works correctly
+    var cats = ['Time','Structure','Noise','Isolation','Momentum'];
+    cats.forEach(function(cat, i) {
+      var score = (data.scores && data.scores[cat]) || 0;
+      answers[i * 2]     = score;
+      answers[i * 2 + 1] = 0;
+    });
+    await new Promise(function(resolve) { setTimeout(resolve, 350); });
+    showResult();
+    // Add back-to-dashboard button in print bar
+    var printBar = document.querySelector('.print-bar');
+    if (printBar) {
+      var backBtn = document.createElement('a');
+      backBtn.href = '/dashboard';
+      backBtn.className = 'btn-print';
+      backBtn.style.marginLeft = '12px';
+      backBtn.textContent = '← Back to dashboard';
+      printBar.appendChild(backBtn);
+    }
+  } catch(err) {
+    console.error('[unblocker] load error:', err);
+  }
+})();
 </script>
 </body>
 </html>

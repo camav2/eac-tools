@@ -14,7 +14,97 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { resolvePersonWithCircle, logActivity } from './_lib/airtable'
 import { addContactToList, sendResultsEmail } from './_lib/brevo'
 
+// -- Helpers ------------------------------------------------------------------
+
+function parseCookie(cookieHeader: string, name: string): string | null {
+  const match = cookieHeader.match(new RegExp((?:^|;\\s*)${name}=([^;]+)))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+async function getSessionEmail(req: VercelRequest): Promise<string | null> {
+  const token = parseCookie(req.headers.cookie ?? '', 'eac_session')
+  if (!token) return null
+  try {
+    const { jwtVerify } = await import('jose')
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+    const { payload } = await jwtVerify(token, secret)
+    return (payload.sub as string) ?? null
+  } catch {
+    return null
+  }
+}
+
+async function atGet(path: string) {
+  const tableId = encodeURIComponent(process.env.AIRTABLE_UNBLOCKER_TABLE_ID!)
+  const url = https://api.airtable.com/v0/ + process.env.AIRTABLE_BASE_ID + / + tableId + path
+  const res = await fetch(url, {
+    headers: { Authorization: Bearer  + process.env.AIRTABLE_API_KEY },
+  })
+  const json = await res.json()
+  if (!res.ok) throw json
+  return json
+}
+
+// -- Route --------------------------------------------------------------------
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Cache-Control', 'no-store')
+
+  // GET: retrieve result(s) for the logged-in member
+  if (req.method === 'GET') {
+    const email = await getSessionEmail(req)
+    if (!email) return res.status(401).json({ error: 'Unauthorised' })
+
+    const { id } = req.query
+
+    if (id && typeof id === 'string') {
+      try {
+        const record = await atGet('/' + id)
+        const recordEmail = (record.fields['Email'] as string) ?? ''
+        if (recordEmail.toLowerCase() !== email.toLowerCase()) {
+          return res.status(403).json({ error: 'Forbidden' })
+        }
+        return res.status(200).json({
+          id:               record.id,
+          submittedAt:      record.fields['Submitted At'] || record.createdTime || null,
+          primaryBlocker:   record.fields['Primary Blocker']   || '',
+          secondaryBlocker: record.fields['Secondary Blocker'] || '',
+          intensityTier:    record.fields['Intensity Tier']    || 'scattered',
+          scores: {
+            Time:      record.fields['Score: Time']      || 0,
+            Structure: record.fields['Score: Structure'] || 0,
+            Noise:     record.fields['Score: Noise']     || 0,
+            Isolation: record.fields['Score: Isolation'] || 0,
+            Momentum:  record.fields['Score: Momentum']  || 0,
+          },
+        })
+      } catch (err) {
+        console.error('[unblocker] GET single error:', err)
+        return res.status(500).json({ error: 'Failed to load result' })
+      }
+    }
+
+    try {
+      const filter = encodeURIComponent('{Email}="' + email + '"')
+      const data = await atGet(
+        '?filterByFormula=' + filter + '&sort[0][field]=Submitted%20At&sort[0][direction]=desc' +
+        '&fields[]=Submitted%20At&fields[]=Primary%20Blocker&fields[]=Secondary%20Blocker&fields[]=Intensity%20Tier'
+      )
+      const results = ((data.records || []) as Array<{ id: string; fields: Record<string, unknown>; createdTime: string }>)
+        .map(r => ({
+          id:               r.id,
+          submittedAt:      (r.fields['Submitted At'] as string) || r.createdTime || null,
+          primaryBlocker:   (r.fields['Primary Blocker']   as string) || '',
+          secondaryBlocker: (r.fields['Secondary Blocker'] as string) || '',
+          intensityTier:    (r.fields['Intensity Tier']    as string) || 'scattered',
+        }))
+      return res.status(200).json({ results })
+    } catch (err) {
+      console.error('[unblocker] GET list error:', err)
+      return res.status(500).json({ error: 'Failed to load results' })
+    }
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const {
@@ -52,6 +142,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const fields: Record<string, unknown> = {
       'Email':               email,
+      'Submitted At':        new Date().toISOString(),
       'First Name':          name || '',
       'Primary Blocker':     primaryBlocker,
       ...(secondaryBlocker ? { 'Secondary Blocker': secondaryBlocker } : {}),
