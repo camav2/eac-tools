@@ -168,8 +168,10 @@
     </div>
     <div class="state-error" id="cowrite-error" style="display:none;">Could not load your sessions. Please refresh the page.</div>
   </div>
-  <div style="margin-top: 32px;">
+  <div style="margin-top: 32px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
     <a href="https://cowrite.expertauthor.community" target="_blank" rel="noopener" class="btn btn-secondary">Book a session &rarr;</a>
+    <button id="sync-cowriting-btn" class="btn btn-secondary" style="display:none;" onclick="syncCowritingEvents(this)">Sync events from Circle</button>
+    <span id="sync-cowriting-status" style="font-size:13px; color: var(--color-grey-400);"></span>
   </div>
 </main>
 
@@ -278,6 +280,7 @@ async function initDashboard() {
   document.getElementById('dashboard-main').style.display = 'block';
   var name = user.name ? user.name.split(' ')[0] : '';
   if (name) document.getElementById('welcome-title').textContent = 'Welcome back, ' + name;
+  if (user.isAdmin) document.getElementById('sync-cowriting-btn').style.display = '';
   try {
     var res = await fetch('/api/book-canvas-results');
     if (res.status === 401) {
@@ -411,6 +414,25 @@ async function loadCowriteSessions() {
 }
 
 initDashboard();
+
+async function syncCowritingEvents(btn) {
+  var status = document.getElementById('sync-cowriting-status');
+  btn.disabled = true;
+  btn.textContent = 'Syncing…';
+  status.textContent = '';
+  try {
+    var res = await fetch('/api/admin-sync-cowriting', { method: 'POST' });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Unknown error');
+    status.textContent = 'Done — ' + data.results.created + ' created, ' + data.results.updated + ' updated.';
+    loadCowriteSessions();
+  } catch (err) {
+    status.textContent = 'Error: ' + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sync events from Circle';
+  }
+}
 </script>
 </body>
 </html>
