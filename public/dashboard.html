@@ -10,56 +10,258 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/eac.css">
   <style>
-    body { font-family: var(--font); background: var(--color-off-white); color: var(--color-navy); min-height: 100vh; margin: 0; }
-    .dashboard-wrap { max-width: 860px; margin: 0 auto; padding: 96px 24px 64px; }
-    .dashboard-header { margin-bottom: 40px; }
-    .dashboard-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-grey-400); margin-bottom: 8px; }
-    .dashboard-title { font-size: 28px; font-weight: 800; color: var(--color-navy); margin: 0 0 8px; }
-    .dashboard-sub { font-size: 15px; color: var(--color-grey-600); margin: 0; }
-    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: var(--color-grey-400); margin-bottom: 16px; }
-    .canvas-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 40px; }
-    .canvas-card { background: var(--color-white); border: 1px solid var(--color-grey-200); border-radius: var(--radius-xl); padding: 20px 24px; display: flex; align-items: center; gap: 20px; box-shadow: var(--shadow-md); transition: box-shadow var(--transition), border-color var(--transition); }
-    .canvas-card:hover { box-shadow: var(--shadow-lg); border-color: var(--color-blue-light); }
-    .canvas-card-icon { width: 44px; height: 44px; border-radius: var(--radius-lg); background: var(--color-yellow); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .canvas-card-icon svg { width: 20px; height: 20px; }
-    .canvas-card-body { flex: 1; min-width: 0; }
-    .canvas-card-title { font-size: 15px; font-weight: 700; color: var(--color-navy); margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .canvas-card-meta { font-size: 13px; color: var(--color-grey-400); margin: 0; display: flex; align-items: center; gap: 10px; }
-    .canvas-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-full); background: var(--color-grey-100); color: var(--color-grey-600); }
-    .canvas-pill.complete { background: #E8F5E9; color: #2E7D32; }
-    .canvas-card-action { flex-shrink: 0; }
-    .empty-state { background: var(--color-white); border: 1px dashed var(--color-grey-200); border-radius: var(--radius-xl); padding: 48px 32px; text-align: center; }
-    .empty-state-icon { width: 48px; height: 48px; background: var(--color-grey-100); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
-    .empty-state p { font-size: 15px; color: var(--color-grey-600); margin: 0 0 20px; }
-    .state-loading, .state-error { text-align: center; padding: 48px 0; color: var(--color-grey-400); font-size: 14px; }
-    .btn { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font); font-size: 13px; font-weight: 700; border-radius: var(--radius-full); padding: 9px 18px; border: none; cursor: pointer; text-decoration: none; transition: opacity var(--transition); white-space: nowrap; }
+    body {
+      font-family: var(--font);
+      background: var(--color-off-white);
+      color: var(--color-navy);
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .dashboard-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 96px 24px 64px;
+    }
+
+    .dashboard-header {
+      margin-bottom: 40px;
+    }
+
+    .dashboard-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-grey-400);
+      margin-bottom: 8px;
+    }
+
+    .dashboard-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--color-navy);
+      margin: 0 0 8px;
+    }
+
+    .dashboard-sub {
+      font-size: 15px;
+      color: var(--color-grey-600);
+      margin: 0;
+    }
+
+    /* ── Section ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--color-grey-400);
+      margin-bottom: 16px;
+    }
+
+    /* ── Canvas cards ── */
+    .canvas-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .canvas-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-grey-200);
+      border-radius: var(--radius-xl);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: var(--shadow-md);
+      transition: box-shadow var(--transition), border-color var(--transition);
+    }
+
+    .canvas-card:hover {
+      box-shadow: var(--shadow-lg);
+      border-color: var(--color-blue-light);
+    }
+
+    .canvas-card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-lg);
+      background: var(--color-yellow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .canvas-card-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--color-navy);
+    }
+
+    .canvas-card-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .canvas-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-navy);
+      margin: 0 0 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .canvas-card-meta {
+      font-size: 13px;
+      color: var(--color-grey-400);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .canvas-pill {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-grey-100);
+      color: var(--color-grey-600);
+    }
+
+    .canvas-pill.complete {
+      background: #E8F5E9;
+      color: #2E7D32;
+    }
+
+    .canvas-card-action {
+      flex-shrink: 0;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      background: var(--color-white);
+      border: 1px dashed var(--color-grey-200);
+      border-radius: var(--radius-xl);
+      padding: 48px 32px;
+      text-align: center;
+    }
+
+    .empty-state-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--color-grey-100);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .empty-state p {
+      font-size: 15px;
+      color: var(--color-grey-600);
+      margin: 0 0 20px;
+    }
+
+    /* ── Loading / error ── */
+    .state-loading,
+    .state-error {
+      text-align: center;
+      padding: 48px 0;
+      color: var(--color-grey-400);
+      font-size: 14px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: var(--radius-full);
+      padding: 9px 18px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity var(--transition), background var(--transition);
+      white-space: nowrap;
+    }
+
     .btn:hover { opacity: 0.88; }
-    .btn-primary { background: var(--color-navy); color: var(--color-white); }
-    .btn-secondary { background: var(--color-grey-100); color: var(--color-navy); }
-    #auth-gate { display: none; min-height: 100vh; align-items: center; justify-content: center; }
-    .auth-gate-card { background: var(--color-white); border-radius: var(--radius-xl); padding: 48px 40px; text-align: center; max-width: 400px; box-shadow: var(--shadow-lg); }
-    .auth-gate-card h2 { font-size: 22px; font-weight: 800; margin: 0 0 12px; }
-    .auth-gate-card p { font-size: 15px; color: var(--color-grey-600); margin: 0 0 24px; }
-    @media (max-width: 600px) { .dashboard-wrap { padding: 80px 16px 48px; } .canvas-card { flex-wrap: wrap; } .canvas-card-action { width: 100%; } .canvas-card-action .btn { width: 100%; justify-content: center; } }
-    .tier-strong { background: #E8F5E9; color: #2E7D32; }
-    .tier-developing { background: #FFF8E1; color: #F57F17; }
-    .tier-not-yet { background: #FBE9E7; color: #BF360C; }
+
+    .btn-primary {
+      background: var(--color-navy);
+      color: var(--color-white);
+    }
+
+    .btn-secondary {
+      background: var(--color-grey-100);
+      color: var(--color-navy);
+    }
+
+    /* ── Auth gate ── */
+    #auth-gate {
+      display: none;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-gate-card {
+      background: var(--color-white);
+      border-radius: var(--radius-xl);
+      padding: 48px 40px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .auth-gate-card h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin: 0 0 12px;
+    }
+
+    .auth-gate-card p {
+      font-size: 15px;
+      color: var(--color-grey-600);
+      margin: 0 0 24px;
+    }
+
+    @media (max-width: 600px) {
+      .dashboard-wrap { padding: 80px 16px 48px; }
+      .canvas-card { flex-wrap: wrap; }
+      .canvas-card-action { width: 100%; }
+      .canvas-card-action .btn { width: 100%; justify-content: center; }
+    }
   </style>
 </head>
 <body>
 
+<!-- ── Navbar ── -->
 <header class="site-header">
   <a class="header-logo" href="https://tools.expertauthor.community">
-    <svg viewBox="0 0 53.3 53.3" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="32.1 53.3 0 53.3 0 21.2 21.1 0.1 53.2 32.2 32.1 53.3" fill="#FFE64B"/>
-      <polyline points="15.8 53.3 0 53.3 0 37.5" fill="#00003D"/>
-      <polygon points="46.6 25.4 33.2 38.8 26.6 32.3 40 19 33.9 13 20.6 26.3 14.4 20.1 27.9 6.7 21.2 0 0 21.2 32.1 53.3 53.3 32.1 46.6 25.4" fill="#00003D"/>
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="8" fill="#FFE64B"/>
+      <path d="M8 24L16 8L24 24" stroke="#00003D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M11 19H21" stroke="#00003D" stroke-width="2.5" stroke-linecap="round"/>
     </svg>
     <span class="header-logo-text">EAC Tools</span>
   </a>
   <div class="header-auth" id="header-auth"></div>
 </header>
 
+<!-- ── Auth gate (shown if not logged in) ── -->
 <div id="auth-gate">
   <div class="auth-gate-card">
     <h2>Members only</h2>
@@ -68,13 +270,16 @@
   </div>
 </div>
 
+<!-- ── Main dashboard ── -->
 <main class="dashboard-wrap" id="dashboard-main" style="display:none;">
+
   <div class="dashboard-header">
     <div class="dashboard-eyebrow">My Dashboard</div>
     <h1 class="dashboard-title" id="welcome-title">Welcome back</h1>
     <p class="dashboard-sub">Your saved tools and results, all in one place.</p>
   </div>
 
+  <!-- Book Canvas section -->
   <div class="section-label">Book Screening Canvas</div>
   <div id="canvas-section">
     <div class="state-loading" id="canvas-loading">Loading your canvases&hellip;</div>
@@ -93,141 +298,97 @@
     <a href="/book-canvas" class="btn btn-secondary">+ New canvas</a>
   </div>
 
-  <div class="section-label" style="margin-top: 48px;">Idea Test</div>
-  <div id="idea-section">
-    <div class="state-loading" id="idea-loading">Loading your results&hellip;</div>
-    <div class="canvas-list" id="idea-list" style="display:none;"></div>
-    <div class="empty-state" id="idea-empty" style="display:none;">
-      <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-      <p>You haven&rsquo;t completed an Idea Test yet.</p>
-      <a href="/idea-test" class="btn btn-primary">Test your idea &rarr;</a>
-    </div>
-    <div class="state-error" id="idea-error" style="display:none;">Could not load your results. Please refresh the page.</div>
-  </div>
-
-  <div style="margin-top: 32px;">
-    <a href="/idea-test" class="btn btn-secondary">+ New idea test</a>
-  </div>
-
-  <div class="section-label" style="margin-top: 48px;">Writing Unblock</div>
-  <div id="unblock-section">
-    <div class="state-loading" id="unblock-loading">Loading your results&hellip;</div>
-    <div class="canvas-list" id="unblock-list" style="display:none;"></div>
-    <div class="empty-state" id="unblock-empty" style="display:none;">
-      <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
-      <p>You haven&rsquo;t completed a Writing Unblock yet.</p>
-      <a href="/unblocker" class="btn btn-primary">Start the diagnostic &rarr;</a>
-    </div>
-    <div class="state-error" id="unblock-error" style="display:none;">Could not load your results. Please refresh the page.</div>
-  </div>
-
-  <div style="margin-top: 32px;">
-    <a href="/unblocker" class="btn btn-secondary">+ New diagnostic</a>
-  </div>
 </main>
 
 <script src="/eac.js"></script>
 <script>
 function formatDate(iso) {
   if (!iso) return '';
-  var d = new Date(iso);
-  return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+  const d = new Date(iso);
+  const date = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+  const time = d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return date + ' · ' + time;
 }
+
 function truncate(str, max) {
   if (!str) return '';
   return str.length > max ? str.slice(0, max - 1) + '…' : str;
 }
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function pillarsLabel(n) {
+  return n + '/9 pillars';
 }
+
 function renderCanvasList(canvases) {
-  var list = document.getElementById('canvas-list');
+  const list = document.getElementById('canvas-list');
   list.innerHTML = '';
+
   canvases.forEach(function(c) {
-    var date = formatDate(c.submittedAt);
-    var title = c.purpose ? truncate(c.purpose, 80) : 'Canvas — ' + date;
-    var isComplete = c.pillarsCompleted === 9;
-    var card = document.createElement('div');
+    const date = formatDate(c.submittedAt);
+    const title = c.purpose ? truncate(c.purpose, 80) : 'Canvas — ' + date;
+    const isComplete = c.pillarsCompleted === 9;
+
+    const card = document.createElement('div');
     card.className = 'canvas-card';
     card.innerHTML =
-      '<div class="canvas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#00003D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>' +
+      '<div class="canvas-card-icon">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>' +
+        '</svg>' +
+      '</div>' +
       '<div class="canvas-card-body">' +
         '<p class="canvas-card-title">' + escHtml(title) + '</p>' +
-        '<p class="canvas-card-meta">' + escHtml(date) + '<span class="canvas-pill' + (isComplete ? ' complete' : '') + '">' + c.pillarsCompleted + '/9 pillars</span></p>' +
+        '<p class="canvas-card-meta">' +
+          date +
+          '<span class="canvas-pill' + (isComplete ? ' complete' : '') + '">' + pillarsLabel(c.pillarsCompleted) + '</span>' +
+        '</p>' +
       '</div>' +
-      '<div class="canvas-card-action"><a href="/book-canvas?load=' + encodeURIComponent(c.id) + '" class="btn btn-primary">View canvas &rarr;</a></div>';
+      '<div class="canvas-card-action">' +
+        '<a href="/book-canvas?load=' + encodeURIComponent(c.id) + '" class="btn btn-primary">View canvas &rarr;</a>' +
+      '</div>';
     list.appendChild(card);
   });
 }
 
-function tierClass(tier) {
-  if (tier === 'Strong')     return 'tier-strong';
-  if (tier === 'Developing') return 'tier-developing';
-  return 'tier-not-yet';
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
-function renderIdeaList(results) {
-  var list = document.getElementById('idea-list');
-  list.innerHTML = '';
-  results.forEach(function(r) {
-    var date  = formatDate(r.submittedAt);
-    var title = r.ideaText ? truncate(r.ideaText, 80) : 'Idea Test — ' + date;
-    var card  = document.createElement('div');
-    card.className = 'canvas-card';
-    card.innerHTML =
-      '<div class="canvas-card-icon" style="background:var(--color-blue-light);"><svg viewBox="0 0 24 24" fill="none" stroke="#00003D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>' +
-      '<div class="canvas-card-body">' +
-        '<p class="canvas-card-title">' + escHtml(title) + '</p>' +
-        '<p class="canvas-card-meta">' + escHtml(date) + '<span class="canvas-pill ' + tierClass(r.tier) + '">' + escHtml(r.tier) + '</span></p>' +
-      '</div>' +
-      '<div class="canvas-card-action"><a href="/idea-test?load=' + encodeURIComponent(r.id) + '" class="btn btn-primary">View result &rarr;</a></div>';
-    list.appendChild(card);
-  });
-}
-
-async function loadIdeaResults() {
-  try {
-    var res = await fetch('/api/airtable');
-    if (res.status === 401) return;
-    if (!res.ok) throw new Error('API error');
-    var data = await res.json();
-    document.getElementById('idea-loading').style.display = 'none';
-    if (!data.results || data.results.length === 0) {
-      document.getElementById('idea-empty').style.display = 'block';
-    } else {
-      renderIdeaList(data.results);
-      document.getElementById('idea-list').style.display = 'flex';
-    }
-  } catch (err) {
-    console.error('[dashboard] idea load error:', err);
-    document.getElementById('idea-loading').style.display = 'none';
-    document.getElementById('idea-error').style.display = 'block';
-  }
-}
 async function initDashboard() {
-  // Fetch auth directly so we never race against eac.js
-  var meRes = await fetch('/api/me');
-  var meData = await meRes.json();
-  var user = meData.user;
-  if (!user) {
+  // Wait for eac.js auth to resolve
+  await new Promise(function(resolve) { setTimeout(resolve, 300); });
+
+  if (typeof eacUser === 'undefined' || !eacUser) {
+    // Not logged in — show gate
     document.getElementById('auth-gate').style.display = 'flex';
-    var redirect = encodeURIComponent(window.location.href);
-    document.getElementById('login-link').href = 'https://auth.expertauthor.community/login?redirect=' + redirect;
+    const redirect = encodeURIComponent(window.location.href);
+    document.getElementById('login-link').href =
+      'https://auth.expertauthor.community/login?redirect=' + redirect;
     return;
   }
+
+  // Logged in — show dashboard
   document.getElementById('dashboard-main').style.display = 'block';
-  var name = user.name ? user.name.split(' ')[0] : '';
+  const name = eacUser.name ? eacUser.name.split(' ')[0] : '';
   if (name) document.getElementById('welcome-title').textContent = 'Welcome back, ' + name;
+
+  // Load canvases
   try {
-    var res = await fetch('/api/book-canvas-results');
+    const res = await fetch('/api/book-canvas-results');
     if (res.status === 401) {
       document.getElementById('dashboard-main').style.display = 'none';
       document.getElementById('auth-gate').style.display = 'flex';
       return;
     }
     if (!res.ok) throw new Error('API error');
-    var data = await res.json();
+
+    const data = await res.json();
     document.getElementById('canvas-loading').style.display = 'none';
+
     if (!data.canvases || data.canvases.length === 0) {
       document.getElementById('canvas-empty').style.display = 'block';
     } else {
@@ -239,57 +400,8 @@ async function initDashboard() {
     document.getElementById('canvas-loading').style.display = 'none';
     document.getElementById('canvas-error').style.display = 'block';
   }
-  loadIdeaResults();
-  loadUnblockResults();
 }
 
-function intensityLabel(tier) {
-  if (tier === 'dominant') return 'Strong pattern';
-  if (tier === 'likely')   return 'Clear pattern';
-  return 'Mixed';
-}
-function intensityClass(tier) {
-  if (tier === 'dominant') return 'tier-strong';
-  if (tier === 'likely')   return 'tier-developing';
-  return '';
-}
-function renderUnblockList(results) {
-  var list = document.getElementById('unblock-list');
-  list.innerHTML = '';
-  results.forEach(function(r) {
-    var date  = formatDate(r.submittedAt);
-    var label = r.primaryBlocker ? (r.primaryBlocker + (r.secondaryBlocker ? ' + ' + r.secondaryBlocker : '')) : 'Writing Unblock — ' + date;
-    var card  = document.createElement('div');
-    card.className = 'canvas-card';
-    card.innerHTML =
-      '<div class="canvas-card-icon" style="background:#EDE9FE;"><svg viewBox="0 0 24 24" fill="none" stroke="#00003D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>' +
-      '<div class="canvas-card-body">' +
-        '<p class="canvas-card-title">' + escHtml(label) + '</p>' +
-        '<p class="canvas-card-meta">' + escHtml(date) + '<span class="canvas-pill ' + intensityClass(r.intensityTier) + '">' + escHtml(intensityLabel(r.intensityTier)) + '</span></p>' +
-      '</div>' +
-      '<div class="canvas-card-action"><a href="/unblocker?load=' + encodeURIComponent(r.id) + '" class="btn btn-primary">View result &rarr;</a></div>';
-    list.appendChild(card);
-  });
-}
-async function loadUnblockResults() {
-  try {
-    var res = await fetch('/api/unblocker');
-    if (res.status === 401) return;
-    if (!res.ok) throw new Error('API error');
-    var data = await res.json();
-    document.getElementById('unblock-loading').style.display = 'none';
-    if (!data.results || data.results.length === 0) {
-      document.getElementById('unblock-empty').style.display = 'block';
-    } else {
-      renderUnblockList(data.results);
-      document.getElementById('unblock-list').style.display = 'flex';
-    }
-  } catch (err) {
-    console.error('[dashboard] unblock load error:', err);
-    document.getElementById('unblock-loading').style.display = 'none';
-    document.getElementById('unblock-error').style.display = 'block';
-  }
-}
 initDashboard();
 </script>
 </body>
