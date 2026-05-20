@@ -41,6 +41,9 @@
     .auth-gate-card h2 { font-size: 22px; font-weight: 800; margin: 0 0 12px; }
     .auth-gate-card p { font-size: 15px; color: var(--color-grey-600); margin: 0 0 24px; }
     @media (max-width: 600px) { .dashboard-wrap { padding: 80px 16px 48px; } .canvas-card { flex-wrap: wrap; } .canvas-card-action { width: 100%; } .canvas-card-action .btn { width: 100%; justify-content: center; } }
+    .tier-strong { background: #E8F5E9; color: #2E7D32; }
+    .tier-developing { background: #FFF8E1; color: #F57F17; }
+    .tier-not-yet { background: #FBE9E7; color: #BF360C; }
   </style>
 </head>
 <body>
@@ -85,6 +88,22 @@
   <div style="margin-top: 32px;">
     <a href="/book-canvas" class="btn btn-secondary">+ New canvas</a>
   </div>
+
+  <div class="section-label" style="margin-top: 48px;">Idea Test</div>
+  <div id="idea-section">
+    <div class="state-loading" id="idea-loading">Loading your results&hellip;</div>
+    <div class="canvas-list" id="idea-list" style="display:none;"></div>
+    <div class="empty-state" id="idea-empty" style="display:none;">
+      <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <p>You haven&rsquo;t completed an Idea Test yet.</p>
+      <a href="/idea-test" class="btn btn-primary">Test your idea &rarr;</a>
+    </div>
+    <div class="state-error" id="idea-error" style="display:none;">Could not load your results. Please refresh the page.</div>
+  </div>
+
+  <div style="margin-top: 32px;">
+    <a href="/idea-test" class="btn btn-secondary">+ New idea test</a>
+  </div>
 </main>
 
 <script src="/eac.js"></script>
@@ -120,6 +139,51 @@ function renderCanvasList(canvases) {
     list.appendChild(card);
   });
 }
+
+function tierClass(tier) {
+  if (tier === 'Strong')     return 'tier-strong';
+  if (tier === 'Developing') return 'tier-developing';
+  return 'tier-not-yet';
+}
+
+function renderIdeaList(results) {
+  var list = document.getElementById('idea-list');
+  list.innerHTML = '';
+  results.forEach(function(r) {
+    var date  = formatDate(r.submittedAt);
+    var title = r.ideaText ? truncate(r.ideaText, 80) : 'Idea Test — ' + date;
+    var card  = document.createElement('div');
+    card.className = 'canvas-card';
+    card.innerHTML =
+      '<div class="canvas-card-icon" style="background:var(--color-blue-light);"><svg viewBox="0 0 24 24" fill="none" stroke="#00003D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>' +
+      '<div class="canvas-card-body">' +
+        '<p class="canvas-card-title">' + escHtml(title) + '</p>' +
+        '<p class="canvas-card-meta">' + escHtml(date) + '<span class="canvas-pill ' + tierClass(r.tier) + '">' + escHtml(r.tier) + '</span></p>' +
+      '</div>' +
+      '<div class="canvas-card-action"><a href="/idea-test?load=' + encodeURIComponent(r.id) + '" class="btn btn-primary">View result &rarr;</a></div>';
+    list.appendChild(card);
+  });
+}
+
+async function loadIdeaResults() {
+  try {
+    var res = await fetch('/api/airtable');
+    if (res.status === 401) return;
+    if (!res.ok) throw new Error('API error');
+    var data = await res.json();
+    document.getElementById('idea-loading').style.display = 'none';
+    if (!data.results || data.results.length === 0) {
+      document.getElementById('idea-empty').style.display = 'block';
+    } else {
+      renderIdeaList(data.results);
+      document.getElementById('idea-list').style.display = 'flex';
+    }
+  } catch (err) {
+    console.error('[dashboard] idea load error:', err);
+    document.getElementById('idea-loading').style.display = 'none';
+    document.getElementById('idea-error').style.display = 'block';
+  }
+}
 async function initDashboard() {
   await new Promise(function(resolve) { setTimeout(resolve, 350); });
   if (typeof eacUser === 'undefined' || !eacUser) {
@@ -152,6 +216,7 @@ async function initDashboard() {
     document.getElementById('canvas-loading').style.display = 'none';
     document.getElementById('canvas-error').style.display = 'block';
   }
+  loadIdeaResults();
 }
 initDashboard();
 </script>

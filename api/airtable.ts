@@ -1,25 +1,114 @@
-/*
+﻿/*
  * Airtable API handler — Idea Test submissions
  *
- * Write order (each step fails independently):
- *   1. Circle: fetch access group for members
- *   2. People: upsert record (find by email or create)
- *   3. Idea Test Results: always written, linked to person if step 2 succeeded
- *   4. Activity Log: written only if step 2 succeeded
+ * POST — save a completed idea test (existing behaviour)
+ * GET  — retrieve idea test result(s) for the logged-in member
+ *   ?id=<recordId>  ->  single result (full answers)
+ *   (no params)     ->  list of all results for the user (summary only)
  *
  * Env vars required:
- *   AIRTABLE_API_KEY      — personal access token (needs access to all 3 tables)
- *   AIRTABLE_BASE_ID      — appvucz2Xo0PLqN2k
- *   AIRTABLE_TABLE_ID     — Idea Test Results table ID (tblPU7kA0YMw58Uyg)
- *   CIRCLE_API_TOKEN      — Circle v2 API token
- *   CIRCLE_COMMUNITY_ID   — 9832
+ *   AIRTABLE_API_KEY, AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, JWT_SECRET
+ *   CIRCLE_API_TOKEN, CIRCLE_COMMUNITY_ID
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { resolvePersonWithCircle, logActivity } from './_lib/airtable'
 import { addContactToList, sendResultsEmail } from './_lib/brevo'
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function parseCookie(cookieHeader: string, name: string): string | null {
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+async function getSessionEmail(req: VercelRequest): Promise<string | null> {
+  const token = parseCookie(req.headers.cookie ?? '', 'eac_session')
+  if (!token) return null
+  try {
+    const { jwtVerify } = await import('jose')
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+    const { payload } = await jwtVerify(token, secret)
+    return (payload.sub as string) ?? null
+  } catch {
+    return null
+  }
+}
+
+async function atGet(path: string) {
+  const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_ID}${path}`
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}` },
+  })
+  const json = await res.json()
+  if (!res.ok) throw json
+  return json
+}
+
+// ── Route ─────────────────────────────────────────────────────────────────────
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Cache-Control', 'no-store')
+
+  // ── GET: retrieve result(s) for the logged-in member ──────────────────────
+  if (req.method === 'GET') {
+    const email = await getSessionEmail(req)
+    if (!email) return res.status(401).json({ error: 'Unauthorised' })
+
+    const { id } = req.query
+
+    // Single result by record ID
+    if (id && typeof id === 'string') {
+      try {
+        const record = await atGet(`/${id}`)
+        const recordEmail = (record.fields['Email'] as string) ?? ''
+        if (recordEmail.toLowerCase() !== email.toLowerCase()) {
+          return res.status(403).json({ error: 'Forbidden' })
+        }
+        const f = record.fields as Record<string, unknown>
+        return res.status(200).json({
+          id:           record.id,
+          submittedAt:  f['Submitted At'] || null,
+          tier:         f['Tier']         || '',
+          score:        f['Score']        || 0,
+          ideaText:     f['Idea Text']    || '',
+          answers: {
+            1: f['Q1 – Persistence'] || 'not-yet',
+            2: f['Q2 – Argument']    || 'not-yet',
+            3: f['Q3 – Reader']      || 'not-yet',
+            4: f['Q4 – Depth']       || 'not-yet',
+            5: f['Q5 – Alignment']   || 'not-yet',
+          },
+        })
+      } catch (err) {
+        console.error('[airtable] GET single error:', err)
+        return res.status(500).json({ error: 'Failed to load result' })
+      }
+    }
+
+    // List all results for this user
+    try {
+      const filter = encodeURIComponent(`{Email}="${email}"`)
+      const data = await atGet(
+        `?filterByFormula=${filter}&sort[0][field]=Submitted%20At&sort[0][direction]=desc` +
+        `&fields[]=Submitted%20At&fields[]=Tier&fields[]=Score&fields[]=Idea%20Text`
+      )
+      const results = ((data.records || []) as Array<{ id: string; fields: Record<string, unknown> }>)
+        .map(r => ({
+          id:          r.id,
+          submittedAt: (r.fields['Submitted At'] as string) || null,
+          tier:        (r.fields['Tier']         as string) || '',
+          score:       (r.fields['Score']        as number) || 0,
+          ideaText:    (r.fields['Idea Text']    as string) || '',
+        }))
+      return res.status(200).json({ results })
+    } catch (err) {
+      console.error('[airtable] GET list error:', err)
+      return res.status(500).json({ error: 'Failed to load results' })
+    }
+  }
+
+  // ── POST: save a completed idea test ──────────────────────────────────────
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const {
@@ -31,7 +120,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!email) return res.status(400).json({ error: 'Email required' })
 
-  // ── Steps 1+2: Circle access group + People upsert (best-effort) ──────────
   const personId = await resolvePersonWithCircle({
     email,
     name:         firstName    || '',
@@ -39,7 +127,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     circleUserId: circleUserId ? String(circleUserId) : undefined,
   })
 
-  // ── Step 3: Write Idea Test Results (always) ─────────────────────────────
   try {
     const fields: Record<string, unknown> = {
       'Email':            email,
@@ -81,7 +168,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { id: resultId } = await resultRes.json()
     console.log('[results] written:', resultId)
 
-    // ── Step 4: Brevo — add to list + send results email (best-effort) ───
     await Promise.all([
       addContactToList({ email, firstName: firstName || '', tool: 'idea-test' }),
       sendResultsEmail({
@@ -101,7 +187,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
     ])
 
-    // ── Step 5: Activity Log (only if we have a person) ───────────────────
     if (personId) {
       try {
         await logActivity({
