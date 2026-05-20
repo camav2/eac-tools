@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <script type="application/json" id="page-content">{
@@ -1845,7 +1845,7 @@ function showCanvas() {
   saveCurrent();
   renderCanvas();
   showScreen('screen-canvas');
-  document.getElementById('nav-progress').textContent = '';
+  var _np = document.getElementById('nav-progress'); if (_np) _np.textContent = '';
 }
 
 function renderCanvas() {
@@ -2121,7 +2121,7 @@ document.addEventListener('input', (e) => {
 
     renderCanvas();
     showScreen('screen-canvas');
-    document.getElementById('nav-progress').textContent = '';
+    var _np = document.getElementById('nav-progress'); if (_np) _np.textContent = '';
   } catch (err) {
     console.error('[book-canvas] load error:', err);
     document.getElementById('screen-intro').style.display = 'flex';
