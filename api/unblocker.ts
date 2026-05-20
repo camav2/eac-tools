@@ -52,7 +52,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // GET: retrieve result(s) for the logged-in member
   if (req.method === 'GET') {
+    const _cookie = req.headers.cookie ?? ''
+    console.log('[unblocker GET] cookie present:', _cookie.length > 0, '| has session:', _cookie.includes('eac_session'))
     const email = await getSessionEmail(req)
+    console.log('[unblocker GET] email:', email ? email.slice(0,3) + '***' : 'null')
     if (!email) return res.status(401).json({ error: 'Unauthorised' })
 
     const { id } = req.query
