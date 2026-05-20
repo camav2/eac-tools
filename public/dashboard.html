@@ -423,8 +423,8 @@ async function syncCowritingEvents(btn) {
   try {
     var res = await fetch('/api/admin-sync-cowriting', { method: 'POST' });
     var data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Unknown error');
-    status.textContent = 'Done — ' + data.results.created + ' created, ' + data.results.updated + ' updated (total: ' + data.total + '). Debug: ' + JSON.stringify(data.debug);
+    if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
+    status.textContent = 'Done — ' + data.results.created + ' created, ' + data.results.updated + ' updated (' + data.total + ' total from Circle).';
     loadCowriteSessions();
   } catch (err) {
     status.textContent = 'Error: ' + err.message;

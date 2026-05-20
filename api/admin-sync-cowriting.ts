@@ -117,11 +117,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!email || !isAdmin(email)) return res.status(403).json({ error: 'Forbidden' })
 
   try {
-    // DEBUG: inspect raw Circle response shape
+    // Probe Circle API and surface errors clearly
     const debugParams = new URLSearchParams({ community_id: CIRCLE_COMMUNITY, per_page: '5', page: '1' })
     const debugRaw = await circleGet(`events?${debugParams}`)
-    console.log('[sync-cowriting] raw Circle response keys:', debugRaw ? Object.keys(debugRaw) : 'null')
-    console.log('[sync-cowriting] raw sample:', JSON.stringify(debugRaw).slice(0, 500))
+    if (!debugRaw) {
+      return res.status(500).json({ error: 'Circle API returned null — check CIRCLE_API_TOKEN and CIRCLE_COMMUNITY_ID in Vercel env vars' })
+    }
+    console.log('[sync-cowriting] raw Circle response:', JSON.stringify(debugRaw).slice(0, 500))
 
     const events = await fetchCowritingEvents()
     console.log(`[sync-cowriting] fetched ${events.length} events`)
