@@ -114,8 +114,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const attendedOnly = attendedRecords.filter((r: AirtableRecord) => !hostedIds.has(r.id as string))
 
     // Batch-fetch all people across both lists
-    const allRecords = [...hostedRecords, ...attendedOnly]
-    const peopleMap = await enrichWithPeople(allRecords)
+    const toEnrich = [...hostedRecords, ...attendedOnly]
+    const peopleMap = await enrichWithPeople(toEnrich)
 
     const hosted   = hostedRecords.map((r: AirtableRecord) => mapRecord(r, peopleMap)).sort(byDateDesc)
     const attended = attendedOnly .map((r: AirtableRecord) => mapRecord(r, peopleMap)).sort(byDateDesc)
