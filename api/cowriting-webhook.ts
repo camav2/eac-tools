@@ -88,6 +88,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // ── "Published an event" ───────────────────────────────────────────────
+    if (type.includes('publish') || type.includes('created')) {
+      const baseFields: Record<string, unknown> = {
+        'Event Title': eventName,
+        'Status':      'Upcoming',
+      }
+      if (eventDate) baseFields['Event Date'] = eventDate
+      if (eventUrl)  baseFields['Event URL']  = eventUrl
+      if (eventDate && endsAt) {
+        const dur = (new Date(endsAt).getTime() - new Date(eventDate).getTime()) / 3600000
+        if (dur > 0) baseFields['Duration (hours)'] = Math.round(dur * 10) / 10
+      }
+
+      const eventRecordId = await upsertEvent(circleEventId, baseFields)
+
+      if (memberEmail) {
+        const personId = await upsertPerson({ email: memberEmail, name: memberName, isMember: true })
+        // Link as host
+        await at(COWRITING_TABLE, `/${eventRecordId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ fields: { Host: [personId] } }),
+        })
+        console.log('[cowriting-webhook] host set:', memberEmail, circleEventId)
+      }
+      return res.status(200).json({ ok: true })
+    }
+
     // ── "Attended live event" ──────────────────────────────────────────────
     if (type.includes('attend') || type.includes('live')) {
       const baseFields: Record<string, unknown> = {
