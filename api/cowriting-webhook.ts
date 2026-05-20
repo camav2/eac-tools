@@ -52,13 +52,11 @@ async function addAttendee(circleEventId: string, personId: string) {
 
 // ── Circle API helpers ────────────────────────────────────────────────────────
 
-const CIRCLE_URL        = process.env.CIRCLE_ADMIN_V2_URL!
-const CIRCLE_TOKEN      = process.env.CIRCLE_ADMIN_V2_TOKEN!
 const CIRCLE_COMMUNITY  = process.env.CIRCLE_COMMUNITY_ID!
 
 async function circleGet(path: string) {
-  const res = await fetch(`${CIRCLE_URL}${path}`, {
-    headers: { Authorization: `Bearer ${CIRCLE_TOKEN}` },
+  const res = await fetch(`https://app.circle.so/api/v2/${path}`, {
+    headers: { Authorization: `Token ${process.env.CIRCLE_API_TOKEN}` },
   })
   if (!res.ok) {
     console.error('[circle] GET failed:', path, res.status)
