@@ -1,46 +1,32 @@
+/*
+ * Subscribe API — Brevo contact upsert via shared helper
+ * Used by the gate form on book-canvas and any standalone opt-in.
+ * Routes to the correct list based on the `tool` field (defaults to book-canvas).
+ */
+
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { addContactToList, BREVO_LISTS } from './_lib/brevo'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { email, name, writingBlocker } = req.body
+  const { email, name, tool } = req.body
 
   if (!email) {
     return res.status(400).json({ error: 'Email required' })
   }
 
-  try {
-    const brevoRes = await fetch('https://api.brevo.com/v3/contacts', {
-      method: 'POST',
-      headers: {
-        'accept': 'application/json',
-        'content-type': 'application/json',
-        'api-key': process.env.BREVO_API_KEY!,
-      },
-      body: JSON.stringify({
-        email,
-        attributes: {
-          FIRSTNAME: name || '',
-          WRITING_BLOCKER: writingBlocker || '',
-        },
-        listIds: [Number(process.env.BREVO_LIST_ID)],
-        updateEnabled: true,
-      }),
-    })
+  const resolvedTool = (tool && tool in BREVO_LISTS)
+    ? tool as keyof typeof BREVO_LISTS
+    : 'book-canvas'
 
-    // 201 = created, 204 = already existed + updated — both are success
-    if (brevoRes.status === 201 || brevoRes.status === 204) {
-      return res.status(200).json({ ok: true })
-    }
+  await addContactToList({
+    email,
+    firstName: name || '',
+    tool:      resolvedTool,
+  })
 
-    const error = await brevoRes.json()
-    console.error('Brevo error:', error)
-    return res.status(500).json({ error: 'Brevo API error' })
-
-  } catch (err) {
-    console.error('Subscribe handler error:', err)
-    return res.status(500).json({ error: 'Internal error' })
-  }
+  return res.status(200).json({ ok: true })
 }

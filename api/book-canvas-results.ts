@@ -14,6 +14,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { resolvePersonWithCircle, logActivity } from './_lib/airtable'
+import { addContactToList, sendResultsEmail } from './_lib/brevo'
 
 const BOOK_CANVAS_TABLE    = 'tblqezI9SqgelqJA5'
 const ACTIVITY_LOG_TABLE   = 'tblgK9bOiRsjfzvdM'
@@ -145,7 +146,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { id: resultId } = await atPost(fields)
     console.log('[book-canvas-results] written:', resultId)
 
-    // ── Step 4: Activity Log ─────────────────────────────────────────────
+    // ── Step 4: Brevo — add to list + send results email (best-effort) ───
+    await Promise.all([
+      addContactToList({ email, firstName: firstName || '', tool: 'book-canvas' }),
+      sendResultsEmail({
+        to:   { email, name: firstName || email },
+        tool: 'book-canvas',
+        templateParams: {
+          FIRSTNAME:        firstName || '',
+          PILLARS_COMPLETED: pillarsCompleted,
+          PURPOSE:          a.purpose      || '—',
+          POSITIONING:      a.positioning  || '—',
+          AUDIENCE:         a.audience     || '—',
+          PROBLEM:          a.problem      || '—',
+          MARKETFIT:        a.marketfit    || '—',
+          UNIQUEVALUE:      a.uniquevalue  || '—',
+          PLATFORM:         platformStr    || '—',
+          OBJECTIVE:        Array.isArray(objectiveSelected) ? objectiveSelected.join(', ') : '—',
+          STRATEGY:         a.strategy     || '—',
+        },
+      }),
+    ])
+
+    // ── Step 5: Activity Log ─────────────────────────────────────────────
     if (personId) {
       await ensureBookCanvasActionType()
       try {

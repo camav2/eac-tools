@@ -12,6 +12,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { resolvePersonWithCircle, logActivity } from './_lib/airtable'
+import { addContactToList, sendResultsEmail } from './_lib/brevo'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -92,7 +93,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { id: resultId } = await airtableRes.json()
     console.log('[unblocker] written:', resultId)
 
-    // ── Step 4: Activity Log (only if we have a person) ───────────────────
+    // ── Step 4: Brevo — add to list + send results email (best-effort) ───
+    await Promise.all([
+      addContactToList({ email, firstName: name || '', tool: 'unblocker' }),
+      sendResultsEmail({
+        to:   { email, name: name || email },
+        tool: 'unblocker',
+        templateParams: {
+          FIRSTNAME:        name             || '',
+          PRIMARY_BLOCKER:  primaryBlocker   || '',
+          SECONDARY_BLOCKER: secondaryBlocker || '—',
+          INTENSITY_TIER:   intensityTier    || '',
+          SCORE_TIME:       scores.Time      ?? 0,
+          SCORE_STRUCTURE:  scores.Structure ?? 0,
+          SCORE_NOISE:      scores.Noise     ?? 0,
+          SCORE_ISOLATION:  scores.Isolation ?? 0,
+          SCORE_MOMENTUM:   scores.Momentum  ?? 0,
+        },
+      }),
+    ])
+
+    // ── Step 5: Activity Log (only if we have a person) ───────────────────
     if (personId) {
       try {
         await logActivity({
