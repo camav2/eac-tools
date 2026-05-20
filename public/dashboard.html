@@ -36,11 +36,7 @@
     .btn:hover { opacity: 0.88; }
     .btn-primary { background: var(--color-navy); color: var(--color-white); }
     .btn-secondary { background: var(--color-grey-100); color: var(--color-navy); }
-    #auth-gate { display: none; min-height: 100vh; align-items: center; justify-content: center; }
-    .auth-gate-card { background: var(--color-white); border-radius: var(--radius-xl); padding: 48px 40px; text-align: center; max-width: 400px; box-shadow: var(--shadow-lg); }
-    .auth-gate-card h2 { font-size: 22px; font-weight: 800; margin: 0 0 12px; }
-    .auth-gate-card p { font-size: 15px; color: var(--color-grey-600); margin: 0 0 24px; }
-    @media (max-width: 600px) { .dashboard-wrap { padding: 80px 16px 48px; } .canvas-card { flex-wrap: wrap; } .canvas-card-action { width: 100%; } .canvas-card-action .btn { width: 100%; justify-content: center; } }
+@media (max-width: 600px) { .dashboard-wrap { padding: 80px 16px 48px; } .canvas-card { flex-wrap: wrap; } .canvas-card-action { width: 100%; } .canvas-card-action .btn { width: 100%; justify-content: center; } }
     .tier-strong { background: #E8F5E9; color: #2E7D32; }
     .tier-developing { background: #FFF8E1; color: #F57F17; }
     .tier-not-yet { background: #FBE9E7; color: #BF360C; }
@@ -65,6 +61,7 @@
     .cowrite-attendee-host { background: #EDE9FE; color: #5B21B6; }
     .cowrite-attendee-host:hover { background: #DDD6FE; }
     .cowrite-attendee svg { width: 11px; height: 11px; flex-shrink: 0; }
+    .cowrite-sublabel { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-grey-400); margin-bottom: 10px; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -81,14 +78,6 @@
   <div class="header-auth" id="header-auth"></div>
 </header>
 
-<div id="auth-gate">
-  <div class="auth-gate-card">
-    <h2>Members only</h2>
-    <p>Log in to view your dashboard and saved canvases.</p>
-    <a id="login-link" href="#" class="btn btn-primary">Member Login</a>
-  </div>
-</div>
-
 <main class="dashboard-wrap" id="dashboard-main" style="display:none;">
   <div class="dashboard-header">
     <div class="dashboard-eyebrow">My Dashboard</div>
@@ -100,7 +89,7 @@
   <div class="community-banner">
     <p class="community-banner-text">
       <strong>EAC Community</strong>
-      Connect with the community, share your progress, and explore what's on.
+      Where expert authors are made.
     </p>
     <a href="https://the.expertauthor.community" target="_blank" rel="noopener" class="community-banner-link">
       Go to Community ↗
@@ -160,12 +149,21 @@
   <div class="section-label" style="margin-top: 48px;">Co-writing Sessions</div>
   <div id="cowrite-section">
     <div class="state-loading" id="cowrite-loading">Loading your sessions&hellip;</div>
-    <div id="cowrite-list" style="display:none;"></div>
+    <div id="cowrite-content" style="display:none;">
+      <div id="cowrite-hosted-wrap" style="display:none;">
+        <div class="cowrite-sublabel">Hosted</div>
+        <div id="cowrite-hosted-list"></div>
+      </div>
+      <div id="cowrite-attended-wrap" style="display:none;">
+        <div class="cowrite-sublabel">Attended</div>
+        <div id="cowrite-attended-list"></div>
+      </div>
+    </div>
     <div class="empty-state" id="cowrite-empty" style="display:none;">
       <div class="empty-state-icon">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
-      <p>You haven&rsquo;t attended a co-writing session yet.</p>
+      <p>You haven&rsquo;t hosted or attended a co-writing session yet.</p>
       <a href="https://cowrite.expertauthor.community" target="_blank" rel="noopener" class="btn btn-primary">Book a session &rarr;</a>
     </div>
     <div class="state-error" id="cowrite-error" style="display:none;">Could not load your sessions. Please refresh the page.</div>
@@ -273,9 +271,8 @@ async function initDashboard() {
     }
   }
   if (!user) {
-    document.getElementById('auth-gate').style.display = 'flex';
     var redirect = encodeURIComponent(window.location.href);
-    document.getElementById('login-link').href = 'https://auth.expertauthor.community/login?redirect=' + redirect;
+    window.location.replace('https://auth.expertauthor.community/login?redirect=' + redirect);
     return;
   }
   document.getElementById('dashboard-main').style.display = 'block';
@@ -284,8 +281,8 @@ async function initDashboard() {
   try {
     var res = await fetch('/api/book-canvas-results');
     if (res.status === 401) {
-      document.getElementById('dashboard-main').style.display = 'none';
-      document.getElementById('auth-gate').style.display = 'flex';
+      var redirect2 = encodeURIComponent(window.location.href);
+      window.location.replace('https://auth.expertauthor.community/login?redirect=' + redirect2);
       return;
     }
     if (!res.ok) throw new Error('API error');
@@ -354,11 +351,8 @@ async function loadUnblockResults() {
     document.getElementById('unblock-error').style.display = 'block';
   }
 }
-function renderCowriteSessions(sessions) {
-  var container = document.getElementById('cowrite-list');
-  container.innerHTML = '';
-  sessions.forEach(function(s) {
-    var date = formatDate(s.eventDate);
+function buildCowriteCard(s) {
+  var date = formatDate(s.eventDate);
     var dur  = s.durationHours === 1 ? '1 hour' : s.durationHours + ' hours';
 
     var attendeeHtml = s.attendees.map(function(a) {
@@ -382,8 +376,7 @@ function renderCowriteSessions(sessions) {
         '</div>' +
       '</div>' +
       (s.attendees.length ? '<div class="cowrite-attendees">' + attendeeHtml + '</div>' : '');
-    container.appendChild(card);
-  });
+  return card;
 }
 
 async function loadCowriteSessions() {
@@ -393,12 +386,23 @@ async function loadCowriteSessions() {
     if (!res.ok) throw new Error('API error');
     var data = await res.json();
     document.getElementById('cowrite-loading').style.display = 'none';
-    if (!data.sessions || data.sessions.length === 0) {
+    var hasHosted   = data.hosted   && data.hosted.length   > 0;
+    var hasAttended = data.attended && data.attended.length > 0;
+    if (!hasHosted && !hasAttended) {
       document.getElementById('cowrite-empty').style.display = 'block';
-    } else {
-      renderCowriteSessions(data.sessions);
-      document.getElementById('cowrite-list').style.display = 'block';
+      return;
     }
+    if (hasHosted) {
+      var hostedList = document.getElementById('cowrite-hosted-list');
+      data.hosted.forEach(function(s) { hostedList.appendChild(buildCowriteCard(s)); });
+      document.getElementById('cowrite-hosted-wrap').style.display = 'block';
+    }
+    if (hasAttended) {
+      var attendedList = document.getElementById('cowrite-attended-list');
+      data.attended.forEach(function(s) { attendedList.appendChild(buildCowriteCard(s)); });
+      document.getElementById('cowrite-attended-wrap').style.display = 'block';
+    }
+    document.getElementById('cowrite-content').style.display = 'block';
   } catch (err) {
     console.error('[dashboard] cowrite load error:', err);
     document.getElementById('cowrite-loading').style.display = 'none';
