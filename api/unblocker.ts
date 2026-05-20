@@ -87,7 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const filter = encodeURIComponent('{Email}="' + email + '"')
       const data = await atGet(
-        '?filterByFormula=' + filter + '&sort[0][field]=Submitted%20At&sort[0][direction]=desc' +
+        '?filterByFormula=' + filter +
         '&fields[]=Submitted%20At&fields[]=Primary%20Blocker&fields[]=Secondary%20Blocker&fields[]=Intensity%20Tier'
       )
       const results = ((data.records || []) as Array<{ id: string; fields: Record<string, unknown>; createdTime: string }>)
@@ -98,6 +98,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           secondaryBlocker: (r.fields['Secondary Blocker'] as string) || '',
           intensityTier:    (r.fields['Intensity Tier']    as string) || 'scattered',
         }))
+        .sort((a, b) => (b.submittedAt || '').localeCompare(a.submittedAt || ''))
       return res.status(200).json({ results })
     } catch (err) {
       console.error('[unblocker] GET list error:', err)
