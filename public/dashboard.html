@@ -50,6 +50,21 @@
     .community-banner-link { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; background: var(--color-yellow); color: var(--color-navy); font-size: 13px; font-weight: 700; padding: 8px 16px; border-radius: var(--radius-full); text-decoration: none; white-space: nowrap; transition: opacity var(--transition); }
     .community-banner-link:hover { opacity: 0.88; }
     @media (max-width: 600px) { .community-banner { flex-direction: column; align-items: flex-start; } }
+    .cowrite-card { background: var(--color-white); border: 1px solid var(--color-grey-200); border-radius: var(--radius-xl); padding: 20px 24px; box-shadow: var(--shadow-md); margin-bottom: 12px; transition: box-shadow var(--transition), border-color var(--transition); }
+    .cowrite-card:hover { box-shadow: var(--shadow-lg); border-color: var(--color-blue-light); }
+    .cowrite-card-header { display: flex; align-items: center; gap: 16px; }
+    .cowrite-card-icon { width: 44px; height: 44px; border-radius: var(--radius-lg); background: #D1FAE5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .cowrite-card-icon svg { width: 20px; height: 20px; }
+    .cowrite-card-body { flex: 1; min-width: 0; }
+    .cowrite-card-title { font-size: 15px; font-weight: 700; color: var(--color-navy); margin: 0 0 4px; }
+    .cowrite-card-meta { font-size: 13px; color: var(--color-grey-400); margin: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .cowrite-duration { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-full); background: #D1FAE5; color: #065F46; }
+    .cowrite-attendees { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .cowrite-attendee { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--color-navy); background: var(--color-grey-100); border-radius: var(--radius-full); padding: 4px 10px; text-decoration: none; transition: background var(--transition); }
+    .cowrite-attendee:hover { background: var(--color-grey-200); }
+    .cowrite-attendee-host { background: #EDE9FE; color: #5B21B6; }
+    .cowrite-attendee-host:hover { background: #DDD6FE; }
+    .cowrite-attendee svg { width: 11px; height: 11px; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -85,7 +100,7 @@
   <div class="community-banner">
     <p class="community-banner-text">
       <strong>EAC Community</strong>
-      Coaching sessions, live events, and your cohort — all in one place.
+      Connect with the community, share your progress, and explore what's on.
     </p>
     <a href="https://the.expertauthor.community" target="_blank" rel="noopener" class="community-banner-link">
       Go to Community ↗
@@ -140,6 +155,23 @@
 
   <div style="margin-top: 32px;">
     <a href="/unblocker" class="btn btn-secondary">+ New diagnostic</a>
+  </div>
+
+  <div class="section-label" style="margin-top: 48px;">Co-writing Sessions</div>
+  <div id="cowrite-section">
+    <div class="state-loading" id="cowrite-loading">Loading your sessions&hellip;</div>
+    <div id="cowrite-list" style="display:none;"></div>
+    <div class="empty-state" id="cowrite-empty" style="display:none;">
+      <div class="empty-state-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <p>You haven&rsquo;t attended a co-writing session yet.</p>
+      <a href="https://cowrite.expertauthor.community" target="_blank" rel="noopener" class="btn btn-primary">Book a session &rarr;</a>
+    </div>
+    <div class="state-error" id="cowrite-error" style="display:none;">Could not load your sessions. Please refresh the page.</div>
+  </div>
+  <div style="margin-top: 32px;">
+    <a href="https://cowrite.expertauthor.community" target="_blank" rel="noopener" class="btn btn-secondary">Book a session &rarr;</a>
   </div>
 </main>
 
@@ -272,6 +304,7 @@ async function initDashboard() {
   }
   loadIdeaResults();
   loadUnblockResults();
+  loadCowriteSessions();
 }
 
 function intensityLabel(tier) {
@@ -321,6 +354,58 @@ async function loadUnblockResults() {
     document.getElementById('unblock-error').style.display = 'block';
   }
 }
+function renderCowriteSessions(sessions) {
+  var container = document.getElementById('cowrite-list');
+  container.innerHTML = '';
+  sessions.forEach(function(s) {
+    var date = formatDate(s.eventDate);
+    var dur  = s.durationHours === 1 ? '1 hour' : s.durationHours + ' hours';
+
+    var attendeeHtml = s.attendees.map(function(a) {
+      var cls  = a.isHost ? 'cowrite-attendee cowrite-attendee-host' : 'cowrite-attendee';
+      var label = escHtml(a.name || 'Member') + (a.isHost ? ' (host)' : '');
+      var liIcon = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>';
+      if (a.linkedinUrl) {
+        return '<a href="' + escHtml(a.linkedinUrl) + '" target="_blank" rel="noopener" class="' + cls + '">' + label + liIcon + '</a>';
+      }
+      return '<span class="' + cls + '">' + label + '</span>';
+    }).join('');
+
+    var card = document.createElement('div');
+    card.className = 'cowrite-card';
+    card.innerHTML =
+      '<div class="cowrite-card-header">' +
+        '<div class="cowrite-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#065F46" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>' +
+        '<div class="cowrite-card-body">' +
+          '<p class="cowrite-card-title">' + escHtml(s.title) + '</p>' +
+          '<p class="cowrite-card-meta">' + escHtml(date) + '<span class="cowrite-duration">' + escHtml(dur) + '</span></p>' +
+        '</div>' +
+      '</div>' +
+      (s.attendees.length ? '<div class="cowrite-attendees">' + attendeeHtml + '</div>' : '');
+    container.appendChild(card);
+  });
+}
+
+async function loadCowriteSessions() {
+  try {
+    var res = await fetch('/api/cowriting-sessions');
+    if (res.status === 401) return;
+    if (!res.ok) throw new Error('API error');
+    var data = await res.json();
+    document.getElementById('cowrite-loading').style.display = 'none';
+    if (!data.sessions || data.sessions.length === 0) {
+      document.getElementById('cowrite-empty').style.display = 'block';
+    } else {
+      renderCowriteSessions(data.sessions);
+      document.getElementById('cowrite-list').style.display = 'block';
+    }
+  } catch (err) {
+    console.error('[dashboard] cowrite load error:', err);
+    document.getElementById('cowrite-loading').style.display = 'none';
+    document.getElementById('cowrite-error').style.display = 'block';
+  }
+}
+
 initDashboard();
 </script>
 </body>
