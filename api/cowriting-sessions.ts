@@ -4,7 +4,7 @@ const COWRITING_TABLE = 'tblMTfHsSf1WrAvbs'
 const PEOPLE_TABLE    = 'tblbJgznPsbETLl8q'
 
 function parseCookie(cookieHeader: string, name: string): string | null {
-  const match = cookieHeader.match(new RegExp(`(?:^|;\s*)${name}=([^;]+)`))
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`))
   return match ? decodeURIComponent(match[1]) : null
 }
 

@@ -5,18 +5,24 @@ const CIRCLE_COMMUNITY = process.env.CIRCLE_COMMUNITY_ID!
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
-async function isAdmin(req: VercelRequest): Promise<boolean> {
+async function getAuthedEmail(req: VercelRequest): Promise<string | null> {
   const cookieHeader = req.headers.cookie ?? ''
   const match = cookieHeader.match(/(?:^|;\s*)eac_session=([^;]+)/)
-  if (!match) return false
+  if (!match) return null
   try {
     const { jwtVerify } = await import('jose')
     const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
     const { payload } = await jwtVerify(decodeURIComponent(match[1]), secret)
-    return !!(payload as any).isAdmin
+    return (payload.sub as string) ?? null
   } catch {
-    return false
+    return null
   }
+}
+
+function isAdmin(email: string): boolean {
+  return (process.env.ADMIN_EMAILS ?? '')
+    .split(',').map(e => e.trim()).filter(Boolean)
+    .includes(email)
 }
 
 // ── Circle API ────────────────────────────────────────────────────────────────
@@ -115,7 +121,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  if (!(await isAdmin(req))) return res.status(403).json({ error: 'Forbidden' })
+  const email = await getAuthedEmail(req)
+  if (!email || !isAdmin(email)) return res.status(403).json({ error: 'Forbidden' })
 
   try {
     const spaceId = await fetchCowritingSpaceId()
