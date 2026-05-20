@@ -117,6 +117,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!email || !isAdmin(email)) return res.status(403).json({ error: 'Forbidden' })
 
   try {
+    // DEBUG: inspect raw Circle response shape
+    const debugParams = new URLSearchParams({ community_id: CIRCLE_COMMUNITY, per_page: '5', page: '1' })
+    const debugRaw = await circleGet(`events?${debugParams}`)
+    console.log('[sync-cowriting] raw Circle response keys:', debugRaw ? Object.keys(debugRaw) : 'null')
+    console.log('[sync-cowriting] raw sample:', JSON.stringify(debugRaw).slice(0, 500))
+
     const events = await fetchCowritingEvents()
     console.log(`[sync-cowriting] fetched ${events.length} events`)
 
@@ -168,7 +174,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     console.log('[sync-cowriting] done:', results)
-    return res.status(200).json({ ok: true, results, total: events.length })
+    return res.status(200).json({ ok: true, results, total: events.length, debug: { rawKeys: debugRaw ? Object.keys(debugRaw) : null, sample: JSON.stringify(debugRaw).slice(0, 300) } })
   } catch (err) {
     console.error('[sync-cowriting] error:', err)
     return res.status(500).json({ error: 'Internal error' })
