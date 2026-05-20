@@ -17,7 +17,7 @@ import { addContactToList, sendResultsEmail } from './_lib/brevo'
 // -- Helpers ------------------------------------------------------------------
 
 function parseCookie(cookieHeader: string, name: string): string | null {
-  const match = cookieHeader.match(new RegExp(`(?:^|;\s*)${name}=([^;]+)`))
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`))
   return match ? decodeURIComponent(match[1]) : null
 }
 
