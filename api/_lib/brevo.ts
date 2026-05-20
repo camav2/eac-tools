@@ -2,7 +2,7 @@
  * Shared Brevo helpers — contact list management + transactional email
  *
  * List IDs (Tools folder):
- *   book-canvas : 28
+ *   book-canvas : 66
  *   idea-test   : 65
  *   unblocker   : 64
  *
@@ -13,7 +13,7 @@
  */
 
 export const BREVO_LISTS = {
-  'book-canvas': 28,
+  'book-canvas': 66,
   'idea-test':   65,
   'unblocker':   64,
 } as const
