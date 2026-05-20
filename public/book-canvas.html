@@ -833,6 +833,28 @@
     color: var(--color-grey-400);
     font-style: italic;
   }
+  .canvas-box-unanswered {
+    border: 1.5px dashed var(--color-grey-200);
+    background: var(--color-grey-100);
+  }
+  .canvas-unanswered-label {
+    display: block;
+    color: var(--color-grey-400);
+    font-style: italic;
+    font-size: 0.85em;
+    margin-bottom: 6px;
+  }
+  .canvas-unanswered-edit {
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: 0.8em;
+    color: var(--color-blue);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .canvas-unanswered-edit:hover { color: var(--color-navy); }
 
   /* ===================== */
   /* GATE SCREEN           */
@@ -1434,7 +1456,8 @@ function prevPillar() {
 }
 
 function skipPillar() {
-  answers[PILLARS[currentPillar].id] = '?';
+  // Clear any partial answer and let saveCurrent() in nextPillar() detect empty input
+  answers[PILLARS[currentPillar].id] = '';
   nextPillar();
 }
 
@@ -1472,16 +1495,21 @@ function saveCurrent() {
     if (differs) val += `Differs because: ${differs}.`;
     answers[p.id] = val.trim();
   } else {
-    // Template based
+    // Template based — only save if at least one field has been filled in
     const fields = document.querySelectorAll('.template-field');
     if (fields.length) {
-      let parts = [...p.templateParts];
-      let result = parts[0];
-      fields.forEach((f, i) => {
-        result += (f.value || `[${p.templatePlaceholders[i]}]`);
-        result += parts[i + 1] || '';
-      });
-      answers[p.id] = result;
+      const allEmpty = [...fields].every(f => !f.value.trim());
+      if (allEmpty) {
+        answers[p.id] = '';
+      } else {
+        let parts = [...p.templateParts];
+        let result = parts[0];
+        fields.forEach((f, i) => {
+          result += (f.value || `[${p.templatePlaceholders[i]}]`);
+          result += parts[i + 1] || '';
+        });
+        answers[p.id] = result;
+      }
     }
   }
 }
@@ -1815,11 +1843,10 @@ function buildMiniBox(idx, currentIdx, small) {
   const p = PILLARS[idx];
   const answer = answers[p.id];
   const isCurrent = idx === currentIdx;
-  const isCompleted = answer && answer !== '?';
-  const isSkipped = answer === '?';
+  const isCompleted = !!answer;
 
   const box = document.createElement('div');
-  box.className = 'mini-box' + (isCurrent ? ' current' : '') + (isCompleted || isSkipped ? ' completed' : '');
+  box.className = 'mini-box' + (isCurrent ? ' current' : '') + (isCompleted ? ' completed' : '');
   box.onclick = () => goToPillar(idx);
   box.style.cursor = 'pointer';
 
@@ -1827,10 +1854,8 @@ function buildMiniBox(idx, currentIdx, small) {
   if (isCompleted) {
     const truncated = answer.length > 60 ? answer.slice(0, 57) + '…' : answer;
     content = `<div class="mini-box-content">${escHtml(truncated)}</div>`;
-  } else if (isSkipped) {
-    content = `<div class="mini-box-placeholder">— (skipped)</div>`;
   } else {
-    content = `<div class="mini-box-placeholder">—</div>`;
+    content = `<div class="mini-box-placeholder">Not answered yet</div>`;
   }
 
   box.innerHTML = `<div class="mini-box-name">${escHtml(p.name)}</div>${content}`;
@@ -1874,13 +1899,18 @@ function renderCanvas() {
 function buildCanvasBox(idx) {
   const p = PILLARS[idx];
   const answer = answers[p.id];
-  const isEmpty = !answer || answer === '?';
+  const isEmpty = !answer;
 
   const box = document.createElement('div');
-  box.className = 'canvas-box';
+  box.className = 'canvas-box' + (isEmpty ? ' canvas-box-unanswered' : '');
   box.innerHTML = `
     <div class="canvas-box-header">${escHtml(p.name)}</div>
-    <div class="canvas-box-body ${isEmpty ? 'empty' : ''}">${isEmpty ? 'Not yet filled in.' : escHtml(answer)}</div>`;
+    <div class="canvas-box-body ${isEmpty ? 'empty' : ''}">
+      ${isEmpty
+        ? `<span class="canvas-unanswered-label">Not answered yet</span>
+           <button class="canvas-unanswered-edit" onclick="goToPillar(${idx})">Edit →</button>`
+        : escHtml(answer)}
+    </div>`;
   return box;
 }
 

@@ -237,23 +237,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('[book-canvas-results] written:', resultId)
 
     // ── Step 4: Brevo — add to list + send results email (best-effort) ───
+    const objectiveStr = Array.isArray(objectiveSelected) ? objectiveSelected.join(', ') : ''
+    const unansweredPillars = [
+      { key: 'purpose',     name: 'Purpose',        answered: !!a.purpose        },
+      { key: 'positioning', name: 'Positioning',    answered: !!a.positioning    },
+      { key: 'audience',    name: 'Audience',       answered: !!a.audience       },
+      { key: 'problem',     name: 'Problem / Need', answered: !!a.problem        },
+      { key: 'marketfit',   name: 'Market Fit',     answered: !!a.marketfit      },
+      { key: 'uniquevalue', name: 'Unique Value',   answered: !!a.uniquevalue    },
+      { key: 'platform',    name: 'Platform',       answered: !!platformStr      },
+      { key: 'objective',   name: 'Objective',      answered: !!objectiveStr     },
+      { key: 'strategy',    name: 'Strategy',       answered: !!a.strategy       },
+    ].filter(p => !p.answered).map(p => p.name)
+
     await Promise.all([
       addContactToList({ email, firstName: firstName || '', tool: 'book-canvas' }),
       sendResultsEmail({
         to:   { email, name: firstName || email },
         tool: 'book-canvas',
         templateParams: {
-          FIRSTNAME:         firstName        || '',
-          PILLARS_COMPLETED: pillarsCompleted,
-          PURPOSE:           a.purpose        || '—',
-          POSITIONING:       a.positioning    || '—',
-          AUDIENCE:          a.audience       || '—',
-          PROBLEM:           a.problem        || '—',
-          MARKETFIT:         a.marketfit      || '—',
-          UNIQUEVALUE:       a.uniquevalue    || '—',
-          PLATFORM:          platformStr      || '—',
-          OBJECTIVE:         Array.isArray(objectiveSelected) ? objectiveSelected.join(', ') : '—',
-          STRATEGY:          a.strategy       || '—',
+          FIRSTNAME:          firstName    || '',
+          PILLARS_COMPLETED:  pillarsCompleted,
+          PILLARS_REMAINING:  9 - pillarsCompleted,
+          UNANSWERED_PILLARS: unansweredPillars.join(' · '),
+          PURPOSE:            a.purpose     || '',
+          POSITIONING:        a.positioning || '',
+          AUDIENCE:           a.audience    || '',
+          PROBLEM:            a.problem     || '',
+          MARKETFIT:          a.marketfit   || '',
+          UNIQUEVALUE:        a.uniquevalue || '',
+          PLATFORM:           platformStr   || '',
+          OBJECTIVE:          objectiveStr  || '',
+          STRATEGY:           a.strategy    || '',
         },
       }),
     ])
