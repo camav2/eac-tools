@@ -96,7 +96,33 @@
     </a>
   </div>
 
-  <div class="section-label">Book Screening Canvas</div>
+  <div class="section-label">Co-writing Sessions</div>
+  <div id="cowrite-section">
+    <div class="state-loading" id="cowrite-loading">Loading your sessions&hellip;</div>
+    <div id="cowrite-content" style="display:none;">
+      <div id="cowrite-hosted-wrap" style="display:none;">
+        <div class="cowrite-sublabel">Hosted</div>
+        <div id="cowrite-hosted-list"></div>
+      </div>
+      <div id="cowrite-attended-wrap" style="display:none;">
+        <div class="cowrite-sublabel">Attended</div>
+        <div id="cowrite-attended-list"></div>
+      </div>
+    </div>
+    <div class="empty-state" id="cowrite-empty" style="display:none;">
+      <div class="empty-state-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <p>You haven&rsquo;t hosted or attended a co-writing session yet.</p>
+      <a href="https://cowrite.expertauthor.community" target="_blank" rel="noopener" class="btn btn-primary">Book a session &rarr;</a>
+    </div>
+    <div class="state-error" id="cowrite-error" style="display:none;">Could not load your sessions. Please refresh the page.</div>
+  </div>
+  <div style="margin-top: 32px;">
+    <a href="https://cowrite.expertauthor.community" target="_blank" rel="noopener" class="btn btn-secondary">Book a session &rarr;</a>
+  </div>
+
+  <div class="section-label" style="margin-top: 48px;">Book Screening Canvas</div>
   <div id="canvas-section">
     <div class="state-loading" id="canvas-loading">Loading your canvases&hellip;</div>
     <div class="canvas-list" id="canvas-list" style="display:none;"></div>
@@ -144,32 +170,6 @@
 
   <div style="margin-top: 32px;">
     <a href="/unblocker" class="btn btn-secondary">+ New diagnostic</a>
-  </div>
-
-  <div class="section-label" style="margin-top: 48px;">Co-writing Sessions</div>
-  <div id="cowrite-section">
-    <div class="state-loading" id="cowrite-loading">Loading your sessions&hellip;</div>
-    <div id="cowrite-content" style="display:none;">
-      <div id="cowrite-hosted-wrap" style="display:none;">
-        <div class="cowrite-sublabel">Hosted</div>
-        <div id="cowrite-hosted-list"></div>
-      </div>
-      <div id="cowrite-attended-wrap" style="display:none;">
-        <div class="cowrite-sublabel">Attended</div>
-        <div id="cowrite-attended-list"></div>
-      </div>
-    </div>
-    <div class="empty-state" id="cowrite-empty" style="display:none;">
-      <div class="empty-state-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      </div>
-      <p>You haven&rsquo;t hosted or attended a co-writing session yet.</p>
-      <a href="https://cowrite.expertauthor.community" target="_blank" rel="noopener" class="btn btn-primary">Book a session &rarr;</a>
-    </div>
-    <div class="state-error" id="cowrite-error" style="display:none;">Could not load your sessions. Please refresh the page.</div>
-  </div>
-  <div style="margin-top: 32px;">
-    <a href="https://cowrite.expertauthor.community" target="_blank" rel="noopener" class="btn btn-secondary">Book a session &rarr;</a>
   </div>
 </main>
 
