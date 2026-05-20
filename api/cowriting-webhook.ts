@@ -42,6 +42,8 @@ async function upsertEvent(circleEventId: string, fields: Record<string, unknown
 async function addAttendee(circleEventId: string, personId: string) {
   const record = await findEvent(circleEventId)
   if (!record) return
+  const hosts    = ((record.fields['Host']      ?? []) as Array<{ id: string }>).map(h => h.id)
+  if (hosts.includes(personId)) return                   // host fires event_ended too — skip
   const existing = ((record.fields['Attendees'] ?? []) as Array<{ id: string }>).map(a => a.id)
   if (existing.includes(personId)) return
   await at(COWRITING_TABLE, `/${record.id}`, {
