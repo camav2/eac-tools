@@ -3,6 +3,8 @@ import { upsertPerson } from './_lib/airtable'
 
 const COWRITING_TABLE = 'tblMTfHsSf1WrAvbs'
 
+// ── Airtable helpers ──────────────────────────────────────────────────────────
+
 async function at(table: string, path = '', options: RequestInit = {}) {
   const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${table}${path}`
   const res = await fetch(url, {
@@ -27,10 +29,7 @@ async function findEvent(circleEventId: string) {
 async function upsertEvent(circleEventId: string, fields: Record<string, unknown>) {
   const record = await findEvent(circleEventId)
   if (record) {
-    await at(COWRITING_TABLE, `/${record.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ fields }),
-    })
+    await at(COWRITING_TABLE, `/${record.id}`, { method: 'PATCH', body: JSON.stringify({ fields }) })
     return record.id as string
   }
   const created = await at(COWRITING_TABLE, '', {
@@ -51,99 +50,126 @@ async function addAttendee(circleEventId: string, personId: string) {
   })
 }
 
+// ── Circle API helpers ────────────────────────────────────────────────────────
+
+const CIRCLE_URL        = process.env.CIRCLE_ADMIN_V2_URL!
+const CIRCLE_TOKEN      = process.env.CIRCLE_ADMIN_V2_TOKEN!
+const CIRCLE_COMMUNITY  = process.env.CIRCLE_COMMUNITY_ID!
+
+async function circleGet(path: string) {
+  const res = await fetch(`${CIRCLE_URL}${path}`, {
+    headers: { Authorization: `Bearer ${CIRCLE_TOKEN}` },
+  })
+  if (!res.ok) {
+    console.error('[circle] GET failed:', path, res.status)
+    return null
+  }
+  return res.json()
+}
+
+async function fetchCircleEvent(eventId: string | number) {
+  return circleGet(`/events/${eventId}?community_id=${CIRCLE_COMMUNITY}`)
+}
+
+async function fetchCircleMember(memberId: string | number) {
+  return circleGet(`/community_members/${memberId}?community_id=${CIRCLE_COMMUNITY}`)
+}
+
+// ── Handler ───────────────────────────────────────────────────────────────────
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  // Verify Circle webhook secret
   const secret = req.headers['x-webhook-secret'] ?? req.headers['x-circle-webhook-secret']
   if (process.env.COWRITING_WEBHOOK_SECRET && secret !== process.env.COWRITING_WEBHOOK_SECRET) {
-    console.warn('[cowriting-webhook] bad secret:', secret)
+    console.warn('[cowriting-webhook] bad secret')
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
-  // Log full payload so we can inspect the first real Circle webhook
-  console.log('[cowriting-webhook] raw payload:', JSON.stringify(req.body))
+  console.log('[cowriting-webhook] raw:', JSON.stringify(req.body))
 
   const body = req.body ?? {}
+  const type = (body.type ?? '') as string
+  const data = body.data ?? {}
 
-  // Circle webhook envelope — best-guess field names; update after first real hit
-  // Expected shape: { type, community_id, data: { event: {...}, member: {...} } }
-  const type       = (body.type ?? body.event_type ?? '') as string
-  const eventData  = body.data?.event   ?? body.event   ?? {}
-  const memberData = body.data?.member  ?? body.member  ?? {}
-
-  const circleEventId = String(eventData.id ?? '')
-  const eventName     = (eventData.name    ?? 'Co-writing Session') as string
-  const eventDate     = (eventData.starts_at ?? eventData.start_time ?? null) as string | null
-  const eventUrl      = (eventData.url     ?? null) as string | null
-  const endsAt        = (eventData.ends_at ?? null) as string | null
-
-  const memberEmail = (memberData.email ?? memberData.member_email ?? '') as string
-  const memberName  = (memberData.name  ?? memberData.full_name    ?? '') as string
+  const circleEventId  = String(data.event_id  ?? '')
+  const circleMemberId = String(data.community_member_id ?? '')
 
   if (!circleEventId) {
-    console.error('[cowriting-webhook] no event id in payload')
-    return res.status(200).json({ ok: true }) // ack to avoid Circle retries
+    console.error('[cowriting-webhook] no event_id')
+    return res.status(200).json({ ok: true })
   }
 
   try {
-    // ── "Published an event" ───────────────────────────────────────────────
-    if (type.includes('publish') || type.includes('created')) {
-      const baseFields: Record<string, unknown> = {
-        'Event Title': eventName,
+    // ── "event_published" — track host ───────────────────────────────────────
+    if (type === 'event_published') {
+      const event = await fetchCircleEvent(circleEventId)
+      if (!event) return res.status(200).json({ ok: true })
+
+      const startsAt = event.event_setting_attributes?.starts_at ?? event.starts_at ?? null
+      const endsAt   = event.event_setting_attributes?.ends_at   ?? event.ends_at   ?? null
+      const fields: Record<string, unknown> = {
+        'Event Title': event.name ?? 'Co-writing Session',
         'Status':      'Upcoming',
       }
-      if (eventDate) baseFields['Event Date'] = eventDate
-      if (eventUrl)  baseFields['Event URL']  = eventUrl
-      if (eventDate && endsAt) {
-        const dur = (new Date(endsAt).getTime() - new Date(eventDate).getTime()) / 3600000
-        if (dur > 0) baseFields['Duration (hours)'] = Math.round(dur * 10) / 10
+      if (startsAt)       fields['Event Date']  = startsAt
+      if (event.url)      fields['Event URL']   = event.url
+      if (startsAt && endsAt) {
+        const dur = (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 3600000
+        if (dur > 0) fields['Duration (hours)'] = Math.round(dur * 10) / 10
       }
 
-      const eventRecordId = await upsertEvent(circleEventId, baseFields)
+      const eventRecordId = await upsertEvent(circleEventId, fields)
 
-      if (memberEmail) {
-        const personId = await upsertPerson({ email: memberEmail, name: memberName, isMember: true })
-        // Link as host
-        await at(COWRITING_TABLE, `/${eventRecordId}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ fields: { Host: [personId] } }),
-        })
-        console.log('[cowriting-webhook] host set:', memberEmail, circleEventId)
-      }
-      return res.status(200).json({ ok: true })
-    }
-
-    // ── "Attended live event" ──────────────────────────────────────────────
-    if (type.includes('attend') || type.includes('live')) {
-      const baseFields: Record<string, unknown> = {
-        'Event Title': eventName,
-        'Status':      'Completed',
-      }
-      if (eventDate) baseFields['Event Date'] = eventDate
-      if (eventUrl)  baseFields['Event URL']  = eventUrl
-
-      // Derive duration from starts_at / ends_at if available
-      if (eventDate && endsAt) {
-        const dur = (new Date(endsAt).getTime() - new Date(eventDate).getTime()) / 3600000
-        if (dur > 0) baseFields['Duration (hours)'] = Math.round(dur * 10) / 10
-      }
-
-      await upsertEvent(circleEventId, baseFields)
-
-      if (memberEmail) {
-        const personId = await upsertPerson({ email: memberEmail, name: memberName, isMember: true })
-        await addAttendee(circleEventId, personId)
-        console.log('[cowriting-webhook] attendee added:', memberEmail, circleEventId)
+      if (circleMemberId) {
+        const member   = await fetchCircleMember(circleMemberId)
+        const email    = member?.email ?? ''
+        const name     = member?.name  ?? member?.full_name ?? ''
+        if (email) {
+          const personId = await upsertPerson({ email, name, isMember: true })
+          await at(COWRITING_TABLE, `/${eventRecordId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ fields: { Host: [personId] } }),
+          })
+          console.log('[cowriting-webhook] host set:', email, circleEventId)
+        }
       }
       return res.status(200).json({ ok: true })
     }
 
-    // ── "Event ended for member" ───────────────────────────────────────────
-    if (type.includes('ended') || type.includes('end')) {
+    // ── "event_attendee.attended" / live event attended ───────────────────────
+    if (type === 'event_attendee.attended' || type.includes('attend')) {
+      const event  = await fetchCircleEvent(circleEventId)
+      const startsAt = event?.event_setting_attributes?.starts_at ?? event?.starts_at ?? null
+      const endsAt   = event?.event_setting_attributes?.ends_at   ?? event?.ends_at   ?? null
+      const fields: Record<string, unknown> = { 'Status': 'Completed' }
+      if (event?.name)   fields['Event Title'] = event.name
+      if (startsAt)      fields['Event Date']  = startsAt
+      if (event?.url)    fields['Event URL']   = event.url
+      if (startsAt && endsAt) {
+        const dur = (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 3600000
+        if (dur > 0) fields['Duration (hours)'] = Math.round(dur * 10) / 10
+      }
+      await upsertEvent(circleEventId, fields)
+
+      if (circleMemberId) {
+        const member = await fetchCircleMember(circleMemberId)
+        const email  = member?.email ?? ''
+        const name   = member?.name  ?? member?.full_name ?? ''
+        if (email) {
+          const personId = await upsertPerson({ email, name, isMember: true })
+          await addAttendee(circleEventId, personId)
+          console.log('[cowriting-webhook] attendee added:', email, circleEventId)
+        }
+      }
+      return res.status(200).json({ ok: true })
+    }
+
+    // ── "event_ended" / event ended for member ───────────────────────────────
+    if (type === 'event_ended' || type.includes('ended')) {
       await upsertEvent(circleEventId, { 'Status': 'Completed' })
-      console.log('[cowriting-webhook] event marked completed:', circleEventId)
+      console.log('[cowriting-webhook] event completed:', circleEventId)
       return res.status(200).json({ ok: true })
     }
 
