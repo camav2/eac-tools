@@ -1054,6 +1054,51 @@
     color: var(--color-navy);
   }
 
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+
+  /* Tablet / large phone: collapse 2-col pillar layout */
+  @media (max-width: 800px) {
+    .pillar-layout {
+      grid-template-columns: 1fr;
+    }
+    .sidebar {
+      position: static;
+    }
+    /* Show sidebar mini-boxes in a horizontal scroll row */
+    .sidebar-body {
+      flex-direction: row;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 12px;
+      gap: 8px;
+    }
+    .mini-box {
+      flex: 0 0 120px;
+    }
+  }
+
+  /* Small phone */
+  @media (max-width: 480px) {
+    /* Intro card: reduce side padding */
+    .intro-header { padding: 28px 24px 24px; }
+    .intro-body   { padding: 28px 24px; }
+    /* Intro footer: stack signature above button */
+    .intro-footer {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 16px;
+    }
+    .intro-footer .btn { width: 100%; justify-content: center; }
+    /* Pillar card: tighten padding */
+    .pillar-card-header { padding: 20px 24px 18px; }
+    .pillar-card-body   { padding: 24px; }
+    /* Analysis */
+    .analysis-headline { font-size: 22px; }
+    .analysis-card { padding: 20px; }
+    #screen-analysis { padding: 24px 16px; }
+  }
 
 </style>
 </head>

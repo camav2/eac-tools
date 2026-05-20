@@ -487,6 +487,38 @@ body {
 .form-input::placeholder { color: var(--color-grey-400); }
 .form-privacy { font-size: 12px; color: var(--color-grey-400); margin-top: 16px; line-height: 1.5; }
 
+.form-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  text-align: left;
+}
+.form-consent input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--color-navy);
+  cursor: pointer;
+}
+.form-consent-label {
+  font-size: 12px;
+  color: var(--color-grey-700);
+  line-height: 1.55;
+  cursor: pointer;
+}
+.form-privacy-note {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-grey-200);
+  font-size: 12px;
+  color: var(--color-grey-400);
+  line-height: 1.55;
+  max-width: 480px;
+}
+
 /* --- Question context card --- */
 .question-context {
   background: var(--color-white); border-radius: var(--radius-xl);
@@ -1208,15 +1240,25 @@ button:focus-visible, a:focus-visible, input:focus-visible {
         <div class="form-field">
           <label class="form-label">What's your book idea? (1–2 sentences)</label>
           <textarea class="form-input" rows="3" placeholder="e.g. A book for mid-career professionals who feel successful but stuck…" style="resize:vertical;"></textarea>
-          <p style="font-size:12px;color:var(--color-grey-400);margin-top:6px;">Optional — but the more specific, the more useful your result.</p>
         </div>
-        <p class="form-privacy">No spam, ever. We'll use this to send you your result and occasional thinking from Kelly about writing, ideas, and books.</p>
+
+        <div class="form-consent">
+          <input type="checkbox" id="ds-consent" onchange="document.getElementById('ds-btn-submit').disabled = !this.checked;">
+          <label class="form-consent-label" for="ds-consent">I agree that when I sign up for my results, I will be added to a marketing list where I will receive occasional news from EAC on writing, books and authors.</label>
+        </div>
+
+        <button class="btn-submit" id="ds-btn-submit" disabled>See My Result →</button>
       </div>
 
-      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--color-grey-200);font-size:13px;color:var(--color-grey-700);">
-        <strong>Focus state:</strong> 2px <code>--color-blue</code> border + <code>3px rgba(82,150,251,0.15)</code> ring<br>
-        <strong>Placeholder:</strong> <code>--color-grey-400</code><br>
-        <strong>Radius:</strong> <code>--radius-md</code> (8px) — note: inputs use md, not xl like cards
+      <p class="form-privacy-note">Your privacy is 100% safe and you can opt-out at any time, for any reason, immediately, and without hassle.</p>
+
+      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--color-grey-200);display:grid;grid-template-columns:100px 1fr;gap:8px 16px;align-items:start;">
+        <span style="font-size:11px;font-weight:700;color:var(--color-navy);padding-top:1px;">Focus state</span>
+        <span style="font-size:12px;color:var(--color-grey-700);">2px <code style="background:var(--color-grey-100);padding:1px 5px;border-radius:3px;font-size:11px;font-family:monospace;">--color-blue</code> border + <code style="background:var(--color-grey-100);padding:1px 5px;border-radius:3px;font-size:11px;font-family:monospace;">3px rgba(82,150,251,0.15)</code> ring</span>
+        <span style="font-size:11px;font-weight:700;color:var(--color-navy);padding-top:1px;">Placeholder</span>
+        <span style="font-size:12px;color:var(--color-grey-700);"><code style="background:var(--color-grey-100);padding:1px 5px;border-radius:3px;font-size:11px;font-family:monospace;">--color-grey-400</code></span>
+        <span style="font-size:11px;font-weight:700;color:var(--color-navy);padding-top:1px;">Radius</span>
+        <span style="font-size:12px;color:var(--color-grey-700);"><code style="background:var(--color-grey-100);padding:1px 5px;border-radius:3px;font-size:11px;font-family:monospace;">--radius-md</code> (8px) — inputs use md, not xl like cards</span>
       </div>
     </div>
   </section>

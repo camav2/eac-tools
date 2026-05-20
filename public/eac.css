@@ -350,6 +350,25 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
+/* ============================================================
+   6. RESPONSIVE HEADER
+   ============================================================ */
+
+/* On very small viewports (≤ 380px) hide the logo wordmark and user name
+   so the header stays single-row without overflow. */
+@media (max-width: 380px) {
+  .header-logo-text { display: none; }
+  .beta-badge       { display: none; }
+  .header-user-name { display: none; }
+  .site-header      { padding: 0 16px; }
+}
+
+/* Reduce header padding on mid-range phones */
+@media (max-width: 480px) {
+  .site-header { padding: 0 16px; }
+}
+
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
