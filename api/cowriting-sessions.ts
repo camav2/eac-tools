@@ -31,14 +31,12 @@ async function at(table: string, path = '') {
 
 type AirtableRecord = { id: string; fields: Record<string, unknown> }
 
-async function fetchSessions(filterFormula: string): Promise<AirtableRecord[]> {
-  const f = encodeURIComponent(filterFormula)
+async function fetchAllSessions(): Promise<AirtableRecord[]> {
   const data = await at(COWRITING_TABLE,
-    `?filterByFormula=${f}` +
-    `&fields[]=Event%20Title&fields[]=Event%20Date&fields[]=Duration%20(hours)` +
+    `?fields[]=Event%20Title&fields[]=Event%20Date&fields[]=Duration%20(hours)` +
     `&fields[]=Event%20URL&fields[]=Status&fields[]=Host&fields[]=Attendees`
   )
-  return (data.records || []).filter((r: AirtableRecord) => r.fields['Status'] === 'Completed')
+  return data.records || []
 }
 
 async function enrichWithPeople(records: AirtableRecord[]) {
@@ -79,6 +77,7 @@ function mapRecord(r: AirtableRecord, peopleMap: Map<string, { name: string; lin
     eventDate:     (r.fields['Event Date']       as string) || null,
     durationHours: (r.fields['Duration (hours)'] as number) || 1,
     eventUrl:      (r.fields['Event URL']        as string) || null,
+    status:        (r.fields['Status']           as string) || 'Upcoming',
     attendees,
   }
 }
@@ -102,11 +101,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const personId = personData.records[0].id
 
-    // Fetch hosted and attended sessions in parallel
-    const [hostedRecords, attendedRecords] = await Promise.all([
-      fetchSessions(`FIND("${personId}", ARRAYJOIN({Host}))`),
-      fetchSessions(`FIND("${personId}", ARRAYJOIN({Attendees}))`),
-    ])
+    const allRecords = await fetchAllSessions()
+    const hostedRecords   = allRecords.filter((r: AirtableRecord) =>
+      ((r.fields['Host']      as Array<{ id: string }>) || []).some(h => h.id === personId)
+    )
+    const attendedRecords = allRecords.filter((r: AirtableRecord) =>
+      ((r.fields['Attendees'] as Array<{ id: string }>) || []).some(a => a.id === personId)
+    )
 
     // Deduplicate: sessions already in hosted shouldn't appear in attended
     const hostedIds = new Set(hostedRecords.map((r: AirtableRecord) => r.id as string))
