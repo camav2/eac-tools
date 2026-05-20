@@ -165,9 +165,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ── "event_ended" / event ended for member ───────────────────────────────
+    // Fires once per member who attended — use it to record both completion and attendee
     if (type === 'event_ended' || type.includes('ended')) {
       await upsertEvent(circleEventId, { 'Status': 'Completed' })
-      console.log('[cowriting-webhook] event completed:', circleEventId)
+
+      if (circleMemberId) {
+        const member = await fetchCircleMember(circleMemberId)
+        const email  = member?.email ?? ''
+        const name   = member?.name  ?? member?.full_name ?? ''
+        if (email) {
+          const personId = await upsertPerson({ email, name, isMember: true })
+          await addAttendee(circleEventId, personId)
+          console.log('[cowriting-webhook] attendee (event_ended):', email, circleEventId)
+        }
+      } else {
+        console.log('[cowriting-webhook] event completed (no member):', circleEventId)
+      }
       return res.status(200).json({ ok: true })
     }
 
