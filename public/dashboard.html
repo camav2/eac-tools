@@ -44,6 +44,12 @@
     .tier-strong { background: #E8F5E9; color: #2E7D32; }
     .tier-developing { background: #FFF8E1; color: #F57F17; }
     .tier-not-yet { background: #FBE9E7; color: #BF360C; }
+    .community-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--color-navy); border-radius: var(--radius-xl); padding: 16px 24px; margin-bottom: 40px; }
+    .community-banner-text { font-size: 14px; color: rgba(255,255,255,0.7); margin: 0; }
+    .community-banner-text strong { color: var(--color-white); font-weight: 700; display: block; margin-bottom: 2px; }
+    .community-banner-link { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; background: var(--color-yellow); color: var(--color-navy); font-size: 13px; font-weight: 700; padding: 8px 16px; border-radius: var(--radius-full); text-decoration: none; white-space: nowrap; transition: opacity var(--transition); }
+    .community-banner-link:hover { opacity: 0.88; }
+    @media (max-width: 600px) { .community-banner { flex-direction: column; align-items: flex-start; } }
   </style>
 </head>
 <body>
@@ -73,6 +79,17 @@
     <div class="dashboard-eyebrow">My Dashboard</div>
     <h1 class="dashboard-title" id="welcome-title">Welcome back</h1>
     <p class="dashboard-sub">Your saved tools and results, all in one place.</p>
+  </div>
+
+  <!-- Community banner -->
+  <div class="community-banner">
+    <p class="community-banner-text">
+      <strong>EAC Community</strong>
+      Coaching sessions, live events, and your cohort — all in one place.
+    </p>
+    <a href="https://the.expertauthor.community" target="_blank" rel="noopener" class="community-banner-link">
+      Go to Community ↗
+    </a>
   </div>
 
   <div class="section-label">Book Screening Canvas</div>

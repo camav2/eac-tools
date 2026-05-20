@@ -34,6 +34,7 @@ eacAuthReady = (async function initAuth() {
         </button>
         <div class="header-dropdown" id="header-dropdown">
           <a class="dropdown-item" href="/dashboard">My Dashboard</a>
+          <a class="dropdown-item" href="https://the.expertauthor.community" target="_blank" rel="noopener">EAC Community ↗</a>
           <div class="dropdown-divider"></div>
           <button class="dropdown-item dropdown-logout" onclick="handleLogout()">Log out</button>
         </div>`;
