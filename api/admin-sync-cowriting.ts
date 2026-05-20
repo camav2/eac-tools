@@ -38,29 +38,21 @@ async function circleGet(path: string) {
   return res.json()
 }
 
-const COWRITING_SPACE_SLUG = 'co-writing-events'
-
-async function fetchCowritingSpaceId(): Promise<number | null> {
-  const params = new URLSearchParams({ community_id: CIRCLE_COMMUNITY, per_page: '50' })
-  const data = await circleGet(`spaces?${params}`)
-  if (!data) return null
-  const spaces: any[] = data.records ?? (Array.isArray(data) ? data : [])
-  const space = spaces.find(s => s.slug === COWRITING_SPACE_SLUG)
-  return space?.id ?? null
-}
-
-async function fetchEventsForSpace(spaceId: number): Promise<any[]> {
+// Space ID for /c/co-writing-events/ — set CIRCLE_COWRITING_SPACE_ID in Vercel env,
+// or leave blank to sync all community events (safe for a one-time backfill).
+async function fetchCowritingEvents(): Promise<any[]> {
+  const spaceId = process.env.CIRCLE_COWRITING_SPACE_ID ?? ''
   const all: any[] = []
   let page = 1
 
   while (true) {
     const params = new URLSearchParams({
       community_id: CIRCLE_COMMUNITY,
-      space_id:     String(spaceId),
       per_page:     '50',
       page:         String(page),
-      status:       'published',
     })
+    if (spaceId) params.set('space_id', spaceId)
+
     const data = await circleGet(`events?${params}`)
     if (!data) break
 
@@ -125,11 +117,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!email || !isAdmin(email)) return res.status(403).json({ error: 'Forbidden' })
 
   try {
-    const spaceId = await fetchCowritingSpaceId()
-    if (!spaceId) return res.status(500).json({ error: 'Could not find co-writing-events space in Circle' })
-
-    const events = await fetchEventsForSpace(spaceId)
-    console.log(`[sync-cowriting] fetched ${events.length} events from space ${spaceId}`)
+    const events = await fetchCowritingEvents()
+    console.log(`[sync-cowriting] fetched ${events.length} events`)
 
     const results = { created: 0, updated: 0, skipped: 0 }
 
