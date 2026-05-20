@@ -1,20 +1,18 @@
-/*
+﻿/*
  * Book Canvas Results API
  *
- * Write order (each step fails independently):
- *   1. Circle: fetch access group for members
- *   2. People: upsert record
- *   3. Book Canvas Results: always written, linked to person if step 2 succeeded
- *   4. Activity Log: written only if step 2 succeeded
+ * POST — save a completed canvas (existing behaviour)
+ * GET  — retrieve canvas(es) for the logged-in member
+ *   ?id=<recordId>  ->  single canvas (full answers)
+ *   (no params)     ->  list of all canvases for the user (summary only)
  *
  * Env vars required:
- *   AIRTABLE_API_KEY, AIRTABLE_BASE_ID
+ *   AIRTABLE_API_KEY, AIRTABLE_BASE_ID, JWT_SECRET
  *   CIRCLE_API_TOKEN, CIRCLE_COMMUNITY_ID
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { resolvePersonWithCircle, logActivity } from './_lib/airtable'
-import { addContactToList, sendResultsEmail } from './_lib/brevo'
 
 const BOOK_CANVAS_TABLE    = 'tblqezI9SqgelqJA5'
 const ACTIVITY_LOG_TABLE   = 'tblgK9bOiRsjfzvdM'
@@ -29,6 +27,65 @@ const EXISTING_ACTION_CHOICES = [
 ]
 
 let actionTypePatched = false
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function parseCookie(cookieHeader: string, name: string): string | null {
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+async function getSessionEmail(req: VercelRequest): Promise<string | null> {
+  const token = parseCookie(req.headers.cookie ?? '', 'eac_session')
+  if (!token) return null
+  try {
+    const { jwtVerify } = await import('jose')
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+    const { payload } = await jwtVerify(token, secret)
+    return (payload.sub as string) ?? null
+  } catch {
+    return null
+  }
+}
+
+async function atGet(path: string) {
+  const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${BOOK_CANVAS_TABLE}${path}`
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}` },
+  })
+  const json = await res.json()
+  if (!res.ok) throw json
+  return json
+}
+
+async function atPost(fields: Record<string, unknown>) {
+  const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${BOOK_CANVAS_TABLE}`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization:  `Bearer ${process.env.AIRTABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ fields }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw json
+  return json
+}
+
+function recordToAnswers(fields: Record<string, unknown>) {
+  return {
+    purpose:     (fields['Purpose']        as string) || '',
+    positioning: (fields['Positioning']    as string) || '',
+    audience:    (fields['Audience']       as string) || '',
+    problem:     (fields['Problem / Need'] as string) || '',
+    marketfit:   (fields['Market Fit']     as string) || '',
+    uniquevalue: (fields['Unique Value']   as string) || '',
+    platform:    (fields['Platform']       as string) || '',
+    objective:   (fields['Objective']      as string) || '',
+    strategy:    (fields['Strategy']       as string) || '',
+  }
+}
 
 async function ensureBookCanvasActionType() {
   if (actionTypePatched) return
@@ -58,22 +115,58 @@ async function ensureBookCanvasActionType() {
   }
 }
 
-async function atPost(fields: Record<string, unknown>) {
-  const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${BOOK_CANVAS_TABLE}`
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization:  `Bearer ${process.env.AIRTABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ fields }),
-  })
-  const json = await res.json()
-  if (!res.ok) throw json
-  return json
-}
+// ── Route ─────────────────────────────────────────────────────────────────────
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Cache-Control', 'no-store')
+
+  // ── GET: retrieve canvas(es) for the logged-in member ─────────────────────
+  if (req.method === 'GET') {
+    const email = await getSessionEmail(req)
+    if (!email) return res.status(401).json({ error: 'Unauthorised' })
+
+    const { id } = req.query
+
+    if (id && typeof id === 'string') {
+      try {
+        const record = await atGet(`/${id}`)
+        const recordEmail = (record.fields['Email'] as string) ?? ''
+        if (recordEmail.toLowerCase() !== email.toLowerCase()) {
+          return res.status(403).json({ error: 'Forbidden' })
+        }
+        return res.status(200).json({
+          id:               record.id,
+          submittedAt:      record.fields['Submitted At'] || null,
+          pillarsCompleted: record.fields['Pillars Completed'] || 0,
+          answers:          recordToAnswers(record.fields),
+        })
+      } catch (err) {
+        console.error('[book-canvas-results] GET single error:', err)
+        return res.status(500).json({ error: 'Failed to load canvas' })
+      }
+    }
+
+    try {
+      const filter = encodeURIComponent(`{Email}="${email}"`)
+      const data = await atGet(
+        `?filterByFormula=${filter}&sort[0][field]=Submitted%20At&sort[0][direction]=desc` +
+        `&fields[]=Submitted%20At&fields[]=Pillars%20Completed&fields[]=Purpose`
+      )
+      const canvases = ((data.records || []) as Array<{ id: string; fields: Record<string, unknown> }>)
+        .map(r => ({
+          id:               r.id,
+          submittedAt:      (r.fields['Submitted At'] as string) || null,
+          pillarsCompleted: (r.fields['Pillars Completed'] as number) || 0,
+          purpose:          (r.fields['Purpose'] as string) || '',
+        }))
+      return res.status(200).json({ canvases })
+    } catch (err) {
+      console.error('[book-canvas-results] GET list error:', err)
+      return res.status(500).json({ error: 'Failed to load canvases' })
+    }
+  }
+
+  // ── POST: save a completed canvas ─────────────────────────────────────────
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const {
@@ -84,7 +177,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!email) return res.status(400).json({ error: 'Email required' })
 
-  // ── Steps 1+2: Circle access group + People upsert (best-effort) ──────────
   const personId = await resolvePersonWithCircle({
     email,
     name:         firstName    || '',
@@ -92,11 +184,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     circleUserId: circleUserId ? String(circleUserId) : undefined,
   })
 
-  // ── Step 3: Write Book Canvas Results (always) ───────────────────────────
   try {
     const a = answers || {}
 
-    // Summarise platform checkboxes as a readable string
     const platformLabels: Record<string, string> = {
       email:         'Email list',
       podcast_own:   'Podcast (own)',
@@ -113,7 +203,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .map(([id]) => platformLabels[id] || id)
       .join(', ')
 
-    // Count non-empty pillar answers
     const pillarsCompleted = [
       'purpose', 'positioning', 'audience', 'problem',
       'marketfit', 'uniquevalue', 'platform', 'objective', 'strategy',
@@ -124,21 +213,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }).length
 
     const fields: Record<string, unknown> = {
-      'Email':            email,
-      'First Name':       firstName         || '',
-      'Is Member':        !!isMember,
-      'Submitted At':     new Date().toISOString(),
-      'Source Tool':      'book-canvas',
+      'Email':             email,
+      'First Name':        firstName         || '',
+      'Is Member':         !!isMember,
+      'Submitted At':      new Date().toISOString(),
+      'Source Tool':       'book-canvas',
       'Pillars Completed': pillarsCompleted,
-      'Purpose':          a.purpose         || '',
-      'Positioning':      a.positioning     || '',
-      'Audience':         a.audience        || '',
-      'Problem / Need':   a.problem         || '',
-      'Market Fit':       a.marketfit       || '',
-      'Unique Value':     a.uniquevalue     || '',
-      'Platform':         platformStr,
-      'Objective':        Array.isArray(objectiveSelected) ? objectiveSelected.join(', ') : '',
-      'Strategy':         a.strategy        || '',
+      'Purpose':           a.purpose         || '',
+      'Positioning':       a.positioning     || '',
+      'Audience':          a.audience        || '',
+      'Problem / Need':    a.problem         || '',
+      'Market Fit':        a.marketfit       || '',
+      'Unique Value':      a.uniquevalue     || '',
+      'Platform':          platformStr,
+      'Objective':         Array.isArray(objectiveSelected) ? objectiveSelected.join(', ') : '',
+      'Strategy':          a.strategy        || '',
     }
 
     if (personId) fields['Person'] = [personId]
@@ -146,29 +235,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { id: resultId } = await atPost(fields)
     console.log('[book-canvas-results] written:', resultId)
 
-    // ── Step 4: Brevo — add to list + send results email (best-effort) ───
-    await Promise.all([
-      addContactToList({ email, firstName: firstName || '', tool: 'book-canvas' }),
-      sendResultsEmail({
-        to:   { email, name: firstName || email },
-        tool: 'book-canvas',
-        templateParams: {
-          FIRSTNAME:        firstName || '',
-          PILLARS_COMPLETED: pillarsCompleted,
-          PURPOSE:          a.purpose      || '—',
-          POSITIONING:      a.positioning  || '—',
-          AUDIENCE:         a.audience     || '—',
-          PROBLEM:          a.problem      || '—',
-          MARKETFIT:        a.marketfit    || '—',
-          UNIQUEVALUE:      a.uniquevalue  || '—',
-          PLATFORM:         platformStr    || '—',
-          OBJECTIVE:        Array.isArray(objectiveSelected) ? objectiveSelected.join(', ') : '—',
-          STRATEGY:         a.strategy     || '—',
-        },
-      }),
-    ])
-
-    // ── Step 5: Activity Log ─────────────────────────────────────────────
     if (personId) {
       await ensureBookCanvasActionType()
       try {
