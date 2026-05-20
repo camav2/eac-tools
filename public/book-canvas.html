@@ -1132,13 +1132,14 @@
       </div>
       <div class="canvas-actions">
         <button class="btn btn-secondary" onclick="window.print()">&#x2193; Download / Print</button>
-        <button class="btn btn-primary" onclick="showAnalysis()">See my analysis &rarr;</button>
+        <button class="btn btn-primary canvas-edit-only" onclick="showAnalysis()">See my analysis &rarr;</button>
       </div>
     </div>
     <div class="canvas-grid" id="canvas-grid"></div>
     <div style="margin-top:24px; display:flex; gap:12px; justify-content:flex-end; flex-wrap:wrap;">
-      <button class="btn btn-ghost" onclick="goToPillar(0)">Edit canvas</button>
-      <button class="btn btn-primary" onclick="showAnalysis()">See my analysis &rarr;</button>
+      <button class="btn btn-ghost canvas-edit-only" onclick="goToPillar(0)">Edit canvas</button>
+      <button class="btn btn-primary canvas-edit-only" onclick="showAnalysis()">See my analysis &rarr;</button>
+      <a href="/dashboard" class="btn btn-ghost canvas-view-only" style="display:none;">&larr; Back to dashboard</a>
     </div>
   </div>
 </section>
@@ -2086,8 +2087,46 @@ document.addEventListener('input', (e) => {
   }
 });
 
-// Init
-document.getElementById('screen-intro').style.display = 'flex';
+// Init — check for ?load=<recordId> before showing intro
+(async function initPage() {
+  var params = new URLSearchParams(window.location.search);
+  var loadId = params.get('load');
+
+  if (!loadId) {
+    document.getElementById('screen-intro').style.display = 'flex';
+    return;
+  }
+
+  try {
+    var res = await fetch('/api/book-canvas-results?id=' + encodeURIComponent(loadId));
+
+    if (res.status === 401) {
+      var redir = encodeURIComponent(window.location.href);
+      window.location.href = 'https://auth.expertauthor.community/login?redirect=' + redir;
+      return;
+    }
+
+    if (res.status === 403) {
+      document.getElementById('screen-intro').style.display = 'flex';
+      return;
+    }
+
+    if (!res.ok) throw new Error('API error');
+
+    var data = await res.json();
+    Object.assign(answers, data.answers || {});
+
+    document.querySelectorAll('.canvas-view-only').forEach(function(el) { el.style.display = ''; });
+    document.querySelectorAll('.canvas-edit-only').forEach(function(el) { el.style.display = 'none'; });
+
+    renderCanvas();
+    showScreen('screen-canvas');
+    document.getElementById('nav-progress').textContent = '';
+  } catch (err) {
+    console.error('[book-canvas] load error:', err);
+    document.getElementById('screen-intro').style.display = 'flex';
+  }
+})();
 </script>
 <script src="/eac.js"></script>
 </body>
