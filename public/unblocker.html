@@ -1824,6 +1824,11 @@ async function nextStep() {
     renderQuestions();
     window.scrollTo(0, 0);
   } else {
+    // Final step — guard against double-click
+    const nextBtn = document.getElementById('btn-next');
+    if (nextBtn.disabled) return;
+    nextBtn.disabled = true;
+
     if (eacUser) {
       userName  = eacUser.name  || '';
       userEmail = eacUser.email || '';
@@ -2111,14 +2116,12 @@ function renderMemberCtas(el) {
    MEMBER CONTEXT SAVE
    ============================================================ */
 function saveContext() {
+  // Context is captured as part of the original submission payload.
+  // We don't re-POST here to avoid creating duplicate records and sending
+  // a second results email. Just give visual feedback.
   const ctx = document.getElementById('input-context-member');
   if (!ctx) return;
   userContext = ctx.value.trim();
-  fetch('/api/unblocker', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(buildAirtablePayload())
-  }).catch(e => console.warn('Airtable failed:', e));
   ctx.disabled = true;
   const btn = ctx.nextElementSibling;
   if (btn) btn.textContent = 'Saved';
