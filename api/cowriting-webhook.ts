@@ -68,11 +68,11 @@ async function circleGet(path: string) {
 }
 
 async function fetchCircleEvent(eventId: string | number) {
-  return circleGet(`/events/${eventId}?community_id=${CIRCLE_COMMUNITY}`)
+  return circleGet(`events/${eventId}?community_id=${CIRCLE_COMMUNITY}`)
 }
 
 async function fetchCircleMember(memberId: string | number) {
-  return circleGet(`/community_members/${memberId}?community_id=${CIRCLE_COMMUNITY}`)
+  return circleGet(`community_members/${memberId}?community_id=${CIRCLE_COMMUNITY}`)
 }
 
 // ── Handler ───────────────────────────────────────────────────────────────────
@@ -108,20 +108,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // ── event published / created — track host ────────────────────────────────
     if (type.includes('publish') || type.includes('creat')) {
-      const event = await fetchCircleEvent(circleEventId)
-      if (!event) return res.status(200).json({ ok: true })
-
-      const startsAt = event.event_setting_attributes?.starts_at ?? event.starts_at ?? null
-      const endsAt   = event.event_setting_attributes?.ends_at   ?? event.ends_at   ?? null
+      // Use webhook payload data directly — don't depend on Circle API fetch
       const fields: Record<string, unknown> = {
-        'Event Title': event.name ?? 'Co-writing Session',
+        'Event Title': data.event_name ?? 'Co-writing Session',
         'Status':      'Upcoming',
       }
-      if (startsAt)       fields['Event Date']  = startsAt
-      if (event.url)      fields['Event URL']   = event.url
-      if (startsAt && endsAt) {
-        const dur = (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 3600000
-        if (dur > 0) fields['Duration (hours)'] = Math.round(dur * 10) / 10
+
+      // Best-effort enrich with dates/URL from Circle API
+      try {
+        const event    = await fetchCircleEvent(circleEventId)
+        const startsAt = event?.event_setting_attributes?.starts_at ?? event?.starts_at ?? null
+        const endsAt   = event?.event_setting_attributes?.ends_at   ?? event?.ends_at   ?? null
+        if (startsAt)            fields['Event Date'] = startsAt
+        if (event?.url)          fields['Event URL']  = event.url
+        if (startsAt && endsAt) {
+          const dur = (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 3600000
+          if (dur > 0) fields['Duration (hours)'] = Math.round(dur * 10) / 10
+        }
+      } catch (e) {
+        console.warn('[cowriting-webhook] circle event fetch failed, continuing without dates:', e)
       }
 
       const eventRecordId = await upsertEvent(circleEventId, fields)
