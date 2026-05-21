@@ -42,9 +42,9 @@ async function upsertEvent(circleEventId: string, fields: Record<string, unknown
 async function addAttendee(circleEventId: string, personId: string) {
   const record = await findEvent(circleEventId)
   if (!record) return
-  const hosts    = ((record.fields['Host']      ?? []) as Array<{ id: string }>).map(h => h.id)
+  const hosts    = (record.fields['Host']      as string[]) || []
   if (hosts.includes(personId)) return                   // host fires event_ended too — skip
-  const existing = ((record.fields['Attendees'] ?? []) as Array<{ id: string }>).map(a => a.id)
+  const existing = (record.fields['Attendees'] as string[]) || []
   if (existing.includes(personId)) return
   await at(COWRITING_TABLE, `/${record.id}`, {
     method: 'PATCH',
@@ -87,7 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
-  console.log('[cowriting-webhook] raw:', JSON.stringify(req.body))
+  console.log('[cowriting-webhook] raw body:', JSON.stringify(req.body).slice(0, 600))
 
   const raw     = req.body ?? {}
   // Circle wraps its payload: { body: { type, data } }
@@ -95,17 +95,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const type    = (payload.type ?? '') as string
   const data    = payload.data ?? {}
 
+  console.log('[cowriting-webhook] type:', type, '| data:', JSON.stringify(data))
+
   const circleEventId  = String(data.event_id  ?? '')
   const circleMemberId = String(data.community_member_id ?? '')
 
   if (!circleEventId) {
-    console.error('[cowriting-webhook] no event_id')
+    console.warn('[cowriting-webhook] no event_id in payload — returning ok')
     return res.status(200).json({ ok: true })
   }
 
   try {
-    // ── "event_published" — track host ───────────────────────────────────────
-    if (type === 'event_published') {
+    // ── event published / created — track host ────────────────────────────────
+    if (type.includes('publish') || type.includes('creat')) {
       const event = await fetchCircleEvent(circleEventId)
       if (!event) return res.status(200).json({ ok: true })
 
