@@ -29,6 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         avatarUrl:    payload.avatarUrl,
         circleUserId: payload.circleUserId,
         isAdmin:      admins.includes(email),
+        spaceGroups:  (payload.spaceGroups as string[]) ?? [],
       },
     })
   } catch {

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Restricted — Expert Author Community</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/eac.css">
+  <style>
+    body {
+      font-family: var(--font);
+      background: var(--color-off-white);
+      color: var(--color-navy);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .page-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px 64px;
+    }
+    .card {
+      background: var(--color-white);
+      border: 1px solid var(--color-grey-200);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      max-width: 520px;
+      width: 100%;
+      overflow: hidden;
+    }
+    .card-header {
+      background: var(--color-navy);
+      padding: 36px 40px 32px;
+    }
+    .card-eyebrow {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-yellow);
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--color-white);
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      margin: 0;
+    }
+    .card-body {
+      padding: 32px 40px 36px;
+    }
+    .card-body p {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-grey-700);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .card-body p:last-of-type {
+      margin-bottom: 32px;
+    }
+    .card-body strong {
+      color: var(--color-navy);
+      font-weight: 700;
+    }
+    .cta-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--color-yellow);
+      color: var(--color-navy);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 15px 24px;
+      border-radius: var(--radius-full);
+      text-decoration: none;
+      transition: all var(--transition);
+      border: none;
+      cursor: pointer;
+    }
+    .btn-primary:hover {
+      background: #f5d800;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255,230,75,0.4);
+    }
+    .btn-secondary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--color-grey-600);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 15px 24px;
+      border-radius: var(--radius-full);
+      text-decoration: none;
+      border: 2px solid var(--color-grey-200);
+      transition: all var(--transition);
+    }
+    .btn-secondary:hover {
+      border-color: var(--color-navy);
+      color: var(--color-navy);
+    }
+    .tool-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tool-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-navy);
+    }
+    .tool-list li::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-yellow);
+      flex-shrink: 0;
+    }
+    .divider {
+      height: 1px;
+      background: var(--color-grey-200);
+      margin: 28px 0;
+    }
+    .upgrade-note {
+      font-size: 12px;
+      color: var(--color-grey-400);
+      text-align: center;
+      margin-top: 16px;
+      margin-bottom: 0 !important;
+    }
+    .upgrade-note a {
+      color: var(--color-navy);
+      font-weight: 700;
+      text-decoration: underline;
+    }
+    @media (max-width: 480px) {
+      .card-header { padding: 28px 24px 24px; }
+      .card-body { padding: 24px 24px 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="header-logo" href="https://tools.expertauthor.community">
+    <svg viewBox="0 0 53.3 53.3" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="32.1 53.3 0 53.3 0 21.2 21.1 0.1 53.2 32.2 32.1 53.3" fill="#FFE64B"/>
+      <polyline points="15.8 53.3 0 53.3 0 37.5" fill="#00003D"/>
+      <polygon points="46.6 25.4 33.2 38.8 26.6 32.3 40 19 33.9 13 20.6 26.3 14.4 20.1 27.9 6.7 21.2 0 0 21.2 32.1 53.3 53.3 32.1 46.6 25.4" fill="#00003D"/>
+    </svg>
+    <span class="header-logo-text">EAC Tools</span><span class="beta-badge">Beta</span>
+  </a>
+</header>
+
+<div class="page-wrap">
+  <div class="card">
+    <div class="card-header">
+      <p class="card-eyebrow">Access restricted</p>
+      <h1 class="card-title">Your writing doesn't stop here.</h1>
+    </div>
+    <div class="card-body">
+      <p>
+        Your current EAC membership doesn't include access to the member dashboard or co-writing sessions — but that doesn't mean you leave empty-handed.
+      </p>
+      <p>Our free tools are open and ready, no login needed:</p>
+      <ul class="tool-list">
+        <li>Writing Unblock — find what's actually in the way</li>
+        <li>Book Idea Test — pressure-test your concept in 5 questions</li>
+        <li>Book Screening Canvas — map the strategic bones of your book</li>
+      </ul>
+
+      <div class="cta-group">
+        <a href="https://tools.expertauthor.community" class="btn-primary">
+          Explore the free tools
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
+      <div class="divider"></div>
+
+      <p>
+        Ready to write alongside other expert authors? <strong>Write Now</strong> is where the work gets done — live co-writing sessions, accountability, and a community of authors who show up.
+      </p>
+      <div class="cta-group">
+        <a href="https://www.expertauthor.community/programs/write-now" target="_blank" rel="noopener" class="btn-secondary">
+          Learn about Write Now
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+      </div>
+      <p class="upgrade-note">Questions? <a href="mailto:support@expertauthor.community">Contact support</a></p>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <p>
+    <a href="https://www.expertauthor.community">expertauthor.community</a>
+    &nbsp;·&nbsp; &copy; Expert Author Community
+  </p>
+</footer>
+
+</body>
+</html>
