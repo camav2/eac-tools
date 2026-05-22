@@ -84,7 +84,7 @@
   <div class="dashboard-header">
     <div class="dashboard-eyebrow">My Dashboard</div>
     <h1 class="dashboard-title" id="welcome-title">Welcome back</h1>
-    <p class="dashboard-sub">Your saved tools and results, all in one place.</p>
+    <p class="dashboard-sub" id="dashboard-sub">Your saved tools and results, all in one place.</p>
   </div>
 
   <!-- Community banner -->
@@ -288,8 +288,12 @@ async function initDashboard() {
     return;
   }
 
+  // Log access for debugging
+  var accessTier = user.isAdmin ? 'admin' : (spaceGroups.includes('connect') ? 'connect' : 'write-now');
+  console.log('[dashboard] email:', user.email, '| isAdmin:', user.isAdmin, '| spaceGroups:', JSON.stringify(spaceGroups), '| tier:', accessTier);
+
   // Hide co-writing for members without 'connect' access
-  if (!spaceGroups.includes('connect')) {
+  if (!user.isAdmin && !spaceGroups.includes('connect')) {
     var cowrap = document.getElementById('cowrite-wrap');
     if (cowrap) cowrap.style.display = 'none';
   }
@@ -297,23 +301,31 @@ async function initDashboard() {
   document.getElementById('dashboard-main').style.display = 'block';
   var name = user.name ? user.name.split(' ')[0] : '';
   if (name) document.getElementById('welcome-title').textContent = 'Welcome back, ' + name;
+
+  // Access level badge
+  var tierLabel = user.isAdmin ? 'Admin' : (spaceGroups.includes('connect') ? 'Connect' : 'Write Now');
+  var tierBadge = document.createElement('span');
+  tierBadge.className = 'access-badge access-tier-' + (user.isAdmin ? 'admin' : 'member');
+  tierBadge.textContent = tierLabel;
+  var subEl = document.getElementById('dashboard-sub');
+  if (subEl) subEl.parentNode.insertBefore(tierBadge, subEl.nextSibling);
   try {
     var res = await fetch('/api/book-canvas-results');
-    if (res.status === 401 || !res.ok) {
+    if (!res.ok) {
       document.getElementById('canvas-loading').style.display = 'none';
       document.getElementById('canvas-empty').style.display = 'block';
-    }
-    if (false) { /* placeholder */
-    var data = await res.json();
-    document.getElementById('canvas-loading').style.display = 'none';
-    if (!data.canvases || data.canvases.length === 0) {
-      document.getElementById('canvas-empty').style.display = 'block';
     } else {
-      renderCanvasList(data.canvases);
-      document.getElementById('canvas-list').style.display = 'flex';
+      var data = await res.json();
+      document.getElementById('canvas-loading').style.display = 'none';
+      if (!data.canvases || data.canvases.length === 0) {
+        document.getElementById('canvas-empty').style.display = 'block';
+      } else {
+        renderCanvasList(data.canvases);
+        document.getElementById('canvas-list').style.display = 'flex';
+      }
     }
   } catch (err) {
-    console.error('[dashboard] load error:', err);
+    console.error('[dashboard] canvas load error:', err);
     document.getElementById('canvas-loading').style.display = 'none';
     document.getElementById('canvas-error').style.display = 'block';
   }
