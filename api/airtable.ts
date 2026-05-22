@@ -12,28 +12,9 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { requireAuth, ALL_TOOLS } from './_lib/auth'
 import { resolvePersonWithCircle, logActivity } from './_lib/airtable'
 import { addContactToList, sendResultsEmail } from './_lib/brevo'
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function parseCookie(cookieHeader: string, name: string): string | null {
-  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`))
-  return match ? decodeURIComponent(match[1]) : null
-}
-
-async function getSessionEmail(req: VercelRequest): Promise<string | null> {
-  const token = parseCookie(req.headers.cookie ?? '', 'eac_session')
-  if (!token) return null
-  try {
-    const { jwtVerify } = await import('jose')
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
-    const { payload } = await jwtVerify(token, secret)
-    return (payload.sub as string) ?? null
-  } catch {
-    return null
-  }
-}
 
 async function atGet(path: string) {
   const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_ID}${path}`
@@ -52,8 +33,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // ── GET: retrieve result(s) for the logged-in member ──────────────────────
   if (req.method === 'GET') {
-    const email = await getSessionEmail(req)
-    if (!email) return res.status(401).json({ error: 'Unauthorised' })
+    const session = await requireAuth(req, res, ALL_TOOLS)
+    if (!session) return
+    const { email } = session
 
     const { id } = req.query
 
