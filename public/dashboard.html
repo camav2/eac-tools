@@ -299,12 +299,11 @@ async function initDashboard() {
   if (name) document.getElementById('welcome-title').textContent = 'Welcome back, ' + name;
   try {
     var res = await fetch('/api/book-canvas-results');
-    if (res.status === 401) {
-      var redirect2 = encodeURIComponent(window.location.href);
-      window.location.replace('https://auth.expertauthor.community/login?redirect=' + redirect2);
-      return;
+    if (res.status === 401 || !res.ok) {
+      document.getElementById('canvas-loading').style.display = 'none';
+      document.getElementById('canvas-empty').style.display = 'block';
     }
-    if (!res.ok) throw new Error('API error');
+    if (false) { /* placeholder */
     var data = await res.json();
     document.getElementById('canvas-loading').style.display = 'none';
     if (!data.canvases || data.canvases.length === 0) {
