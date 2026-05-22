@@ -128,18 +128,15 @@
 </div>
 
 <script src="/eac.js"></script>
+<script>requireAuth();</script>
 <script>
-(async function() {
-  // Gate: must be admin
-  var ok = await requireAuth();
-  if (!ok) return;
-  await eacAuthReady;
+eacAuthReady.then(function() {
   if (!eacUser || !eacUser.isAdmin) {
     window.location.replace('/dashboard');
     return;
   }
   loadSettings();
-})();
+});
 
 async function loadSettings() {
   var container = document.getElementById('settings-content');
