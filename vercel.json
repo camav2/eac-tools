@@ -23,6 +23,10 @@
     {
       "source": "/dashboard",
       "destination": "/dashboard.html"
+    },
+    {
+      "source": "/settings",
+      "destination": "/settings.html"
     }
   ]
 }
