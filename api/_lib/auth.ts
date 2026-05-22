@@ -2,6 +2,13 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
 
+// Emails that always get admin access, checked at request time.
+// Overrides whatever is in the JWT so a change takes effect without re-login.
+function isAdminEmail(email: string): boolean {
+  const list = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+  return list.includes(email.toLowerCase())
+}
+
 function parseCookie(cookieHeader: string, name: string): string | null {
   const match = cookieHeader.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'))
   return match ? decodeURIComponent(match[1]) : null
@@ -17,8 +24,8 @@ export interface Session {
 }
 
 // Groups that gate access to EAC tools
-export const ALL_TOOLS   = ['connect', 'write-now'] as const
-export const COWRITING   = ['connect']               as const
+export const ALL_TOOLS = ['connect', 'write-now'] as const
+export const COWRITING = ['connect']               as const
 
 export async function getSession(req: VercelRequest): Promise<Session | null> {
   const token = parseCookie(req.headers.cookie ?? '', 'eac_session')
@@ -26,13 +33,14 @@ export async function getSession(req: VercelRequest): Promise<Session | null> {
   try {
     const { jwtVerify } = await import('jose')
     const { payload } = await jwtVerify(token, JWT_SECRET)
+    const email = payload.sub as string
     return {
-      email:        payload.sub          as string,
+      email,
       circleUserId: payload.circleUserId as number,
       name:         payload.name         as string,
       avatarUrl:    payload.avatarUrl    as string,
       spaceGroups:  (payload.spaceGroups as string[]) ?? [],
-      isAdmin:      (payload.isAdmin     as boolean)  ?? false,
+      isAdmin:      (payload.isAdmin     as boolean) || isAdminEmail(email),
     }
   } catch {
     return null
