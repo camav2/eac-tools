@@ -1,25 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { requireAuth, COWRITING } from './_lib/auth'
 
 const COWRITING_TABLE = 'tblMTfHsSf1WrAvbs'
 const PEOPLE_TABLE    = 'tblbJgznPsbETLl8q'
-
-function parseCookie(cookieHeader: string, name: string): string | null {
-  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`))
-  return match ? decodeURIComponent(match[1]) : null
-}
-
-async function getSessionEmail(req: VercelRequest): Promise<string | null> {
-  const token = parseCookie(req.headers.cookie ?? '', 'eac_session')
-  if (!token) return null
-  try {
-    const { jwtVerify } = await import('jose')
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
-    const { payload } = await jwtVerify(token, secret)
-    return (payload.sub as string) ?? null
-  } catch {
-    return null
-  }
-}
 
 async function at(table: string, path = '') {
   const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${table}${path}`
@@ -89,8 +72,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
 
-  const email = await getSessionEmail(req)
-  if (!email) return res.status(401).json({ error: 'Unauthorised' })
+  const session = await requireAuth(req, res, COWRITING)
+  if (!session) return
+  const { email } = session
 
   try {
     // Find person record ID
