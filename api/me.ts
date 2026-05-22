@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
 
 function parseCookie(cookieHeader: string, name: string): string | null {
-  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`))
+  const match = cookieHeader.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'))
   return match ? decodeURIComponent(match[1]) : null
 }
 
@@ -20,15 +20,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const { jwtVerify } = await import('jose')
     const { payload } = await jwtVerify(token, JWT_SECRET)
-    const email   = payload.sub as string
-    const admins  = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean)
     return res.status(200).json({
       user: {
-        email,
-        name:         payload.name,
-        avatarUrl:    payload.avatarUrl,
-        circleUserId: payload.circleUserId,
-        isAdmin:      admins.includes(email),
+        email:        payload.sub          as string,
+        name:         payload.name         as string,
+        avatarUrl:    payload.avatarUrl    as string,
+        circleUserId: payload.circleUserId as number,
+        isAdmin:      (payload.isAdmin     as boolean) ?? false,
         spaceGroups:  (payload.spaceGroups as string[]) ?? [],
       },
     })
