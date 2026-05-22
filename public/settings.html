@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — EAC Tools</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #00003D;
+      --navy-light: #1a1a5e;
+      --blue-mid: #4a5568;
+      --grey-100: #f3f4f6;
+      --grey-200: #e5e7eb;
+      --grey-500: #6b7280;
+      --grey-700: #374151;
+      --green: #059669;
+      --amber: #d97706;
+      --red: #dc2626;
+      --radius: 10px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fb; color: var(--navy); min-height: 100vh; }
+
+    /* ── Header ── */
+    .site-header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 60px; background: #fff; border-bottom: 1px solid var(--grey-200); position: sticky; top: 0; z-index: 100; }
+    .header-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--navy); }
+    .header-logo-img { width: 28px; height: 28px; }
+    .header-logo-text { font-weight: 700; font-size: 1rem; letter-spacing: -0.01em; }
+    .beta-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .header-auth { position: relative; display: flex; align-items: center; }
+    .header-user-btn { display: flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+    .header-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+    .header-avatar-placeholder { width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+    .header-user-name { font-size: 0.875rem; font-weight: 500; }
+    .header-chevron { opacity: 0.5; }
+    .header-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--grey-200); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,10,0.1); min-width: 180px; padding: 4px; }
+    .header-dropdown.open { display: block; }
+    .dropdown-item { display: block; width: 100%; text-align: left; padding: 8px 12px; border-radius: 5px; font-size: 0.875rem; color: var(--navy); text-decoration: none; background: none; border: none; cursor: pointer; }
+    .dropdown-item:hover { background: var(--grey-100); }
+    .dropdown-divider { height: 1px; background: var(--grey-200); margin: 4px 0; }
+    .dropdown-logout { color: var(--red); }
+
+    /* ── Page ── */
+    .page-wrap { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+    .page-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-500); margin-bottom: 8px; }
+    .page-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; display: flex; align-items: center; gap: 12px; }
+    .admin-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
+    .page-sub { color: var(--grey-500); font-size: 0.95rem; margin-top: 8px; }
+
+    /* ── Section ── */
+    .section { margin-top: 48px; }
+    .section-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
+    .section-sub { font-size: 0.85rem; color: var(--grey-500); margin-bottom: 20px; }
+
+    /* ── Groups table ── */
+    .groups-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .groups-table th { text-align: left; padding: 8px 12px; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--grey-500); border-bottom: 2px solid var(--grey-200); }
+    .groups-table td { padding: 14px 12px; border-bottom: 1px solid var(--grey-200); vertical-align: top; }
+    .groups-table tr:last-child td { border-bottom: none; }
+    .group-name { font-weight: 700; }
+    .group-desc { color: var(--grey-500); font-size: 0.8rem; margin-top: 3px; }
+    .slug-pill { display: inline-block; font-family: monospace; font-size: 0.8rem; background: var(--grey-100); border: 1px solid var(--grey-200); padding: 2px 8px; border-radius: 5px; color: var(--navy-light); }
+    .circle-id { font-family: monospace; font-size: 0.8rem; color: var(--grey-500); }
+
+    /* ── Tools grid ── */
+    .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .tool-card { background: #fff; border: 1px solid var(--grey-200); border-radius: var(--radius); padding: 20px; }
+    .tool-card-name { font-weight: 700; font-size: 0.95rem; }
+    .tool-card-path { font-family: monospace; font-size: 0.78rem; color: var(--grey-500); margin-top: 2px; }
+    .tool-card-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .group-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 99px; }
+    .group-tag-connect   { background: #dbeafe; color: #1d4ed8; }
+    .group-tag-write-now { background: #d1fae5; color: #065f46; }
+    .group-tag-default   { background: var(--grey-100); color: var(--grey-700); }
+
+    /* ── Add group form ── */
+    .add-form { background: #fff; border: 1px solid var(--grey-200); border-radius: var(--radius); padding: 28px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 0.8rem; font-weight: 600; color: var(--grey-700); }
+    input[type="text"], input[type="number"], textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--grey-200); border-radius: 7px; font-size: 0.875rem; outline: none; transition: border-color 0.15s; font-family: inherit; }
+    input:focus, textarea:focus { border-color: var(--navy); }
+    .form-hint { font-size: 0.75rem; color: var(--grey-500); }
+    .tools-check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+    .check-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; }
+    .check-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--navy); cursor: pointer; }
+    .btn-submit { margin-top: 20px; padding: 10px 24px; background: var(--navy); color: #fff; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+    .btn-submit:hover { background: var(--navy-light); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Result box ── */
+    .result-box { margin-top: 20px; padding: 16px; border-radius: 8px; font-size: 0.85rem; display: none; }
+    .result-box.success { background: #d1fae5; color: #065f46; }
+    .result-box.error   { background: #fee2e2; color: #991b1b; }
+    pre.result-pre { margin-top: 8px; font-size: 0.75rem; white-space: pre-wrap; word-break: break-all; }
+
+    /* ── Deploy reminder ── */
+    .deploy-note { margin-top: 24px; padding: 16px 20px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; font-size: 0.83rem; color: #92400e; }
+    .deploy-note strong { display: block; margin-bottom: 6px; }
+    .deploy-note ol { margin-left: 18px; margin-top: 6px; }
+    .deploy-note li { margin-top: 4px; }
+    code { font-family: monospace; background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px; }
+
+    /* ── Loading ── */
+    .loading { color: var(--grey-500); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="header-logo" href="https://tools.expertauthor.community">
+    <img class="header-logo-img" src="/eac-logo.png" alt="EAC" onerror="this.style.display='none'">
+    <span class="header-logo-text">EAC Tools</span><span class="beta-badge">Beta</span>
+  </a>
+  <div class="header-auth" id="header-auth"></div>
+</header>
+
+<div class="page-wrap">
+  <div class="page-eyebrow">Admin</div>
+  <h1 class="page-title">Settings <span class="admin-badge">Admin only</span></h1>
+  <p class="page-sub">Access control configuration — the single source of truth for which space groups unlock which tools.</p>
+
+  <div id="settings-content">
+    <p class="loading" style="margin-top:40px;">Loading config…</p>
+  </div>
+</div>
+
+<script src="/eac.js"></script>
+<script>
+(async function() {
+  // Gate: must be admin
+  var ok = await requireAuth();
+  if (!ok) return;
+  await eacAuthReady;
+  if (!eacUser || !eacUser.isAdmin) {
+    window.location.replace('/dashboard');
+    return;
+  }
+  loadSettings();
+})();
+
+async function loadSettings() {
+  var container = document.getElementById('settings-content');
+  try {
+    var res = await fetch('/api/access-config');
+    if (!res.ok) throw new Error('API error ' + res.status);
+    var config = await res.json();
+    renderSettings(config);
+  } catch (err) {
+    container.innerHTML = '<p style="color:#dc2626;margin-top:40px;">Failed to load config: ' + err.message + '</p>';
+  }
+}
+
+function tagClass(slug) {
+  if (slug === 'connect')   return 'group-tag-connect';
+  if (slug === 'write-now') return 'group-tag-write-now';
+  return 'group-tag-default';
+}
+
+function renderSettings(config) {
+  var groups = config.groups || [];
+  var tools  = config.tools  || [];
+
+  // ── Groups table ──────────────────────────────────────────
+  var groupRows = groups.map(function(g) {
+    return '<tr>' +
+      '<td><div class="group-name">' + escHtml(g.name) + '</div><div class="group-desc">' + escHtml(g.description || '') + '</div></td>' +
+      '<td><span class="slug-pill">' + escHtml(g.slug) + '</span></td>' +
+      '<td><span class="circle-id">' + escHtml(String(g.circleSpaceGroupId)) + '</span></td>' +
+    '</tr>';
+  }).join('');
+
+  // ── Tools grid ────────────────────────────────────────────
+  var toolCards = tools.map(function(t) {
+    var tags = (t.requiredGroups || []).map(function(slug) {
+      var groupName = (groups.find(function(g) { return g.slug === slug; }) || {}).name || slug;
+      return '<span class="group-tag ' + tagClass(slug) + '">' + escHtml(groupName) + '</span>';
+    }).join('');
+    return '<div class="tool-card">' +
+      '<div class="tool-card-name">' + escHtml(t.name) + '</div>' +
+      '<div class="tool-card-path">' + escHtml(t.path) + '</div>' +
+      '<div class="tool-card-groups">' + tags + '</div>' +
+    '</div>';
+  }).join('');
+
+  // ── Tool checkboxes for add-group form ────────────────────
+  var toolChecks = tools.map(function(t) {
+    return '<label class="check-item"><input type="checkbox" name="tool" value="' + escHtml(t.slug) + '"> ' + escHtml(t.name) + '</label>';
+  }).join('');
+
+  document.getElementById('settings-content').innerHTML =
+    // Groups
+    '<div class="section">' +
+      '<div class="section-title">Space Groups</div>' +
+      '<div class="section-sub">Defined in Circle. The slug must match exactly what\'s set in <code>eac-auth/src/lib/circle.ts</code> and <code>eac-tools/api/_lib/auth.ts</code>.</div>' +
+      '<table class="groups-table"><thead><tr><th>Group</th><th>Slug</th><th>Circle Space Group ID</th></tr></thead><tbody>' + groupRows + '</tbody></table>' +
+    '</div>' +
+
+    // Tools
+    '<div class="section">' +
+      '<div class="section-title">Tools &amp; Access</div>' +
+      '<div class="section-sub">Each tool and the space groups required to access it.</div>' +
+      '<div class="tools-grid">' + toolCards + '</div>' +
+    '</div>' +
+
+    // Add group form
+    '<div class="section">' +
+      '<div class="section-title">Add Space Group</div>' +
+      '<div class="section-sub">When you create a new Space Group in Circle and want to grant it access to tools.</div>' +
+      '<form class="add-form" id="add-group-form">' +
+        '<div class="form-grid">' +
+          '<div class="form-group"><label for="g-name">Group Name</label><input type="text" id="g-name" placeholder="e.g. Alumni" required></div>' +
+          '<div class="form-group"><label for="g-slug">Slug</label><input type="text" id="g-slug" placeholder="e.g. alumni" required><span class="form-hint">Lowercase, hyphens only. Must match eac-auth config.</span></div>' +
+          '<div class="form-group"><label for="g-id">Circle Space Group ID</label><input type="number" id="g-id" placeholder="e.g. 99999" required></div>' +
+          '<div class="form-group"><label for="g-desc">Description</label><input type="text" id="g-desc" placeholder="Who is in this group?"></div>' +
+          '<div class="form-group full"><label>Grant access to tools</label><div class="tools-check-grid">' + toolChecks + '</div></div>' +
+        '</div>' +
+        '<button type="submit" class="btn-submit" id="add-btn">Add Group</button>' +
+        '<div class="result-box" id="add-result"></div>' +
+      '</form>' +
+      '<div class="deploy-note">' +
+        '<strong>⚠ After adding a group here you must also:</strong>' +
+        '<ol>' +
+          '<li>Add the slug to <code>GATED_SPACE_GROUPS</code> in <code>eac-auth/src/lib/circle.ts</code></li>' +
+          '<li>Update <code>ALL_TOOLS</code> or create a new gate constant in <code>eac-tools/api/_lib/auth.ts</code></li>' +
+          '<li>Set <code>ACCESS_CONFIG_JSON</code> in Vercel env vars (the API returns the updated JSON)</li>' +
+          '<li>Redeploy both <strong>eac-auth</strong> and <strong>eac-tools</strong></li>' +
+        '</ol>' +
+      '</div>' +
+    '</div>';
+
+  // Wire up form
+  document.getElementById('add-group-form').addEventListener('submit', submitGroup);
+}
+
+async function submitGroup(e) {
+  e.preventDefault();
+  var btn = document.getElementById('add-btn');
+  var resultBox = document.getElementById('add-result');
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+  resultBox.style.display = 'none';
+
+  var checkedTools = Array.from(document.querySelectorAll('input[name="tool"]:checked')).map(function(el) { return el.value; });
+
+  try {
+    var res = await fetch('/api/access-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:               document.getElementById('g-name').value.trim(),
+        slug:               document.getElementById('g-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+        circleSpaceGroupId: Number(document.getElementById('g-id').value),
+        description:        document.getElementById('g-desc').value.trim(),
+        tools:              checkedTools,
+      }),
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'API error');
+
+    resultBox.className = 'result-box success';
+    resultBox.innerHTML = '<strong>Group added.</strong> Copy the JSON below and set it as the <code>ACCESS_CONFIG_JSON</code> Vercel env var, then redeploy.<pre class="result-pre">' + escHtml(JSON.stringify(data.config, null, 2)) + '</pre>';
+    resultBox.style.display = 'block';
+
+    // Reload to reflect the new group
+    setTimeout(loadSettings, 1500);
+  } catch (err) {
+    resultBox.className = 'result-box error';
+    resultBox.innerHTML = 'Error: ' + escHtml(err.message);
+    resultBox.style.display = 'block';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Add Group';
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
