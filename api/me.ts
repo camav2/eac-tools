@@ -32,7 +32,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         spaceGroups:  (payload.spaceGroups as string[]) ?? [],
       },
     })
-  } catch {
+  } catch (err) {
+    console.error('[me] jwtVerify error:', err)
     return res.status(200).json({ user: null })
   }
 }
