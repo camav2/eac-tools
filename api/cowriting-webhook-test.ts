@@ -84,6 +84,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'Event Title': event_name,
       'Status':      'Upcoming',
     }
+
+    // Fetch event details from Circle to get date, URL, duration
+    try {
+      const eventUrl = `${process.env.CIRCLE_ADMIN_V2_URL}/events/${circleEventId}?community_id=${process.env.CIRCLE_COMMUNITY_ID}`
+      const eventRes = await fetch(eventUrl, {
+        headers: { Authorization: `Bearer ${process.env.CIRCLE_ADMIN_V2_TOKEN}` },
+        cache: 'no-store',
+      })
+      if (eventRes.ok) {
+        const event    = await eventRes.json() as any
+        const startsAt = event?.event_setting_attributes?.starts_at ?? event?.starts_at ?? null
+        const endsAt   = event?.event_setting_attributes?.ends_at   ?? event?.ends_at   ?? null
+        if (startsAt)        fields['Event Date'] = startsAt
+        if (event?.url)      fields['Event URL']  = event.url
+        if (startsAt && endsAt) {
+          const dur = (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 3600000
+          if (dur > 0) fields['Duration (hours)'] = Math.round(dur * 10) / 10
+        }
+        results.circleEvent = { ok: true, startsAt, url: event?.url }
+      } else {
+        results.circleEvent = { ok: false, status: eventRes.status }
+      }
+    } catch (e) {
+      results.circleEvent = { ok: false, error: String(e) }
+    }
+
     const eventRecordId = await upsertEvent(circleEventId, fields)
     results.airtableEvent = { ok: true, recordId: eventRecordId }
 
