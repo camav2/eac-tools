@@ -22,7 +22,9 @@ async function at(table: string, path = '', options: RequestInit = {}) {
       ...((options.headers as Record<string, string>) ?? {}),
     },
   })
-  const json = await res.json()
+  const text = await res.text()
+  let json: unknown
+  try { json = JSON.parse(text) } catch { throw new Error(`Non-JSON response (${res.status}): ${text.slice(0, 200)}`) }
   if (!res.ok) throw json
   return json
 }
@@ -34,7 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!session) return
   if (!session.isAdmin) return res.status(403).json({ error: 'Admin only' })
 
-  // 1. Check env vars
+  // 1. Check env vars — return immediately so the response is always readable JSON
   const envCheck = {
     AIRTABLE_BASE_ID:      !!process.env.AIRTABLE_BASE_ID,
     AIRTABLE_API_KEY:      !!process.env.AIRTABLE_API_KEY,
@@ -43,6 +45,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     CIRCLE_COMMUNITY_ID:   !!process.env.CIRCLE_COMMUNITY_ID,
   }
   console.log('[webhook-test] env check:', envCheck)
+
+  const missingEnv = Object.entries(envCheck).filter(([, v]) => !v).map(([k]) => k)
+  if (missingEnv.length) {
+    return res.status(200).json({ envCheck, error: `Missing env vars: ${missingEnv.join(', ')}` })
+  }
 
   const {
     event_id            = 99999999,
