@@ -199,7 +199,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── "event_ended" / event ended for member ───────────────────────────────
     if (type === 'event_ended' || type.includes('ended')) {
-      await upsertEvent(circleEventId, { 'Status': 'Completed' })
+      const fields: Record<string, unknown> = { 'Status': 'Completed' }
+      try {
+        const event    = await fetchCircleEvent(circleEventId)
+        const startsAt = event?.event_setting_attributes?.starts_at ?? event?.starts_at ?? null
+        const endsAt   = event?.event_setting_attributes?.ends_at   ?? event?.ends_at   ?? null
+        if (event?.name)  fields['Event Title'] = event.name
+        if (startsAt)     fields['Event Date']  = startsAt
+        if (event?.url)   fields['Event URL']   = event.url
+        if (startsAt && endsAt) {
+          const dur = (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 3600000
+          if (dur > 0) fields['Duration (hours)'] = Math.round(dur * 10) / 10
+        }
+      } catch (e) {
+        console.warn('[cowriting-webhook] circle event fetch failed for event_ended:', e)
+      }
+      await upsertEvent(circleEventId, fields)
 
       if (circleMemberId) {
         const member = await fetchCircleMember(circleMemberId)
