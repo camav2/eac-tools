@@ -2212,7 +2212,7 @@ loadContent();
   var loadId = params.get('load');
   if (!loadId) return;
   try {
-    var res = await fetch('/api/airtable?id=' + encodeURIComponent(loadId));
+    var res = await fetch('/api/idea-test?id=' + encodeURIComponent(loadId));
     if (res.status === 401) {
       window.location.href = 'https://auth.expertauthor.community/login?redirect=' + encodeURIComponent(window.location.href);
       return;
