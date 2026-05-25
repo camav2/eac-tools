@@ -2,13 +2,6 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
 
-// Emails that always get admin access, checked at request time.
-// Overrides whatever is in the JWT so a change takes effect without re-login.
-function isAdminEmail(email: string): boolean {
-  const list = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
-  return list.includes(email.toLowerCase())
-}
-
 function parseCookie(cookieHeader: string, name: string): string | null {
   const match = cookieHeader.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'))
   return match ? decodeURIComponent(match[1]) : null
@@ -33,23 +26,17 @@ export async function getSession(req: VercelRequest): Promise<Session | null> {
   try {
     const { jwtVerify } = await import('jose')
     const { payload } = await jwtVerify(token, JWT_SECRET)
-    const email = payload.sub as string
     return {
-      email,
+      email:        payload.sub          as string,
       circleUserId: payload.circleUserId as number,
       name:         payload.name         as string,
       avatarUrl:    payload.avatarUrl    as string,
       spaceGroups:  (payload.spaceGroups as string[]) ?? [],
-      isAdmin:      (payload.isAdmin     as boolean) || isAdminEmail(email),
+      isAdmin:      (payload.isAdmin     as boolean)  ?? false,
     }
   } catch {
     return null
   }
-}
-
-// Backward-compat helper used in routes that only need the email
-export async function getSessionEmail(req: VercelRequest): Promise<string | null> {
-  return (await getSession(req))?.email ?? null
 }
 
 export function hasAccess(session: Session, requiredGroups: readonly string[]): boolean {
