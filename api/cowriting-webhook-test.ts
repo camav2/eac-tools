@@ -78,57 +78,56 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const circleMemberId = String(community_member_id)
   const results: Record<string, unknown> = { envCheck, inputs: { event_id, event_name, community_member_id, type } }
 
-  // 2. Upsert event record in Airtable
-  try {
-    const fields: Record<string, unknown> = {
-      'Event Title': event_name,
-      'Status':      'Upcoming',
-    }
+  // Helper: fetch Circle member by community_member_id
+  async function fetchMember(memberId: string) {
+    const url = `${process.env.CIRCLE_ADMIN_V2_URL}/community_members/${memberId}?community_id=${process.env.CIRCLE_COMMUNITY_ID}`
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${process.env.CIRCLE_ADMIN_V2_TOKEN}` },
+      cache: 'no-store',
+    })
+    if (!res.ok) return null
+    return res.json() as Promise<any>
+  }
 
-    // Fetch event details from Circle to get date, URL, duration
-    try {
-      const eventUrl = `${process.env.CIRCLE_ADMIN_V2_URL}/events/${circleEventId}?community_id=${process.env.CIRCLE_COMMUNITY_ID}`
-      const eventRes = await fetch(eventUrl, {
-        headers: { Authorization: `Bearer ${process.env.CIRCLE_ADMIN_V2_TOKEN}` },
-        cache: 'no-store',
-      })
-      if (eventRes.ok) {
-        const event    = await eventRes.json() as any
-        const startsAt = event?.event_setting_attributes?.starts_at ?? event?.starts_at ?? null
-        const endsAt   = event?.event_setting_attributes?.ends_at   ?? event?.ends_at   ?? null
+  // Helper: fetch Circle event by event_id
+  async function fetchCircleEvent(eventId: string) {
+    const url = `${process.env.CIRCLE_ADMIN_V2_URL}/events/${eventId}?community_id=${process.env.CIRCLE_COMMUNITY_ID}`
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${process.env.CIRCLE_ADMIN_V2_TOKEN}` },
+      cache: 'no-store',
+    })
+    if (!res.ok) { results.circleEvent = { ok: false, status: res.status }; return null }
+    const event = await res.json() as any
+    const startsAt = event?.event_setting_attributes?.starts_at ?? event?.starts_at ?? null
+    const endsAt   = event?.event_setting_attributes?.ends_at   ?? event?.ends_at   ?? null
+    results.circleEvent = { ok: true, startsAt, url: event?.url }
+    return { event, startsAt, endsAt }
+  }
+
+  try {
+    // ── event_published — upsert event + set host ─────────────────────────────
+    if (type.includes('publish') || type.includes('creat')) {
+      const fields: Record<string, unknown> = { 'Event Title': event_name, 'Status': 'Upcoming' }
+
+      const circleEventData = await fetchCircleEvent(circleEventId)
+      if (circleEventData) {
+        const { event, startsAt, endsAt } = circleEventData
         if (startsAt)        fields['Event Date'] = startsAt
         if (event?.url)      fields['Event URL']  = event.url
         if (startsAt && endsAt) {
           const dur = (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 3600000
           if (dur > 0) fields['Duration (hours)'] = Math.round(dur * 10) / 10
         }
-        results.circleEvent = { ok: true, startsAt, url: event?.url }
-      } else {
-        results.circleEvent = { ok: false, status: eventRes.status }
       }
-    } catch (e) {
-      results.circleEvent = { ok: false, error: String(e) }
-    }
 
-    const eventRecordId = await upsertEvent(circleEventId, fields)
-    results.airtableEvent = { ok: true, recordId: eventRecordId }
+      const eventRecordId = await upsertEvent(circleEventId, fields)
+      results.airtableEvent = { ok: true, recordId: eventRecordId }
 
-    // 3. Fetch member from Circle and set host
-    if (circleMemberId && circleMemberId !== '0') {
-      const circleUrl = `${process.env.CIRCLE_ADMIN_V2_URL}/community_members/${circleMemberId}?community_id=${process.env.CIRCLE_COMMUNITY_ID}`
-      const circleRes = await fetch(circleUrl, {
-        headers: { Authorization: `Bearer ${process.env.CIRCLE_ADMIN_V2_TOKEN}` },
-        cache: 'no-store',
-      })
-
-      if (!circleRes.ok) {
-        results.circleMember = { ok: false, status: circleRes.status }
-      } else {
-        const member = await circleRes.json() as any
+      if (circleMemberId && circleMemberId !== '0') {
+        const member = await fetchMember(circleMemberId)
         const email  = member?.email ?? ''
-        const name   = member?.name  ?? member?.full_name ?? ''
-        results.circleMember = { ok: true, email, name }
-
+        const name   = member?.name ?? member?.full_name ?? ''
+        results.circleMember = member ? { ok: true, email, name } : { ok: false }
         if (email) {
           const personId = await upsertPerson({ email, name, isMember: true })
           await at(COWRITING_TABLE, `/${eventRecordId}`, {
@@ -139,6 +138,56 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
     }
+
+    // ── event_ended — mark completed + add attendee ───────────────────────────
+    else if (type.includes('ended')) {
+      const fields: Record<string, unknown> = { 'Status': 'Completed' }
+
+      const circleEventData = await fetchCircleEvent(circleEventId)
+      if (circleEventData) {
+        const { event, startsAt, endsAt } = circleEventData
+        if (event?.name)  fields['Event Title'] = event.name
+        if (startsAt)     fields['Event Date']  = startsAt
+        if (event?.url)   fields['Event URL']   = event.url
+        if (startsAt && endsAt) {
+          const dur = (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 3600000
+          if (dur > 0) fields['Duration (hours)'] = Math.round(dur * 10) / 10
+        }
+      }
+
+      const eventRecordId = await upsertEvent(circleEventId, fields)
+      results.airtableEvent = { ok: true, recordId: eventRecordId }
+
+      if (circleMemberId && circleMemberId !== '0') {
+        const member = await fetchMember(circleMemberId)
+        const email  = member?.email ?? ''
+        const name   = member?.name ?? member?.full_name ?? ''
+        results.circleMember = member ? { ok: true, email, name } : { ok: false }
+        if (email) {
+          const personId = await upsertPerson({ email, name, isMember: true })
+          // Check existing attendees — don't duplicate
+          const record = await findEvent(circleEventId)
+          const hosts    = (record?.fields['Host']      as string[]) || []
+          const existing = (record?.fields['Attendees'] as string[]) || []
+          if (hosts.includes(personId)) {
+            results.attendee = { ok: true, skipped: 'is host', email }
+          } else if (existing.includes(personId)) {
+            results.attendee = { ok: true, skipped: 'already attendee', email }
+          } else {
+            await at(COWRITING_TABLE, `/${eventRecordId}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ fields: { Attendees: [...existing, personId] } }),
+            })
+            results.attendee = { ok: true, personId, email }
+          }
+        }
+      }
+    }
+
+    else {
+      results.error = `Unhandled type: ${type}`
+    }
+
   } catch (err) {
     results.error = String(err)
     console.error('[webhook-test] error:', err)
