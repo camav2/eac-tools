@@ -2039,18 +2039,11 @@ async function submitGate(e) {
   btn.disabled    = true;
 
   try {
-    await Promise.all([
-      fetch('/api/book-canvas', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, name: firstName, tool: 'book-canvas', website: document.getElementById('gate-website').value }),
-      }),
-      fetch('/api/book-canvas-results', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(buildCanvasPayload(email, firstName, false)),
-      }),
-    ]);
+    await fetch('/api/book-canvas', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ ...buildCanvasPayload(email, firstName, false), website: document.getElementById('gate-website').value }),
+    });
     proceedToAnalysis();
   } catch {
     errEl.style.display = 'block';
@@ -2062,7 +2055,7 @@ async function submitGate(e) {
 async function logMemberCanvas() {
   if (!eacUser || !eacUser.email) return;
   try {
-    await fetch('/api/book-canvas-results', {
+    await fetch('/api/book-canvas', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(buildCanvasPayload(eacUser.email, eacUser.name || '', true)),
@@ -2212,7 +2205,7 @@ document.addEventListener('input', (e) => {
   }
 
   try {
-    var res = await fetch('/api/book-canvas-results?id=' + encodeURIComponent(loadId));
+    var res = await fetch('/api/book-canvas?id=' + encodeURIComponent(loadId));
 
     if (res.status === 401) {
       var redir = encodeURIComponent(window.location.href);

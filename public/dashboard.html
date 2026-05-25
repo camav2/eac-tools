@@ -313,7 +313,7 @@ async function initDashboard() {
   var subEl = document.getElementById('dashboard-sub');
   if (subEl) subEl.parentNode.insertBefore(tierBadge, subEl.nextSibling);
   try {
-    var res = await fetch('/api/book-canvas-results');
+    var res = await fetch('/api/book-canvas');
     if (!res.ok) {
       document.getElementById('canvas-loading').style.display = 'none';
       document.getElementById('canvas-empty').style.display = 'block';
