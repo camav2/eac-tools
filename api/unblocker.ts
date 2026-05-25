@@ -15,6 +15,12 @@ import { requireAuth, ALL_TOOLS } from './_lib/auth'
 import { resolvePersonWithCircle, logActivity } from './_lib/airtable'
 import { addContactToList, sendResultsEmail } from './_lib/brevo'
 
+const ALLOWED_ORIGINS = ['https://tools.expertauthor.community']
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+}
+
 
 async function atGet(path: string) {
   const tableId = encodeURIComponent(process.env.AIRTABLE_UNBLOCKER_TABLE_ID!)
@@ -91,9 +97,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
+  // 1. Origin check — block direct API hits from outside the site
+  const origin = (req.headers['origin'] ?? req.headers['referer'] ?? '') as string
+  if (!ALLOWED_ORIGINS.some(o => origin.startsWith(o))) {
+    return res.status(403).json({ error: 'Forbidden' })
+  }
+
   const {
     email,
     name,
+    website,
     primaryBlocker,
     secondaryBlocker,
     intensityTier,
@@ -105,7 +118,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     source,
   } = req.body
 
-  if (!email || !primaryBlocker || !scores) {
+  // 2. Honeypot — bots fill hidden fields, humans don't
+  if (website) {
+    return res.status(200).json({ ok: true })
+  }
+
+  // 3. Email validation
+  if (!email || !isValidEmail(email)) {
+    return res.status(400).json({ ok: false, error: 'Valid email required' })
+  }
+
+  if (!primaryBlocker || !scores) {
     return res.status(400).json({ ok: false, error: 'Missing required fields' })
   }
 

@@ -1434,6 +1434,9 @@ body { padding-top: 60px; }
         <label class="form-label" for="input-email">Email address</label>
         <input class="form-input" type="email" id="input-email" placeholder="you@example.com" required autocomplete="email">
       </div>
+      <div style="position:absolute;opacity:0;pointer-events:none;height:0;overflow:hidden;" aria-hidden="true">
+        <input type="text" id="gate-website" name="website" tabindex="-1" autocomplete="off">
+      </div>
       <div class="field-group">
         <label for="input-context">What are you currently working on? <span class="field-optional">(optional)</span></label>
         <textarea
@@ -1983,7 +1986,8 @@ function buildAirtablePayload() {
     context:            userContext,
     isMember:           !!eacUser,
     combinationPattern: comboKey,
-    source:             'unblocker'
+    source:             'unblocker',
+    website:            document.getElementById('gate-website').value
   };
 }
 
