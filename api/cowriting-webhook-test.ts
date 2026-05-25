@@ -1,14 +1,13 @@
 /**
  * Diagnostic endpoint for the cowriting webhook — admin only.
+ * Runs the full event_published pipeline (upsert event + fetch member + set host).
  *
  * POST /api/cowriting-webhook-test
  * Body: { event_id?, event_name?, community_member_id?, type? }
- *
- * Checks env vars, hits Airtable directly, and attempts the full
- * upsert so you can verify the pipeline without creating a real Circle event.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAuth } from './_lib/auth'
+import { upsertPerson } from './_lib/airtable'
 
 const COWRITING_TABLE = 'tblMTfHsSf1WrAvbs'
 
@@ -29,6 +28,25 @@ async function at(table: string, path = '', options: RequestInit = {}) {
   return json
 }
 
+async function findEvent(circleEventId: string) {
+  const filter = encodeURIComponent(`{Circle Event ID}="${circleEventId}"`)
+  const data = await at(COWRITING_TABLE, `?filterByFormula=${filter}&maxRecords=1`) as any
+  return data.records?.[0] ?? null
+}
+
+async function upsertEvent(circleEventId: string, fields: Record<string, unknown>) {
+  const record = await findEvent(circleEventId)
+  if (record) {
+    await at(COWRITING_TABLE, `/${record.id}`, { method: 'PATCH', body: JSON.stringify({ fields }) })
+    return record.id as string
+  }
+  const created = await at(COWRITING_TABLE, '', {
+    method: 'POST',
+    body: JSON.stringify({ fields: { 'Circle Event ID': circleEventId, ...fields } }),
+  }) as any
+  return created.id as string
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -36,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!session) return
   if (!session.isAdmin) return res.status(403).json({ error: 'Admin only' })
 
-  // 1. Check env vars — return immediately so the response is always readable JSON
+  // 1. Check env vars
   const envCheck = {
     AIRTABLE_BASE_ID:      !!process.env.AIRTABLE_BASE_ID,
     AIRTABLE_API_KEY:      !!process.env.AIRTABLE_API_KEY,
@@ -44,8 +62,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     CIRCLE_ADMIN_V2_URL:   !!process.env.CIRCLE_ADMIN_V2_URL,
     CIRCLE_COMMUNITY_ID:   !!process.env.CIRCLE_COMMUNITY_ID,
   }
-  console.log('[webhook-test] env check:', envCheck)
-
   const missingEnv = Object.entries(envCheck).filter(([, v]) => !v).map(([k]) => k)
   if (missingEnv.length) {
     return res.status(200).json({ envCheck, error: `Missing env vars: ${missingEnv.join(', ')}` })
@@ -58,68 +74,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     type                = 'event_published',
   } = req.body ?? {}
 
-  const circleEventId = String(event_id)
-  const results: Record<string, unknown> = { envCheck }
+  const circleEventId  = String(event_id)
+  const circleMemberId = String(community_member_id)
+  const results: Record<string, unknown> = { envCheck, inputs: { event_id, event_name, community_member_id, type } }
 
-  // 2. Try Airtable — find existing record
+  // 2. Upsert event record in Airtable
   try {
-    const filter = encodeURIComponent(`{Circle Event ID}="${circleEventId}"`)
-    const found  = await at(COWRITING_TABLE, `?filterByFormula=${filter}&maxRecords=1`)
-    results.airtableFind = { ok: true, existing: found.records?.length > 0 }
-  } catch (err) {
-    results.airtableFind = { ok: false, error: err }
-    console.error('[webhook-test] airtable find failed:', err)
-    return res.status(200).json(results)
-  }
-
-  // 3. Try Airtable — create/update record
-  try {
-    const existing = (results.airtableFind as { existing: boolean }).existing
-    let recordId: string
-
-    if (existing) {
-      const filter = encodeURIComponent(`{Circle Event ID}="${circleEventId}"`)
-      const found  = await at(COWRITING_TABLE, `?filterByFormula=${filter}&maxRecords=1`)
-      recordId = found.records[0].id
-      await at(COWRITING_TABLE, `/${recordId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ fields: { 'Event Title': event_name, 'Status': 'Upcoming' } }),
-      })
-      results.airtableUpsert = { ok: true, action: 'updated', recordId }
-    } else {
-      const created = await at(COWRITING_TABLE, '', {
-        method: 'POST',
-        body: JSON.stringify({
-          fields: {
-            'Circle Event ID': circleEventId,
-            'Event Title':     event_name,
-            'Status':          'Upcoming',
-          },
-        }),
-      })
-      recordId = created.id
-      results.airtableUpsert = { ok: true, action: 'created', recordId }
+    const fields: Record<string, unknown> = {
+      'Event Title': event_name,
+      'Status':      'Upcoming',
     }
-    console.log('[webhook-test] airtable upsert ok:', results.airtableUpsert)
-  } catch (err) {
-    results.airtableUpsert = { ok: false, error: err }
-    console.error('[webhook-test] airtable upsert failed:', err)
-    return res.status(200).json(results)
-  }
+    const eventRecordId = await upsertEvent(circleEventId, fields)
+    results.airtableEvent = { ok: true, recordId: eventRecordId }
 
-  // 4. Try Circle API — fetch member (if provided)
-  if (community_member_id) {
-    try {
-      const circleUrl = `${process.env.CIRCLE_ADMIN_V2_URL}/community_members/${community_member_id}?community_id=${process.env.CIRCLE_COMMUNITY_ID}`
+    // 3. Fetch member from Circle and set host
+    if (circleMemberId && circleMemberId !== '0') {
+      const circleUrl = `${process.env.CIRCLE_ADMIN_V2_URL}/community_members/${circleMemberId}?community_id=${process.env.CIRCLE_COMMUNITY_ID}`
       const circleRes = await fetch(circleUrl, {
         headers: { Authorization: `Bearer ${process.env.CIRCLE_ADMIN_V2_TOKEN}` },
         cache: 'no-store',
       })
-      results.circleMember = { ok: circleRes.ok, status: circleRes.status }
-      console.log('[webhook-test] circle member fetch:', circleRes.status)
-    } catch (err) {
-      results.circleMember = { ok: false, error: String(err) }
+
+      if (!circleRes.ok) {
+        results.circleMember = { ok: false, status: circleRes.status }
+      } else {
+        const member = await circleRes.json() as any
+        const email  = member?.email ?? ''
+        const name   = member?.name  ?? member?.full_name ?? ''
+        results.circleMember = { ok: true, email, name }
+
+        if (email) {
+          const personId = await upsertPerson({ email, name, isMember: true })
+          await at(COWRITING_TABLE, `/${eventRecordId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ fields: { Host: [personId] } }),
+          })
+          results.host = { ok: true, personId, email }
+        }
+      }
     }
+  } catch (err) {
+    results.error = String(err)
+    console.error('[webhook-test] error:', err)
   }
 
   return res.status(200).json(results)
