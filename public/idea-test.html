@@ -2016,7 +2016,7 @@ async function nextQuestion() {
       ideaText  = '';
 
       try {
-        await fetch('/api/airtable', {
+        await fetch('/api/idea-test', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -2066,7 +2066,7 @@ async function submitEmail(e) {
   const tier = getTier(weightedScore);
 
   try {
-    await fetch('/api/airtable', {
+    await fetch('/api/idea-test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

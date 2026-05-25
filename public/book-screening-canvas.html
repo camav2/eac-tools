@@ -1,74 +1,104 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<script type="application/json" id="page-content">{
-  "book-canvas/intro/eyebrow": "Expert Author Community",
-  "book-canvas/intro/signature": "Built with ❤️ for the EAC community",
-  "book-canvas/analysis/audience-gap": "Your ideal reader could be more specific. The more clearly you can picture one real person, the more powerfully your book will speak to many. Give them a name - Sarah from NAB, Jeremy the overworked dentist. A named person on the page is a reader who feels seen."
-}</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book Screening Canvas: Map Your Book Idea in 15 Minutes | Expert Author Community</title>
-<meta name="description" content="9 strategic pillars. 15 minutes. Work through Kelly Irving's Book Screening Canvas to clarify your purpose, audience, unique value, and more — then get a smart cross-pillar read of what your answers reveal.">
-<meta name="robots" content="index, follow">
-<link rel="canonical" href="https://tools.expertauthor.community/book-canvas">
-
-<!-- Open Graph -->
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Expert Author Community">
-<meta property="og:url" content="https://tools.expertauthor.community/book-canvas">
-<meta property="og:title" content="Book Screening Canvas: Map Your Book Idea in 15 Minutes">
-<meta property="og:description" content="9 strategic pillars. 15 minutes. Clarify your purpose, audience, unique value, and more — then get a smart read of what your answers reveal.">
-<meta property="og:image" content="https://tools.expertauthor.community/og-book-canvas.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Book Screening Canvas — Expert Author Community">
-
-<!-- Twitter / X -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:site" content="@kellyirvingwrites">
-<meta name="twitter:title" content="Book Screening Canvas: Map Your Book Idea in 15 Minutes">
-<meta name="twitter:description" content="9 strategic pillars. 15 minutes. Clarify your purpose, audience, unique value, and more — then get a smart read of what your answers reveal.">
-<meta name="twitter:image" content="https://tools.expertauthor.community/og-book-canvas.png">
-<meta name="twitter:image:alt" content="Book Screening Canvas — Expert Author Community">
-
-<!-- Structured Data -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "Book Screening Canvas",
-  "url": "https://tools.expertauthor.community/book-canvas",
-  "description": "9 strategic pillars. 15 minutes. Map your book idea across purpose, audience, positioning, unique value, and more.",
-  "applicationCategory": "EducationApplication",
-  "operatingSystem": "Web",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "AUD"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "Expert Author Community",
-    "url": "https://expertauthor.community"
-  }
-}
-</script>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<title>EAC Book Screening Canvas — Kelly Irving</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/eac.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+  :root {
+    /* ── EAC Design System tokens (canonical) ── */
+    --color-navy:         #00003D;
+    --color-yellow:       #FFE64B;
+    --color-yellow-light: #FFF3A5;
+    --color-yellow-mid:   #FFF3A5; /* alias → yellow-light */
+    --color-blue:         #5296FB;
+    --color-blue-light:   #97C0FD;
+    --color-orange:       #FE8D17;
+    --color-white:        #FFFFFF;
+    --color-off-white:    #F9F9FB;
+    --color-grey-100:     #F2F2F5;
+    --color-grey-200:     #E4E4EA;
+    --color-grey-400:     #9999B0;
+    --color-grey-700:     #444455;
+    --color-black:        #0A0A1A;
+    --font:               'Montserrat', sans-serif;
+    --radius-md:          8px;
+    --radius-lg:          12px;
+    --radius-xl:          16px;
+    --radius-full:        9999px;
+    --shadow-md:          0 4px 12px rgba(0,0,61,0.10);
+    --shadow-lg:          0 8px 32px rgba(0,0,61,0.14);
+    --transition:         0.2s ease;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
   body {
     font-family: var(--font);
     background: var(--color-off-white);
     color: var(--color-black);
     padding-top: 60px;
     min-height: 100vh;
+  }
+
+  /* NAVBAR — site-header pattern */
+  .site-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--color-navy);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    z-index: 1000;
+  }
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .header-logo svg { width: 26px; height: 26px; flex-shrink: 0; }
+  .header-logo-text {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-white);
+  }
+  .beta-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    background: var(--color-orange);
+    color: var(--color-white);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    line-height: 1;
+  }
+  .navbar-tool-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.04em;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .navbar-progress {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.05em;
   }
 
   /* SCREENS */
@@ -778,10 +808,9 @@
     font-weight: 500;
     color: var(--color-grey-700);
     line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
   }
   .mini-box-placeholder {
     font-size: 11px;
@@ -867,125 +896,6 @@
   .canvas-box-body.empty {
     color: var(--color-grey-400);
     font-style: italic;
-  }
-  .canvas-box-unanswered {
-    border: 1.5px dashed var(--color-grey-200);
-    background: var(--color-grey-100);
-  }
-  .canvas-unanswered-label {
-    display: block;
-    color: var(--color-grey-400);
-    font-style: italic;
-    font-size: 0.85em;
-    margin-bottom: 6px;
-  }
-  .canvas-unanswered-edit {
-    background: none;
-    border: none;
-    padding: 0;
-    font-family: inherit;
-    font-size: 0.8em;
-    color: var(--color-blue);
-    cursor: pointer;
-    text-decoration: underline;
-  }
-  .canvas-unanswered-edit:hover { color: var(--color-navy); }
-
-  /* ===================== */
-  /* GATE SCREEN           */
-  /* ===================== */
-  #screen-gate {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 48px 24px;
-  }
-  .gate-card {
-    background: var(--color-white);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-lg);
-    max-width: 520px;
-    width: 100%;
-    overflow: hidden;
-  }
-  .gate-header {
-    background: var(--color-navy);
-    padding: 36px 48px 28px;
-  }
-  .gate-eyebrow {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-yellow);
-    background: rgba(255,230,75,0.12);
-    padding: 5px 12px;
-    border-radius: var(--radius-full);
-    margin-bottom: 14px;
-  }
-  .gate-headline {
-    font-size: 22px;
-    font-weight: 900;
-    color: var(--color-white);
-    line-height: 1.25;
-    margin-bottom: 8px;
-  }
-  .gate-sub {
-    font-size: 13px;
-    font-weight: 500;
-    color: rgba(255,255,255,0.55);
-    line-height: 1.6;
-  }
-  .gate-body {
-    padding: 36px 48px 40px;
-  }
-  .form-field { margin-bottom: 16px; text-align: left; }
-  .form-label {
-    display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--color-navy); margin-bottom: 6px;
-  }
-  .form-input {
-    width: 100%; padding: 14px 16px;
-    border: 2px solid var(--color-grey-200); border-radius: var(--radius-md);
-    font-family: var(--font); font-size: 14px; font-weight: 500; color: var(--color-navy);
-    background: var(--color-white); transition: border-color var(--transition); appearance: none;
-  }
-  .form-input:focus { outline: none; border-color: var(--color-blue); box-shadow: 0 0 0 3px rgba(82,150,251,0.15); }
-  .form-input::placeholder { color: var(--color-grey-400); }
-  .form-privacy { font-size: 12px; color: var(--color-grey-400); margin-top: 16px; line-height: 1.5; }
-  .gate-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    margin-top: 24px;
-  }
-  .gate-submit {
-    width: 100%;
-  }
-  .gate-skip {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--color-grey-400);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: var(--font);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    padding: 0;
-  }
-  .gate-skip:hover { color: var(--color-grey-700); }
-  .gate-error {
-    color: #c0392b;
-    font-size: 13px;
-    font-weight: 600;
-    margin-top: 10px;
-    display: none;
-  }
-  @media (max-width: 560px) {
-    .gate-header, .gate-body { padding-left: 28px; padding-right: 28px; }
   }
 
   /* ===================== */
@@ -1089,68 +999,37 @@
     color: var(--color-navy);
   }
 
-  /* ============================================================
-     RESPONSIVE
-     ============================================================ */
-
-  /* Tablet / large phone: collapse 2-col pillar layout */
-  @media (max-width: 800px) {
-    .pillar-layout {
-      grid-template-columns: 1fr;
-    }
-    .sidebar {
-      position: static;
-    }
-    /* Show sidebar mini-boxes in a horizontal scroll row */
-    .sidebar-body {
-      flex-direction: row;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 12px;
-      gap: 8px;
-    }
-    .mini-box {
-      flex: 0 0 120px;
-    }
+  /* DS focus-visible ring */
+  button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 3px solid var(--color-yellow);
+    outline-offset: 2px;
   }
 
-  /* Small phone */
-  @media (max-width: 480px) {
-    /* Intro card: reduce side padding */
-    .intro-header { padding: 28px 24px 24px; }
-    .intro-body   { padding: 28px 24px; }
-    /* Intro footer: stack signature above button */
-    .intro-footer {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 16px;
+  /* DS reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
     }
-    .intro-footer .btn { width: 100%; justify-content: center; }
-    /* Pillar card: tighten padding */
-    .pillar-card-header { padding: 20px 24px 18px; }
-    .pillar-card-body   { padding: 24px; }
-    /* Analysis */
-    .analysis-headline { font-size: 22px; }
-    .analysis-card { padding: 20px; }
-    #screen-analysis { padding: 24px 16px; }
   }
-
 </style>
 </head>
 <body>
 
 <!-- NAVBAR -->
-<header class="site-header">
-  <a class="header-logo" href="https://tools.expertauthor.community">
+<nav class="site-header">
+  <a class="header-logo" href="#">
     <svg viewBox="0 0 53.3 53.3" xmlns="http://www.w3.org/2000/svg">
       <polygon points="32.1 53.3 0 53.3 0 21.2 21.1 0.1 53.2 32.2 32.1 53.3" fill="#FFE64B"/>
       <polyline points="15.8 53.3 0 53.3 0 37.5" fill="#00003D"/>
       <polygon points="46.6 25.4 33.2 38.8 26.6 32.3 40 19 33.9 13 20.6 26.3 14.4 20.1 27.9 6.7 21.2 0 0 21.2 32.1 53.3 53.3 32.1 46.6 25.4" fill="#00003D"/>
     </svg>
-    <span class="header-logo-text">EAC Tools</span><span class="beta-badge">Beta</span>
+    <span class="header-logo-text">EAC Tools</span>
+    <span class="beta-badge">Beta</span>
   </a>
-  <div class="header-auth" id="header-auth"></div>
-</header>
+  <span class="navbar-tool-name">Book Screening Canvas</span>
+  <span class="navbar-progress" id="nav-progress"></span>
+</nav>
 
 <!-- ===================== -->
 <!-- INTRO SCREEN          -->
@@ -1158,9 +1037,9 @@
 <section id="screen-intro" class="screen active">
   <div class="intro-card">
     <div class="intro-header">
-      <div class="intro-eyebrow" data-content-key="book-canvas/intro/eyebrow">Kelly Irving &mdash; Expert Author Community</div>
-      <h1 class="intro-headline" data-content-key="book-canvas/intro/headline">Your Book Screening Canvas</h1>
-      <div class="intro-sub" data-content-key="book-canvas/intro/sub">9 pillars. 15 minutes. A clearer book idea.</div>
+      <div class="intro-eyebrow">Kelly Irving &mdash; Expert Author Community</div>
+      <h1 class="intro-headline">Your Book Screening Canvas</h1>
+      <div class="intro-sub">9 pillars. 15 minutes. A clearer book idea.</div>
       <div class="intro-accent"></div>
     </div>
     <div class="intro-body">
@@ -1168,8 +1047,8 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         About 15 minutes
       </div>
-      <p data-content-key="book-canvas/intro/body-1">This isn't a test. There are no right answers. <strong>A question mark is a perfectly good answer</strong> — it just tells you where your next thinking needs to go.</p>
-      <p data-content-key="book-canvas/intro/body-2">The Book Screening Canvas works through 9 strategic pillars. Each one asks something different about your book idea. Your job is to get something down — not to get it perfect.</p>
+      <p>This isn't a test. There are no right answers. <strong>A question mark is a perfectly good answer</strong> — it just tells you where your next thinking needs to go.</p>
+      <p>The Book Screening Canvas works through 9 strategic pillars. Each one asks something different about your book idea. Your job is to get something down — not to get it perfect.</p>
       <div class="intro-permissions">
         <div class="perm-item">
           <span class="perm-dot"></span>
@@ -1189,8 +1068,8 @@
         </div>
       </div>
       <div class="intro-footer">
-        <span class="intro-signature" data-content-key="book-canvas/intro/signature">Built for the EAC community &mdash; Kelly Irving</span>
-<button class="btn btn-primary" onclick="startCanvas()">Let's begin &rarr;</button>
+        <span class="intro-signature">Built for the EAC community &mdash; Kelly Irving</span>
+        <button class="btn btn-primary" onclick="startCanvas()">Let's begin &rarr;</button>
       </div>
     </div>
   </div>
@@ -1234,47 +1113,13 @@
       </div>
       <div class="canvas-actions">
         <button class="btn btn-secondary" onclick="window.print()">&#x2193; Download / Print</button>
-        <button class="btn btn-primary canvas-edit-only" onclick="showAnalysis()">See my analysis &rarr;</button>
+        <button class="btn btn-primary" onclick="showAnalysis()">See my analysis &rarr;</button>
       </div>
     </div>
     <div class="canvas-grid" id="canvas-grid"></div>
     <div style="margin-top:24px; display:flex; gap:12px; justify-content:flex-end; flex-wrap:wrap;">
-      <button class="btn btn-ghost canvas-edit-only" onclick="goToPillar(0)">Edit canvas</button>
-      <button class="btn btn-primary canvas-edit-only" onclick="showAnalysis()">See my analysis &rarr;</button>
-      <a href="/dashboard" class="btn btn-ghost canvas-view-only" style="display:none;">&larr; Back to dashboard</a>
-    </div>
-  </div>
-</section>
-
-<!-- ===================== -->
-<!-- GATE SCREEN           -->
-<!-- ===================== -->
-<section id="screen-gate" class="screen">
-  <div class="gate-card">
-    <div class="gate-header">
-      <div class="gate-eyebrow">Almost there</div>
-      <h2 class="gate-headline">Where should we send your results?</h2>
-      <p class="gate-sub">Enter your details to unlock your cross-pillar analysis. We'll also send you a copy to revisit later.</p>
-    </div>
-    <div class="gate-body">
-      <form id="gate-form" onsubmit="submitGate(event)">
-        <div class="form-field">
-          <label class="form-label" for="gate-name">First name</label>
-          <input class="form-input" type="text" id="gate-name" placeholder="Your first name" autocomplete="given-name">
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="gate-email">Email address</label>
-          <input class="form-input" type="email" id="gate-email" placeholder="you@example.com" autocomplete="email" required>
-        </div>
-        <div style="position:absolute;opacity:0;pointer-events:none;height:0;overflow:hidden;" aria-hidden="true">
-          <input type="text" id="gate-website" name="website" tabindex="-1" autocomplete="off">
-        </div>
-        <div class="gate-actions">
-          <button type="submit" class="btn btn-primary gate-submit" id="gate-submit-btn">See my analysis &rarr;</button>
-          <button type="button" class="gate-skip" onclick="proceedToAnalysis()">Skip for now</button>
-        </div>
-        <p class="gate-error" id="gate-error">Something went wrong — please try again.</p>
-      </form>
+      <button class="btn btn-ghost" onclick="goToPillar(0)">Edit canvas</button>
+      <button class="btn btn-primary" onclick="showAnalysis()">See my analysis &rarr;</button>
     </div>
   </div>
 </section>
@@ -1285,9 +1130,9 @@
 <section id="screen-analysis" class="screen">
   <div class="analysis-wrap">
     <div class="analysis-header">
-      <div class="analysis-eyebrow" data-content-key="book-canvas/analysis/eyebrow">Smart Cross-Pillar Analysis</div>
-      <h2 class="analysis-headline" data-content-key="book-canvas/analysis/headline">What your canvas is telling you</h2>
-      <p class="analysis-sub" data-content-key="book-canvas/analysis/sub">This isn't a score. It's a read of how your nine answers fit together — where you're strong, where you're still finding your way, and what to pay attention to next.</p>
+      <div class="analysis-eyebrow">Smart Cross-Pillar Analysis</div>
+      <h2 class="analysis-headline">What your canvas is telling you</h2>
+      <p class="analysis-sub">This isn't a score. It's a read of how your nine answers fit together — where you're strong, where you're still finding your way, and what to pay attention to next.</p>
     </div>
     <div class="analysis-cards" id="analysis-cards"></div>
     <div class="analysis-back">
@@ -1492,15 +1337,13 @@ let objectiveFreeText = '';
 // NAVIGATION
 // =====================
 
-const SCREEN_DISPLAY = { 'screen-gate': 'flex', 'screen-intro': 'flex' };
-
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => {
     s.style.display = 'none';
     s.classList.remove('active');
   });
   const el = document.getElementById(id);
-  el.style.display = SCREEN_DISPLAY[id] || 'block';
+  el.style.display = 'block';
   setTimeout(() => el.classList.add('active'), 10);
   window.scrollTo(0, 0);
 }
@@ -1539,13 +1382,17 @@ function prevPillar() {
 }
 
 function skipPillar() {
-  // Clear any partial answer and let saveCurrent() in nextPillar() detect empty input
-  answers[PILLARS[currentPillar].id] = '';
+  answers[PILLARS[currentPillar].id] = '?';
   nextPillar();
 }
 
 function updateNavProgress() {
-  // Progress shown in .progress-track on the pillar screen; no navbar counter needed.
+  const el = document.getElementById('nav-progress');
+  if (document.getElementById('screen-pillar').classList.contains('active')) {
+    el.textContent = `Pillar ${currentPillar + 1} of 9`;
+  } else {
+    el.textContent = '';
+  }
 }
 
 // =====================
@@ -1578,21 +1425,16 @@ function saveCurrent() {
     if (differs) val += `Differs because: ${differs}.`;
     answers[p.id] = val.trim();
   } else {
-    // Template based — only save if at least one field has been filled in
+    // Template based
     const fields = document.querySelectorAll('.template-field');
     if (fields.length) {
-      const allEmpty = [...fields].every(f => !f.value.trim());
-      if (allEmpty) {
-        answers[p.id] = '';
-      } else {
-        let parts = [...p.templateParts];
-        let result = parts[0];
-        fields.forEach((f, i) => {
-          result += (f.value || `[${p.templatePlaceholders[i]}]`);
-          result += parts[i + 1] || '';
-        });
-        answers[p.id] = result;
-      }
+      let parts = [...p.templateParts];
+      let result = parts[0];
+      fields.forEach((f, i) => {
+        result += (f.value || `[${p.templatePlaceholders[i]}]`);
+        result += parts[i + 1] || '';
+      });
+      answers[p.id] = result;
     }
   }
 }
@@ -1926,10 +1768,11 @@ function buildMiniBox(idx, currentIdx, small) {
   const p = PILLARS[idx];
   const answer = answers[p.id];
   const isCurrent = idx === currentIdx;
-  const isCompleted = !!answer;
+  const isCompleted = answer && answer !== '?';
+  const isSkipped = answer === '?';
 
   const box = document.createElement('div');
-  box.className = 'mini-box' + (isCurrent ? ' current' : '') + (isCompleted ? ' completed' : '');
+  box.className = 'mini-box' + (isCurrent ? ' current' : '') + (isCompleted || isSkipped ? ' completed' : '');
   box.onclick = () => goToPillar(idx);
   box.style.cursor = 'pointer';
 
@@ -1937,8 +1780,10 @@ function buildMiniBox(idx, currentIdx, small) {
   if (isCompleted) {
     const truncated = answer.length > 60 ? answer.slice(0, 57) + '…' : answer;
     content = `<div class="mini-box-content">${escHtml(truncated)}</div>`;
+  } else if (isSkipped) {
+    content = `<div class="mini-box-placeholder">— (skipped)</div>`;
   } else {
-    content = `<div class="mini-box-placeholder">Not answered yet</div>`;
+    content = `<div class="mini-box-placeholder">—</div>`;
   }
 
   box.innerHTML = `<div class="mini-box-name">${escHtml(p.name)}</div>${content}`;
@@ -1953,7 +1798,7 @@ function showCanvas() {
   saveCurrent();
   renderCanvas();
   showScreen('screen-canvas');
-  var _np = document.getElementById('nav-progress'); if (_np) _np.textContent = '';
+  document.getElementById('nav-progress').textContent = '';
 }
 
 function renderCanvas() {
@@ -1982,18 +1827,13 @@ function renderCanvas() {
 function buildCanvasBox(idx) {
   const p = PILLARS[idx];
   const answer = answers[p.id];
-  const isEmpty = !answer;
+  const isEmpty = !answer || answer === '?';
 
   const box = document.createElement('div');
-  box.className = 'canvas-box' + (isEmpty ? ' canvas-box-unanswered' : '');
+  box.className = 'canvas-box';
   box.innerHTML = `
     <div class="canvas-box-header">${escHtml(p.name)}</div>
-    <div class="canvas-box-body ${isEmpty ? 'empty' : ''}">
-      ${isEmpty
-        ? `<span class="canvas-unanswered-label">Not answered yet</span>
-           <button class="canvas-unanswered-edit" onclick="goToPillar(${idx})">Edit →</button>`
-        : escHtml(answer)}
-    </div>`;
+    <div class="canvas-box-body ${isEmpty ? 'empty' : ''}">${isEmpty ? 'Not yet filled in.' : escHtml(answer)}</div>`;
   return box;
 }
 
@@ -2001,75 +1841,9 @@ function buildCanvasBox(idx) {
 // ANALYSIS SCREEN
 // =====================
 
-async function showAnalysis() {
-  if (typeof eacAuthReady !== 'undefined') await eacAuthReady;
-  if (typeof eacUser !== 'undefined' && eacUser) {
-    logMemberCanvas();
-    proceedToAnalysis();
-  } else {
-    showScreen('screen-gate');
-  }
-}
-
-function proceedToAnalysis() {
+function showAnalysis() {
   renderAnalysis();
   showScreen('screen-analysis');
-}
-
-function buildCanvasPayload(email, firstName, isMember) {
-  return {
-    email,
-    firstName,
-    isMember:          !!isMember,
-    circleUserId:      isMember && eacUser ? eacUser.id : undefined,
-    answers:           answers,
-    platformChecked:   platformChecked,
-    objectiveSelected: objectiveSelected,
-  };
-}
-
-async function submitGate(e) {
-  e.preventDefault();
-  const firstName = document.getElementById('gate-name').value.trim();
-  const email     = document.getElementById('gate-email').value.trim();
-  const btn       = document.getElementById('gate-submit-btn');
-  const errEl     = document.getElementById('gate-error');
-  errEl.style.display = 'none';
-  btn.textContent = 'One moment…';
-  btn.disabled    = true;
-
-  try {
-    await Promise.all([
-      fetch('/api/book-canvas', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, name: firstName, tool: 'book-canvas', website: document.getElementById('gate-website').value }),
-      }),
-      fetch('/api/book-canvas-results', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(buildCanvasPayload(email, firstName, false)),
-      }),
-    ]);
-    proceedToAnalysis();
-  } catch {
-    errEl.style.display = 'block';
-    btn.textContent = 'See my analysis →';
-    btn.disabled    = false;
-  }
-}
-
-async function logMemberCanvas() {
-  if (!eacUser || !eacUser.email) return;
-  try {
-    await fetch('/api/book-canvas-results', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(buildCanvasPayload(eacUser.email, eacUser.name || '', true)),
-    });
-  } catch (err) {
-    console.error('[book-canvas] member log failed:', err);
-  }
 }
 
 function renderAnalysis() {
@@ -2080,20 +1854,12 @@ function renderAnalysis() {
     const el = document.createElement('div');
     el.className = `analysis-card ${card.type}`;
     el.style.animationDelay = `${i * 0.08}s`;
-    const keyAttr = card.key ? ` data-content-key="${card.key}"` : '';
     el.innerHTML = `
       <span class="analysis-pill pill-${card.type}">${card.label}</span>
-      <div class="analysis-card-text"${keyAttr}>${card.text}</div>
+      <div class="analysis-card-text">${card.text}</div>
       ${card.cta ? `<div class="analysis-cta">${card.cta}</div>` : ''}`;
     container.appendChild(el);
   });
-  if (typeof enableEditing === 'function' && typeof eacUser !== 'undefined' && eacUser && eacUser.isAdmin) {
-    enableEditing();
-  }
-}
-
-function analysisText(key, defaultText) {
-  return (typeof contentMap !== 'undefined' && contentMap[key]) || defaultText;
 }
 
 function generateAnalysis() {
@@ -2108,19 +1874,18 @@ function generateAnalysis() {
     cards.push({
       type: 'gap',
       label: 'Gap',
-      key: 'book-canvas/analysis/audience-gap',
-      text: analysisText('book-canvas/analysis/audience-gap', 'Your ideal reader could be more specific. The more clearly you can picture one real person, the more powerfully your book will speak to many. Give them a name — Sarah from NAB, Jeremy the overworked dentist. A named person on the page is a reader who feels seen.')
+      text: 'Your ideal reader could be more specific. The more clearly you can picture one real person, the more powerfully your book will speak to many. Give them a name — Sarah from NAB, Jeremy the overworked dentist. A named person on the page is a reader who feels seen.'
     });
   }
 
   // 2. Platform check
+  const platformAnswer = a.platform || '';
   const platformCount = (PILLARS[6].checkboxes || []).filter(cb => platformChecked[cb.id]).length;
   if (platformCount < 2) {
     cards.push({
       type: 'gap',
       label: 'Gap',
-      key: 'book-canvas/analysis/platform-gap',
-      text: analysisText('book-canvas/analysis/platform-gap', 'Your platform section is light — social media alone rarely drives meaningful book sales. This is the box most authors underinvest in before they start writing. Your audience needs a direct route to your work: an email list, a speaking circuit, corporate relationships, or a community you already own. Start building now, not after you publish.')
+      text: 'Your platform section is light — social media alone rarely drives meaningful book sales. This is the box most authors underinvest in before they start writing. Your audience needs a direct route to your work: an email list, a speaking circuit, corporate relationships, or a community you already own. Start building now, not after you publish.'
     });
   }
 
@@ -2131,8 +1896,7 @@ function generateAnalysis() {
     cards.push({
       type: 'alignment',
       label: 'Alignment',
-      key: 'book-canvas/analysis/purpose-strategy-alignment',
-      text: analysisText('book-canvas/analysis/purpose-strategy-alignment', 'Your Purpose and Strategy are both clear — you know why you\'re writing and where you want to go. That alignment is rarer than you\'d think. Most authors have a strong why or a strong where, but not both at once. This is what keeps authors going when the writing gets hard and the end feels distant. Hold onto it.')
+      text: 'Your Purpose and Strategy are both clear — you know why you\'re writing and where you want to go. That alignment is rarer than you\'d think. Most authors have a strong why or a strong where, but not both at once. This is what keeps authors going when the writing gets hard and the end feels distant. Hold onto it.'
     });
   }
 
@@ -2143,8 +1907,7 @@ function generateAnalysis() {
     cards.push({
       type: 'opportunity',
       label: 'Opportunity',
-      key: 'book-canvas/analysis/unique-value-opportunity',
-      text: analysisText('book-canvas/analysis/unique-value-opportunity', 'Your Unique Value describes something genuinely useful — but it doesn\'t have a name yet. Naming your method is one of the most powerful things you can do before you publish. "The Self-Fidelity Framework." "The Succession Blueprint." "The Hacking Happy Method." A named approach is what makes your expertise memorable, transferable, and searchable. You already have it — it just needs a label.')
+      text: 'Your Unique Value describes something genuinely useful — but it doesn\'t have a name yet. Naming your method is one of the most powerful things you can do before you publish. "The Self-Fidelity Framework." "The Succession Blueprint." "The Hacking Happy Method." A named approach is what makes your expertise memorable, transferable, and searchable. You already have it — it just needs a label.'
     });
   }
 
@@ -2153,8 +1916,7 @@ function generateAnalysis() {
     cards.push({
       type: 'strength',
       label: 'Strength',
-      key: 'book-canvas/analysis/purpose-strength',
-      text: analysisText('book-canvas/analysis/purpose-strength', 'Your Purpose statement is one of the most important things in this canvas. Authors who are clear on their why — not just their what — write better books, stay the course longer, and attract the right readers faster. Yours is worth revisiting when the project feels big or uncertain. It\'s your anchor.')
+      text: 'Your Purpose statement is one of the most important things in this canvas. Authors who are clear on their why — not just their what — write better books, stay the course longer, and attract the right readers faster. Yours is worth revisiting when the project feels big or uncertain. It\'s your anchor.'
     });
   }
 
@@ -2162,8 +1924,7 @@ function generateAnalysis() {
   cards.push({
     type: 'cta-card',
     label: 'Next Step',
-    key: 'book-canvas/analysis/cta',
-    text: analysisText('book-canvas/analysis/cta', 'Your canvas is a starting point, not a finished plan. The gaps are as useful as the answers — they show you exactly where to focus next. If you\'d like help thinking through any of these pillars, a Clarity Call with Kelly is a good next step.'),
+    text: 'Your canvas is a starting point, not a finished plan. The gaps are as useful as the answers — they show you exactly where to focus next. If you\'d like help thinking through any of these pillars, a Clarity Call with Kelly is a good next step.',
     cta: `<a class="btn btn-navy" href="https://tidycal.com/lea-eac/20-minute-meeting" target="_blank" rel="noopener">Book a Clarity Call &rarr;</a>
           <button class="btn btn-ghost" onclick="showCanvas()">Back to canvas</button>`
   });
@@ -2201,48 +1962,8 @@ document.addEventListener('input', (e) => {
   }
 });
 
-// Init — check for ?load=<recordId> before showing intro
-(async function initPage() {
-  var params = new URLSearchParams(window.location.search);
-  var loadId = params.get('load');
-
-  if (!loadId) {
-    document.getElementById('screen-intro').style.display = 'flex';
-    return;
-  }
-
-  try {
-    var res = await fetch('/api/book-canvas-results?id=' + encodeURIComponent(loadId));
-
-    if (res.status === 401) {
-      var redir = encodeURIComponent(window.location.href);
-      window.location.href = 'https://auth.expertauthor.community/login?redirect=' + redir;
-      return;
-    }
-
-    if (res.status === 403) {
-      document.getElementById('screen-intro').style.display = 'flex';
-      return;
-    }
-
-    if (!res.ok) throw new Error('API error');
-
-    var data = await res.json();
-    Object.assign(answers, data.answers || {});
-
-    document.querySelectorAll('.canvas-view-only').forEach(function(el) { el.style.display = ''; });
-    document.querySelectorAll('.canvas-edit-only').forEach(function(el) { el.style.display = 'none'; });
-
-    renderCanvas();
-    showScreen('screen-canvas');
-    var _np = document.getElementById('nav-progress'); if (_np) _np.textContent = '';
-  } catch (err) {
-    console.error('[book-canvas] load error:', err);
-    document.getElementById('screen-intro').style.display = 'flex';
-  }
-})();
+// Init
+document.getElementById('screen-intro').style.display = 'flex';
 </script>
-<script src="/eac.js"></script>
-<script>requireAuth();</script>
 </body>
 </html>
