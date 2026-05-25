@@ -1266,6 +1266,9 @@
           <label class="form-label" for="gate-email">Email address</label>
           <input class="form-input" type="email" id="gate-email" placeholder="you@example.com" autocomplete="email" required>
         </div>
+        <div style="position:absolute;opacity:0;pointer-events:none;height:0;overflow:hidden;" aria-hidden="true">
+          <input type="text" id="gate-website" name="website" tabindex="-1" autocomplete="off">
+        </div>
         <div class="gate-actions">
           <button type="submit" class="btn btn-primary gate-submit" id="gate-submit-btn">See my analysis &rarr;</button>
           <button type="button" class="gate-skip" onclick="proceedToAnalysis()">Skip for now</button>
@@ -2040,7 +2043,7 @@ async function submitGate(e) {
       fetch('/api/subscribe', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, name: firstName, writingBlocker: 'book-canvas' }),
+        body:    JSON.stringify({ email, name: firstName, tool: 'book-canvas', website: document.getElementById('gate-website').value }),
       }),
       fetch('/api/book-canvas-results', {
         method:  'POST',
