@@ -16,7 +16,10 @@ async function at(table: string, path = '', options: RequestInit = {}) {
     },
   })
   const json = await res.json()
-  if (!res.ok) throw json
+  if (!res.ok) {
+    console.error('[airtable] error:', JSON.stringify(json))
+    throw json
+  }
   return json
 }
 
@@ -30,12 +33,14 @@ async function upsertEvent(circleEventId: string, fields: Record<string, unknown
   const record = await findEvent(circleEventId)
   if (record) {
     await at(COWRITING_TABLE, `/${record.id}`, { method: 'PATCH', body: JSON.stringify({ fields }) })
+    console.log('[cowriting-webhook] event updated:', record.id)
     return record.id as string
   }
   const created = await at(COWRITING_TABLE, '', {
     method: 'POST',
     body: JSON.stringify({ fields: { 'Circle Event ID': circleEventId, ...fields } }),
   })
+  console.log('[cowriting-webhook] event created:', created.id)
   return created.id as string
 }
 
@@ -54,11 +59,15 @@ async function addAttendee(circleEventId: string, personId: string) {
 
 // ── Circle API helpers ────────────────────────────────────────────────────────
 
+// Use the same admin v2 token/URL as the rest of eac-tools
+const CIRCLE_BASE_URL   = process.env.CIRCLE_ADMIN_V2_URL ?? 'https://app.circle.so/api/admin/v2'
+const CIRCLE_API_TOKEN  = process.env.CIRCLE_ADMIN_V2_TOKEN!
 const CIRCLE_COMMUNITY  = process.env.CIRCLE_COMMUNITY_ID!
 
 async function circleGet(path: string) {
-  const res = await fetch(`https://app.circle.so/api/v2/${path}`, {
-    headers: { Authorization: `Token ${process.env.CIRCLE_API_TOKEN}` },
+  const res = await fetch(`${CIRCLE_BASE_URL}/${path}`, {
+    headers: { Authorization: `Bearer ${CIRCLE_API_TOKEN}` },
+    cache: 'no-store',
   })
   if (!res.ok) {
     console.error('[circle] GET failed:', path, res.status)
@@ -105,10 +114,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ ok: true })
   }
 
+  // Env var check — log missing vars so we can diagnose in Vercel logs
+  if (!process.env.AIRTABLE_BASE_ID || !process.env.AIRTABLE_API_KEY) {
+    console.error('[cowriting-webhook] missing AIRTABLE_BASE_ID or AIRTABLE_API_KEY')
+    return res.status(500).json({ error: 'Server misconfiguration' })
+  }
+  if (!CIRCLE_API_TOKEN) {
+    console.warn('[cowriting-webhook] CIRCLE_ADMIN_V2_TOKEN not set — member lookup will be skipped')
+  }
+
   try {
     // ── event published / created — track host ────────────────────────────────
     if (type.includes('publish') || type.includes('creat')) {
-      // Use webhook payload data directly — don't depend on Circle API fetch
       const fields: Record<string, unknown> = {
         'Event Title': data.event_name ?? 'Co-writing Session',
         'Status':      'Upcoming',
@@ -125,6 +142,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const dur = (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 3600000
           if (dur > 0) fields['Duration (hours)'] = Math.round(dur * 10) / 10
         }
+        console.log('[cowriting-webhook] event enriched from Circle API')
       } catch (e) {
         console.warn('[cowriting-webhook] circle event fetch failed, continuing without dates:', e)
       }
@@ -132,9 +150,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const eventRecordId = await upsertEvent(circleEventId, fields)
 
       if (circleMemberId) {
-        const member   = await fetchCircleMember(circleMemberId)
-        const email    = member?.email ?? ''
-        const name     = member?.name  ?? member?.full_name ?? ''
+        const member = await fetchCircleMember(circleMemberId)
+        const email  = member?.email ?? ''
+        const name   = member?.name  ?? member?.full_name ?? ''
         if (email) {
           const personId = await upsertPerson({ email, name, isMember: true })
           await at(COWRITING_TABLE, `/${eventRecordId}`, {
@@ -142,6 +160,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             body: JSON.stringify({ fields: { Host: [personId] } }),
           })
           console.log('[cowriting-webhook] host set:', email, circleEventId)
+        } else {
+          console.warn('[cowriting-webhook] member lookup returned no email for memberId:', circleMemberId)
         }
       }
       return res.status(200).json({ ok: true })
@@ -149,13 +169,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── "event_attendee.attended" / live event attended ───────────────────────
     if (type === 'event_attendee.attended' || type.includes('attend')) {
-      const event  = await fetchCircleEvent(circleEventId)
+      const event    = await fetchCircleEvent(circleEventId)
       const startsAt = event?.event_setting_attributes?.starts_at ?? event?.starts_at ?? null
       const endsAt   = event?.event_setting_attributes?.ends_at   ?? event?.ends_at   ?? null
       const fields: Record<string, unknown> = { 'Status': 'Completed' }
-      if (event?.name)   fields['Event Title'] = event.name
-      if (startsAt)      fields['Event Date']  = startsAt
-      if (event?.url)    fields['Event URL']   = event.url
+      if (event?.name)  fields['Event Title'] = event.name
+      if (startsAt)     fields['Event Date']  = startsAt
+      if (event?.url)   fields['Event URL']   = event.url
       if (startsAt && endsAt) {
         const dur = (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 3600000
         if (dur > 0) fields['Duration (hours)'] = Math.round(dur * 10) / 10
@@ -170,13 +190,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const personId = await upsertPerson({ email, name, isMember: true })
           await addAttendee(circleEventId, personId)
           console.log('[cowriting-webhook] attendee added:', email, circleEventId)
+        } else {
+          console.warn('[cowriting-webhook] member lookup returned no email for memberId:', circleMemberId)
         }
       }
       return res.status(200).json({ ok: true })
     }
 
     // ── "event_ended" / event ended for member ───────────────────────────────
-    // Fires once per member who attended — use it to record both completion and attendee
     if (type === 'event_ended' || type.includes('ended')) {
       await upsertEvent(circleEventId, { 'Status': 'Completed' })
 
@@ -188,6 +209,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const personId = await upsertPerson({ email, name, isMember: true })
           await addAttendee(circleEventId, personId)
           console.log('[cowriting-webhook] attendee (event_ended):', email, circleEventId)
+        } else {
+          console.warn('[cowriting-webhook] member lookup returned no email for memberId:', circleMemberId)
         }
       } else {
         console.log('[cowriting-webhook] event completed (no member):', circleEventId)
@@ -199,6 +222,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ ok: true })
   } catch (err) {
     console.error('[cowriting-webhook] error:', err)
-    return res.status(500).json({ error: 'Internal error' })
+    return res.status(500).json({ error: 'Internal error', detail: String(err) })
   }
 }
