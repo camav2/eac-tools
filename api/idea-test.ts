@@ -16,7 +16,7 @@ import { requireAuth, ALL_TOOLS } from './_lib/auth'
 import { resolvePersonWithCircle, logActivity } from './_lib/airtable'
 import { addContactToList, sendResultsEmail } from './_lib/brevo'
 
-const ALLOWED_ORIGINS = ['https://tools.expertauthor.community']
+const ALLOWED_ORIGINS = ['https://hub.expertauthor.community']
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())

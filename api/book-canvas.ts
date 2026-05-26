@@ -20,7 +20,7 @@ const BOOK_CANVAS_TABLE    = 'tblqezI9SqgelqJA5'
 const ACTIVITY_LOG_TABLE   = 'tblgK9bOiRsjfzvdM'
 const ACTION_TYPE_FIELD_ID = 'fld7imPa3v3yvyLJY'
 
-const ALLOWED_ORIGINS = ['https://tools.expertauthor.community']
+const ALLOWED_ORIGINS = ['https://hub.expertauthor.community']
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
