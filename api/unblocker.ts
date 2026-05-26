@@ -106,7 +106,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const {
     email,
     name,
-    website,
     primaryBlocker,
     secondaryBlocker,
     intensityTier,
@@ -118,12 +117,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     source,
   } = req.body
 
-  // 2. Honeypot — bots fill hidden fields, humans don't
-  if (website) {
-    return res.status(200).json({ ok: true })
-  }
-
-  // 3. Email validation
+  // 2. Email validation
   if (!email || !isValidEmail(email)) {
     return res.status(400).json({ ok: false, error: 'Valid email required' })
   }

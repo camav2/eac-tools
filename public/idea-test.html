@@ -2074,7 +2074,6 @@ async function submitEmail(e) {
         q1: answers[1], q2: answers[2], q3: answers[3],
         q4: answers[4], q5: answers[5],
         isMember:      false,
-        website:       document.getElementById('gate-website')?.value || '',
       })
     });
   } catch (_) { /* silent failure — result shows regardless */ }
@@ -2236,20 +2235,6 @@ loadContent();
   } catch (err) {
     console.error('[idea-test] load error:', err);
   }
-})();
-
-// Honeypot — injected via JS so browser autofill never targets it
-(function() {
-  var form = document.getElementById('email-form');
-  if (!form) return;
-  var hp = document.createElement('input');
-  hp.type = 'text';
-  hp.id = 'gate-website';
-  hp.tabIndex = -1;
-  hp.autocomplete = 'off';
-  hp.setAttribute('aria-hidden', 'true');
-  hp.style.cssText = 'position:absolute;opacity:0;pointer-events:none;height:0;overflow:hidden;';
-  form.appendChild(hp);
 })();
 </script>
 </body>

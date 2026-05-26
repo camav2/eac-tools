@@ -113,18 +113,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     weightedScore, tier,
     q1, q2, q3, q4, q5,
     isMember, circleUserId,
-    website,
   } = req.body
 
-  console.log('[idea-test] email:', email, 'website (honeypot):', website, 'isMember:', isMember)
+  console.log('[idea-test] email:', email, 'isMember:', isMember)
 
-  // 2. Honeypot — bots fill hidden fields, humans don't
-  if (website) {
-    console.log('[idea-test] blocked by honeypot')
-    return res.status(200).json({ ok: true })
-  }
-
-  // 3. Email validation
+  // 2. Email validation
   if (!email || !isValidEmail(email)) {
     console.log('[idea-test] blocked by email validation:', email)
     return res.status(400).json({ error: 'Valid email required' })
