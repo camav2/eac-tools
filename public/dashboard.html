@@ -244,7 +244,7 @@ function renderIdeaList(results) {
 
 async function loadIdeaResults() {
   try {
-    var res = await fetch('/api/airtable');
+    var res = await fetch('/api/idea-test');
     if (res.status === 401) return;
     if (!res.ok) throw new Error('API error');
     var data = await res.json();
