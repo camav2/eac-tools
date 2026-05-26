@@ -1434,9 +1434,6 @@ body { padding-top: 60px; }
         <label class="form-label" for="input-email">Email address</label>
         <input class="form-input" type="email" id="input-email" placeholder="you@example.com" required autocomplete="email">
       </div>
-      <div style="position:absolute;opacity:0;pointer-events:none;height:0;overflow:hidden;" aria-hidden="true">
-        <input type="text" id="gate-website" name="website" tabindex="-1" autocomplete="off">
-      </div>
       <div class="field-group">
         <label for="input-context">What are you currently working on? <span class="field-optional">(optional)</span></label>
         <textarea
@@ -1986,7 +1983,7 @@ function buildAirtablePayload() {
     isMember:           !!eacUser,
     combinationPattern: comboKey,
     source:             'unblocker',
-    website:            document.getElementById('gate-website').value
+    website:            document.getElementById('gate-website')?.value || ''
   };
 }
 
@@ -2255,6 +2252,20 @@ loadContent();
   } catch(err) {
     console.error('[unblocker] load error:', err);
   }
+})();
+
+// Honeypot — injected via JS so browser autofill never targets it
+(function() {
+  var form = document.getElementById('email-form');
+  if (!form) return;
+  var hp = document.createElement('input');
+  hp.type = 'text';
+  hp.id = 'gate-website';
+  hp.tabIndex = -1;
+  hp.autocomplete = 'off';
+  hp.setAttribute('aria-hidden', 'true');
+  hp.style.cssText = 'position:absolute;opacity:0;pointer-events:none;height:0;overflow:hidden;';
+  form.appendChild(hp);
 })();
 </script>
 </body>

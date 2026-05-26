@@ -1266,9 +1266,6 @@
           <label class="form-label" for="gate-email">Email address</label>
           <input class="form-input" type="email" id="gate-email" placeholder="you@example.com" autocomplete="email" required>
         </div>
-        <div style="position:absolute;opacity:0;pointer-events:none;height:0;overflow:hidden;" aria-hidden="true">
-          <input type="text" id="gate-website" name="website" tabindex="-1" autocomplete="off">
-        </div>
         <div class="gate-actions">
           <button type="submit" class="btn btn-primary gate-submit" id="gate-submit-btn">See my analysis &rarr;</button>
           <button type="button" class="gate-skip" onclick="proceedToAnalysis()">Skip for now</button>
@@ -2042,7 +2039,7 @@ async function submitGate(e) {
     await fetch('/api/book-canvas', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ ...buildCanvasPayload(email, firstName, false), website: document.getElementById('gate-website').value }),
+      body:    JSON.stringify({ ...buildCanvasPayload(email, firstName, false), website: document.getElementById('gate-website')?.value || '' }),
     });
     proceedToAnalysis();
   } catch {
@@ -2233,6 +2230,20 @@ document.addEventListener('input', (e) => {
     console.error('[book-canvas] load error:', err);
     document.getElementById('screen-intro').style.display = 'flex';
   }
+})();
+
+// Honeypot — injected via JS so browser autofill never targets it
+(function() {
+  var form = document.getElementById('gate-form');
+  if (!form) return;
+  var hp = document.createElement('input');
+  hp.type = 'text';
+  hp.id = 'gate-website';
+  hp.tabIndex = -1;
+  hp.autocomplete = 'off';
+  hp.setAttribute('aria-hidden', 'true');
+  hp.style.cssText = 'position:absolute;opacity:0;pointer-events:none;height:0;overflow:hidden;';
+  form.appendChild(hp);
 })();
 </script>
 <script src="/eac.js"></script>
