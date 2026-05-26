@@ -900,46 +900,17 @@
     justify-content: center;
     padding: 48px 24px;
   }
-  .gate-card {
-    background: var(--color-white);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-lg);
-    max-width: 520px;
-    width: 100%;
-    overflow: hidden;
+  .email-card {
+    background: var(--color-white); border-radius: 24px; padding: 48px 40px;
+    max-width: 500px; width: 100%; box-shadow: var(--shadow-lg); text-align: center;
   }
-  .gate-header {
-    background: var(--color-navy);
-    padding: 36px 48px 28px;
+  .email-icon {
+    width: 64px; height: 64px; background: var(--color-yellow); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px; font-size: 28px;
   }
-  .gate-eyebrow {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-yellow);
-    background: rgba(255,230,75,0.12);
-    padding: 5px 12px;
-    border-radius: var(--radius-full);
-    margin-bottom: 14px;
-  }
-  .gate-headline {
-    font-size: 22px;
-    font-weight: 900;
-    color: var(--color-white);
-    line-height: 1.25;
-    margin-bottom: 8px;
-  }
-  .gate-sub {
-    font-size: 13px;
-    font-weight: 500;
-    color: rgba(255,255,255,0.55);
-    line-height: 1.6;
-  }
-  .gate-body {
-    padding: 36px 48px 40px;
-  }
+  .email-title { font-size: 26px; font-weight: 800; color: var(--color-navy); letter-spacing: -0.02em; margin-bottom: 12px; }
+  .email-sub { font-size: 15px; color: var(--color-grey-700); line-height: 1.6; margin-bottom: 32px; }
   .form-field { margin-bottom: 16px; text-align: left; }
   .form-label {
     display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
@@ -948,44 +919,43 @@
   .form-input {
     width: 100%; padding: 14px 16px;
     border: 2px solid var(--color-grey-200); border-radius: var(--radius-md);
-    font-family: var(--font); font-size: 14px; font-weight: 500; color: var(--color-navy);
+    font-family: var(--font); font-size: 15px; color: var(--color-black);
     background: var(--color-white); transition: border-color var(--transition); appearance: none;
   }
   .form-input:focus { outline: none; border-color: var(--color-blue); box-shadow: 0 0 0 3px rgba(82,150,251,0.15); }
   .form-input::placeholder { color: var(--color-grey-400); }
   .form-privacy { font-size: 12px; color: var(--color-grey-400); margin-top: 16px; line-height: 1.5; }
-  .gate-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    margin-top: 24px;
+  .form-consent {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-top: 16px; margin-bottom: 8px; text-align: left;
   }
-  .gate-submit {
-    width: 100%;
+  .form-consent input[type="checkbox"] {
+    flex-shrink: 0; width: 18px; height: 18px; margin-top: 2px;
+    accent-color: var(--color-navy); cursor: pointer;
   }
+  .form-consent-label { font-size: 12px; color: var(--color-grey-700); line-height: 1.55; cursor: pointer; }
+  .btn-submit {
+    display: block; width: 100%; padding: 16px 32px;
+    background: var(--color-navy); color: var(--color-white);
+    border: none; border-radius: var(--radius-full); cursor: pointer;
+    font-family: var(--font); font-size: 14px; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+    margin-top: 8px;
+  }
+  .btn-submit:hover { background: #000055; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .btn-submit:disabled { background: var(--color-grey-400); cursor: not-allowed; transform: none; box-shadow: none; }
   .gate-skip {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--color-grey-400);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: var(--font);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    padding: 0;
+    font-size: 12px; font-weight: 600; color: var(--color-grey-400);
+    background: none; border: none; cursor: pointer; font-family: var(--font);
+    text-decoration: underline; text-underline-offset: 3px; padding: 0; margin-top: 14px; display: block; width: 100%;
   }
   .gate-skip:hover { color: var(--color-grey-700); }
   .gate-error {
-    color: #c0392b;
-    font-size: 13px;
-    font-weight: 600;
-    margin-top: 10px;
-    display: none;
+    color: #c0392b; font-size: 13px; font-weight: 600; margin-top: 10px; display: none;
   }
   @media (max-width: 560px) {
-    .gate-header, .gate-body { padding-left: 28px; padding-right: 28px; }
+    .email-card { padding: 36px 24px; }
   }
 
   /* ===================== */
@@ -1250,13 +1220,11 @@
 <!-- GATE SCREEN           -->
 <!-- ===================== -->
 <section id="screen-gate" class="screen">
-  <div class="gate-card">
-    <div class="gate-header">
-      <div class="gate-eyebrow">Almost there</div>
-      <h2 class="gate-headline">Where should we send your results?</h2>
-      <p class="gate-sub">Enter your details to unlock your cross-pillar analysis. We'll also send you a copy to revisit later.</p>
-    </div>
-    <div class="gate-body">
+  <div style="display:flex;justify-content:center;padding:48px 24px;">
+    <div class="email-card">
+      <div class="email-icon">📋</div>
+      <h2 class="email-title">Where should we send your results?</h2>
+      <p class="email-sub">Enter your details to unlock your cross-pillar analysis. We'll also send you a copy to revisit later.</p>
       <form id="gate-form" onsubmit="submitGate(event)">
         <div class="form-field">
           <label class="form-label" for="gate-name">First name</label>
@@ -1266,12 +1234,15 @@
           <label class="form-label" for="gate-email">Email address</label>
           <input class="form-input" type="email" id="gate-email" placeholder="you@example.com" autocomplete="email" required>
         </div>
-        <div class="gate-actions">
-          <button type="submit" class="btn btn-primary gate-submit" id="gate-submit-btn">See my analysis &rarr;</button>
-          <button type="button" class="gate-skip" onclick="proceedToAnalysis()">Skip for now</button>
+        <div class="form-consent">
+          <input type="checkbox" id="gate-consent" onchange="document.getElementById('gate-submit-btn').disabled = !this.checked;">
+          <label class="form-consent-label" for="gate-consent">I agree that when I sign up for my results, I will be added to a marketing list where I will receive occasional news from EAC on writing, books and authors.</label>
         </div>
+        <button type="submit" class="btn-submit" id="gate-submit-btn" disabled>See My Analysis &rarr;</button>
+        <button type="button" class="gate-skip" onclick="proceedToAnalysis()">Skip for now</button>
         <p class="gate-error" id="gate-error">Something went wrong — please try again.</p>
       </form>
+      <p class="form-privacy">Your privacy is 100% safe and you can opt-out at any time, for any reason, immediately, and without hassle.</p>
     </div>
   </div>
 </section>

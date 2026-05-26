@@ -1031,30 +1031,29 @@ body {
   font-family: var(--font); font-size: 12px; cursor: pointer;
 }
 
-/* ── CONTEXT FIELD (email screen) ── */
-.field-group {
-  margin-bottom: 16px;
+.form-textarea { resize: vertical; min-height: 80px; }
+
+.form-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  margin-bottom: 8px;
   text-align: left;
 }
-.field-group label {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-navy);
-  margin-bottom: 6px;
+.form-consent input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--color-navy);
+  cursor: pointer;
 }
-.field-optional {
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
-  color: var(--color-grey-400);
-  font-size: 11px;
-}
-.form-textarea {
-  resize: vertical;
-  min-height: 80px;
+.form-consent-label {
+  font-size: 12px;
+  color: var(--color-grey-700);
+  line-height: 1.55;
+  cursor: pointer;
 }
 
 /* ── INTENSITY BADGE ── */
@@ -1434,8 +1433,8 @@ body { padding-top: 60px; }
         <label class="form-label" for="input-email">Email address</label>
         <input class="form-input" type="email" id="input-email" placeholder="you@example.com" required autocomplete="email">
       </div>
-      <div class="field-group">
-        <label for="input-context">What are you currently working on? <span class="field-optional">(optional)</span></label>
+      <div class="form-field">
+        <label class="form-label" for="input-context">What are you currently working on? <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--color-grey-400);font-size:11px;">(optional)</span></label>
         <textarea
           class="form-input form-textarea"
           id="input-context"
@@ -1445,13 +1444,14 @@ body { padding-top: 60px; }
           maxlength="500"
         ></textarea>
       </div>
-      <button type="submit" class="btn-submit">
-        See my results
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </button>
+      <div class="form-consent">
+        <input type="checkbox" id="consent" onchange="document.getElementById('btn-submit').disabled = !this.checked;">
+        <label class="form-consent-label" for="consent">I agree that when I sign up for my results, I will be added to a marketing list where I will receive occasional news from EAC on writing, books and authors.</label>
+      </div>
+      <button type="submit" class="btn-submit" id="btn-submit" disabled>See My Results &rarr;</button>
     </form>
 
-    <p class="form-privacy">No spam, ever. We respect your privacy and you can unsubscribe at any time.</p>
+    <p class="form-privacy">Your privacy is 100% safe and you can opt-out at any time, for any reason, immediately, and without hassle.</p>
   </div>
 </section>
 

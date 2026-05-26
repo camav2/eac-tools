@@ -1533,12 +1533,16 @@ body { padding-top: 60px; }
         <label class="form-label" for="input-email">Email address</label>
         <input class="form-input" type="email" id="input-email" name="email" placeholder="your@email.com" required autocomplete="email">
       </div>
-      <button class="btn-submit" type="submit" id="btn-submit">
+      <div class="form-consent">
+        <input type="checkbox" id="consent" onchange="document.getElementById('btn-submit').disabled = !this.checked;">
+        <label class="form-consent-label" for="consent">I agree that when I sign up for my results, I will be added to a marketing list where I will receive occasional news from EAC on writing, books and authors.</label>
+      </div>
+      <button class="btn-submit" type="submit" id="btn-submit" disabled>
         See My Result &rarr;
       </button>
     </form>
 
-    <p class="form-privacy">No spam, ever. We'll use this to send you your result and occasional thinking from Kelly about writing, ideas, and books.</p>
+    <p class="form-privacy">Your privacy is 100% safe and you can opt-out at any time, for any reason, immediately, and without hassle.</p>
   </div>
 </div>
 
