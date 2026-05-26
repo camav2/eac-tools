@@ -945,13 +945,7 @@
   }
   .btn-submit:hover { background: #000055; transform: translateY(-1px); box-shadow: var(--shadow-md); }
   .btn-submit:disabled { background: var(--color-grey-400); cursor: not-allowed; transform: none; box-shadow: none; }
-  .gate-skip {
-    font-size: 12px; font-weight: 600; color: var(--color-grey-400);
-    background: none; border: none; cursor: pointer; font-family: var(--font);
-    text-decoration: underline; text-underline-offset: 3px; padding: 0; margin-top: 14px; display: block; width: 100%;
-  }
-  .gate-skip:hover { color: var(--color-grey-700); }
-  .gate-error {
+.gate-error {
     color: #c0392b; font-size: 13px; font-weight: 600; margin-top: 10px; display: none;
   }
   @media (max-width: 560px) {
@@ -1239,7 +1233,6 @@
           <label class="form-consent-label" for="gate-consent">I agree that when I sign up for my results, I will be added to a marketing list where I will receive occasional news from EAC on writing, books and authors.</label>
         </div>
         <button type="submit" class="btn-submit" id="gate-submit-btn" disabled>See My Analysis &rarr;</button>
-        <button type="button" class="gate-skip" onclick="proceedToAnalysis()">Skip for now</button>
         <p class="gate-error" id="gate-error">Something went wrong — please try again.</p>
       </form>
       <p class="form-privacy">Your privacy is 100% safe and you can opt-out at any time, for any reason, immediately, and without hassle.</p>
