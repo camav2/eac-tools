@@ -13,6 +13,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { getSession } from './_lib/auth'
 
 const PAGE_FILES: Record<string, string> = {
   'index':       'public/index.html',
@@ -23,28 +24,6 @@ const PAGE_FILES: Record<string, string> = {
 
 const CONTENT_BLOCK_RE = /<script type="application\/json" id="page-content">([\s\S]*?)<\/script>/
 
-function parseCookie(header: string, name: string): string | null {
-  const m = header.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`))
-  return m ? decodeURIComponent(m[1]) : null
-}
-
-async function getAuthedEmail(req: VercelRequest): Promise<string | null> {
-  const token = parseCookie(req.headers.cookie ?? '', 'eac_session')
-  if (!token) return null
-  try {
-    const { jwtVerify } = await import('jose')
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET!))
-    return (payload.sub as string) ?? null
-  } catch {
-    return null
-  }
-}
-
-function isAdmin(email: string): boolean {
-  return (process.env.ADMIN_EMAILS ?? '')
-    .split(',').map(e => e.trim()).filter(Boolean)
-    .includes(email)
-}
 
 async function ghGet(filePath: string) {
   const url = `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/${filePath}`
@@ -113,20 +92,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // POST — admin only; updates a key and commits the HTML file to GitHub
   if (req.method === 'POST') {
-    const email = await getAuthedEmail(req)
-    console.log('[content] POST email:', email, 'cookie header present:', !!req.headers.cookie)
-    if (!email) return res.status(403).json({ error: 'Forbidden — no session' })
-    if (!isAdmin(email)) {
-      console.log('[content] not admin:', email, 'ADMIN_EMAILS:', process.env.ADMIN_EMAILS)
-      return res.status(403).json({ error: 'Forbidden — not admin' })
-    }
+    const session = await getSession(req)
+    if (!session) return res.status(401).json({ error: 'Unauthorised' })
+    if (!session.isAdmin) return res.status(403).json({ error: 'Forbidden — not admin' })
 
     const { key, html: value, page } = req.body
     if (!key || !page) return res.status(400).json({ error: 'key and page required' })
     const filePath = PAGE_FILES[page]
     if (!filePath) return res.status(400).json({ error: 'Unknown page' })
 
-    console.log('[content] saving key:', key, 'page:', page, 'file:', filePath)
     try {
       const { content, sha } = await ghGet(filePath)
       const fileHtml    = Buffer.from(content, 'base64').toString('utf8')
@@ -135,7 +109,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const updatedHtml = injectContentMap(fileHtml, updatedMap)
 
       await ghPut(filePath, updatedHtml, sha, `content: update ${key}`)
-      console.log('[content] saved ok')
       return res.status(200).json({ ok: true })
     } catch (err) {
       console.error('[content] POST failed:', err)
