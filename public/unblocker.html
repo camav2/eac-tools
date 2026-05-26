@@ -1426,14 +1426,6 @@ body { padding-top: 60px; }
 
     <form id="email-form" onsubmit="submitEmail(event)">
       <div class="form-field">
-        <label class="form-label" for="input-name">First name</label>
-        <input class="form-input" type="text" id="input-name" placeholder="Your first name" required autocomplete="given-name">
-      </div>
-      <div class="form-field">
-        <label class="form-label" for="input-email">Email address</label>
-        <input class="form-input" type="email" id="input-email" placeholder="you@example.com" required autocomplete="email">
-      </div>
-      <div class="form-field">
         <label class="form-label" for="input-context">What are you currently working on? <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--color-grey-400);font-size:11px;">(optional)</span></label>
         <textarea
           class="form-input form-textarea"
@@ -1443,6 +1435,14 @@ body { padding-top: 60px; }
           placeholder="e.g. a business book I've been circling for two years, a leadership framework I want to turn into a manuscript..."
           maxlength="500"
         ></textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="input-name">First name</label>
+        <input class="form-input" type="text" id="input-name" placeholder="Your first name" required autocomplete="given-name">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="input-email">Email address</label>
+        <input class="form-input" type="email" id="input-email" placeholder="you@example.com" required autocomplete="email">
       </div>
       <div class="form-consent">
         <input type="checkbox" id="consent" onchange="document.getElementById('btn-submit').disabled = !this.checked;">
