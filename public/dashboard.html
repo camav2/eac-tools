@@ -352,7 +352,7 @@ function renderUnblockList(results) {
   list.innerHTML = '';
   results.forEach(function(r) {
     var date  = formatDate(r.submittedAt);
-    var label = r.primaryBlocker ? (r.primaryBlocker + (r.secondaryBlocker ? ' + ' + r.secondaryBlocker : '')) : 'Writing Unblock — ' + date;
+    var label = r.primaryBlocker ? (r.primaryBlocker + (r.secondaryBlocker ? ' + ' + r.secondaryBlocker : '') + (date ? ' — ' + date : '')) : 'Writing Unblock — ' + date;
     var card  = document.createElement('div');
     card.className = 'canvas-card';
     card.innerHTML =
