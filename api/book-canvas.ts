@@ -168,9 +168,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     email, firstName,
     isMember, circleUserId,
     answers, platformChecked, objectiveSelected,
+    _t, url,
   } = req.body
 
-  // 2. Email validation
+  // 2. Timing check — _t is a JS-set timestamp; missing = no JS = bot; too fast = bot
+  const loadTime = parseInt(_t || '0', 10)
+  const age = Date.now() - loadTime
+  if (!loadTime || age < 4000 || age > 86400000) {
+    console.log('[book-canvas] bot check failed (timing):', { age, email })
+    return res.status(400).json({ error: 'Invalid submission' })
+  }
+
+  // 3. Honeypot — JS-injected field; bots that skip JS execution will trip this
+  if (url) {
+    console.log('[book-canvas] bot check failed (honeypot):', { email })
+    return res.status(400).json({ error: 'Invalid submission' })
+  }
+
+  // 4. Email validation
   if (!email || !isValidEmail(email)) return res.status(400).json({ error: 'Valid email required' })
 
   const personId = await resolvePersonWithCircle({

@@ -1220,6 +1220,8 @@
       <h2 class="email-title">Where should we send your results?</h2>
       <p class="email-sub">Enter your details to unlock your cross-pillar analysis. We'll also send you a copy to revisit later.</p>
       <form id="gate-form" onsubmit="submitGate(event)">
+        <input type="hidden" id="_t" value="">
+        <div id="hp-trap"></div>
         <div class="form-field">
           <label class="form-label" for="gate-name">First name</label>
           <input class="form-input" type="text" id="gate-name" placeholder="Your first name" autocomplete="given-name">
@@ -2003,7 +2005,11 @@ async function submitGate(e) {
     await fetch('/api/book-canvas', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ ...buildCanvasPayload(email, firstName, false), }),
+      body:    JSON.stringify({
+        ...buildCanvasPayload(email, firstName, false),
+        _t:  document.getElementById('_t').value,
+        url: (document.querySelector('#hp-trap input') || {}).value || '',
+      }),
     });
     proceedToAnalysis();
   } catch {
@@ -2154,6 +2160,22 @@ document.addEventListener('input', (e) => {
     platformSubs[id] = e.target.value;
   }
 });
+
+// Bot protection: timestamp (proves JS ran + catches instant submits) + JS-injected honeypot
+(function() {
+  var tEl = document.getElementById('_t');
+  if (tEl) tEl.value = Date.now();
+  var trap = document.getElementById('hp-trap');
+  if (trap) {
+    var hp = document.createElement('input');
+    hp.type = 'text'; hp.name = 'url';
+    hp.setAttribute('tabindex', '-1');
+    hp.setAttribute('autocomplete', 'off');
+    hp.setAttribute('aria-hidden', 'true');
+    hp.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
+    trap.appendChild(hp);
+  }
+})();
 
 // Init — check for ?load=<recordId> before showing intro
 (async function initPage() {
