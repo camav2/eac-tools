@@ -99,9 +99,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // ── POST: save a completed idea test ──────────────────────────────────────
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
+  console.log('[idea-test] POST received, origin:', req.headers['origin'], 'referer:', req.headers['referer'])
+
   // 1. Origin check — block direct API hits from outside the site
   const origin = (req.headers['origin'] ?? req.headers['referer'] ?? '') as string
   if (!ALLOWED_ORIGINS.some(o => origin.startsWith(o))) {
+    console.log('[idea-test] blocked by origin check:', origin)
     return res.status(403).json({ error: 'Forbidden' })
   }
 
@@ -113,13 +116,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     website,
   } = req.body
 
+  console.log('[idea-test] email:', email, 'website (honeypot):', website, 'isMember:', isMember)
+
   // 2. Honeypot — bots fill hidden fields, humans don't
-  if (website) return res.status(200).json({ ok: true })
+  if (website) {
+    console.log('[idea-test] blocked by honeypot')
+    return res.status(200).json({ ok: true })
+  }
 
   // 3. Email validation
   if (!email || !isValidEmail(email)) {
+    console.log('[idea-test] blocked by email validation:', email)
     return res.status(400).json({ error: 'Valid email required' })
   }
+  console.log('[idea-test] passed validation, proceeding to write')
 
   // ── Email helpers ──────────────────────────────────────────────────────────
   function answerLabel(val: string): string {
