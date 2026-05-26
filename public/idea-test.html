@@ -2061,10 +2061,12 @@ async function submitEmail(e) {
   btn.disabled    = true;
   btn.textContent = 'One moment…';
 
+  console.log('[debug] idea-test: submitEmail running, email:', email);
   weightedScore = calcScore();
   const tier = getTier(weightedScore);
 
   try {
+    console.log('[debug] idea-test: about to fetch, email:', email, 'gate-website el:', document.getElementById('gate-website'));
     await fetch('/api/idea-test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2080,7 +2082,8 @@ async function submitEmail(e) {
         website:       document.getElementById('gate-website').value,
       })
     });
-  } catch (_) { /* silent failure — result shows regardless */ }
+    console.log('[debug] idea-test: fetch completed');
+  } catch (err) { console.error('[debug] idea-test fetch error:', err); }
 
   buildResult(tier);
   showScreen('screen-result');
