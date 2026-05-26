@@ -192,3 +192,13 @@ function finishEdit(key, html) {
 
 /* Run on every page load */
 loadContent();
+
+/* ── AUTH GATE (called by pages that need it) ── */
+function requireAuth() {
+  eacAuthReady.then(function() {
+    if (!eacUser) {
+      const redirect = encodeURIComponent(window.location.href);
+      window.location.href = 'https://auth.expertauthor.community/login?redirect=' + redirect;
+    }
+  });
+}
