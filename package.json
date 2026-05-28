@@ -2,6 +2,9 @@
   "name": "eac-tools",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@vercel/node": "^3.0.0"

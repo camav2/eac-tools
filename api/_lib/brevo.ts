@@ -16,12 +16,14 @@ export const BREVO_LISTS = {
   'book-canvas': 66,
   'idea-test':   65,
   'unblocker':   64,
+  'isbn-wizard': 68,
 } as const
 
 export const BREVO_TEMPLATES = {
   'book-canvas': 546,
   'idea-test':   547,
   'unblocker':   548,
+  'isbn-wizard': 550,
 } as const
 
 /**

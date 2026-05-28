@@ -42,11 +42,13 @@ const defaultConfig = {
   ],
 }
 
-function loadConfig() {
+type Config = typeof defaultConfig
+
+function loadConfig(): Config {
   try {
     const raw = process.env.ACCESS_CONFIG_JSON
     if (!raw) return defaultConfig
-    const parsed = JSON.parse(raw)
+    const parsed = JSON.parse(raw) as Partial<Config>
     // Merge: keep default tools/groups but allow overrides + additions
     return {
       groups: parsed.groups ?? defaultConfig.groups,

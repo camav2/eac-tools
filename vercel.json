@@ -37,6 +37,10 @@
     {
       "source": "/settings",
       "destination": "/settings.html"
+    },
+    {
+      "source": "/isbn-wizard",
+      "destination": "/isbn-wizard.html"
     }
   ]
 }

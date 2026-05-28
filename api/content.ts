@@ -16,10 +16,11 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getSession } from './_lib/auth'
 
 const PAGE_FILES: Record<string, string> = {
-  'index':       'public/index.html',
-  'idea-test':   'public/idea-test.html',
-  'unblocker':   'public/unblocker.html',
-  'book-canvas': 'public/book-canvas.html',
+  'index':        'public/index.html',
+  'idea-test':    'public/idea-test.html',
+  'unblocker':    'public/unblocker.html',
+  'book-canvas':  'public/book-canvas.html',
+  'isbn-wizard':  'public/isbn-wizard.html',
 }
 
 const CONTENT_BLOCK_RE = /<script type="application\/json" id="page-content">([\s\S]*?)<\/script>/
