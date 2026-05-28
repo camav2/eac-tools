@@ -19,7 +19,7 @@
 | `/idea-test` | `public/idea-test.html` | `api/idea-test.ts` | `AIRTABLE_TABLE_ID` |
 | `/unblocker` | `public/unblocker.html` | `api/unblocker.ts` | `AIRTABLE_UNBLOCKER_TABLE_ID` |
 | `/book-canvas` | `public/book-canvas.html` | `api/book-canvas.ts` | `tblqezI9SqgelqJA5` (hardcoded) |
-| `/isbn-wizard` | `public/isbn-wizard.html` | `api/isbn-wizard.ts` | `AIRTABLE_ISBN_WIZARD_TABLE_ID` (env var — table needs creating) |
+| `/isbn-wizard` | `public/isbn-wizard.html` | `api/isbn-wizard.ts` | `AIRTABLE_ISBN_WIZARD_TABLE_ID` → `tblZL8zS59pGTAyyY` |
 | `/dashboard` | `public/dashboard.html` | multiple GET endpoints | — |
 | `/settings` | `public/settings.html` | `api/access-config.ts` | — |
 | `/editor` | `public/editor.html` | `api/content.ts` | — |
@@ -340,6 +340,14 @@ Both require `requireAuth(req, res, ALL_TOOLS)`.
 - Writing Unblock Completed
 - Book Canvas Completed ← added dynamically if missing via Airtable Meta API
 
+### Primary key convention — all new tables
+
+**Every new tool-specific table must use an auto-increment `ID` field as the primary key (first column).** Do not use Email or any user-supplied value as the primary field.
+
+- Primary field: `ID`, type `autoNumber`
+- Airtable record lookups in the API always use the Airtable record ID (`rec...`), never the primary field value — so this is purely a display/admin convenience and has no effect on API reads or writes.
+- Existing tables (Idea Test, Unblocker, Book Canvas) pre-date this convention and use Email as primary.
+
 ### Tool-specific tables
 
 **Idea Test** (`process.env.AIRTABLE_TABLE_ID`)
@@ -350,6 +358,9 @@ Key fields: Email, First Name, Primary Blocker, Secondary Blocker, Intensity Tie
 
 **Book Canvas** (`tblqezI9SqgelqJA5` — hardcoded)
 Key fields: Email, First Name, Is Member, Submitted At, Source Tool, Pillars Completed (0–9), Purpose, Positioning, Audience, Problem/Need, Market Fit, Unique Value, Platform, Objective, Strategy, Person (link)
+
+**ISBN Wizard Results** (`tblZL8zS59pGTAyyY` — env var `AIRTABLE_ISBN_WIZARD_TABLE_ID`)
+Key fields: ID (auto-increment, primary), Email, First Name, Is Member, Submitted At, Source Tool, Country, Formats, Platform, Publisher, Quantity, ISBN Count, Recommended Pack, Person (link)
 
 ### `_lib/airtable.ts` helpers
 
@@ -374,6 +385,7 @@ await logActivity({ personId, actionType, sourceTool, summary, referenceId })
 | unblocker | 64 |
 | idea-test | 65 |
 | book-canvas | 66 |
+| isbn-wizard | 68 |
 
 ### Templates
 | Tool | Template ID |
@@ -381,6 +393,7 @@ await logActivity({ personId, actionType, sourceTool, summary, referenceId })
 | unblocker | 548 |
 | idea-test | 547 |
 | book-canvas | 546 |
+| isbn-wizard | 550 |
 
 ### `_lib/brevo.ts` helpers
 
@@ -462,6 +475,7 @@ Circle API calls always fail silently — they must never block a form submissio
   □ res.setHeader('Cache-Control', 'no-store') at top
 
 □ Add Airtable table
+  □ Primary field: ID (autoNumber) — not Email
   □ Include: Email, First Name, Is Member, Submitted At, Source Tool, Person (link to People)
   □ Add the table ID to an env var (or hardcode like book-canvas does)
 
