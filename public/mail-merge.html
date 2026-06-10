@@ -587,18 +587,16 @@ function updateSendButton() {
 
   var note = document.getElementById('throttle-note');
   if (memberCount > 0 && ready) {
-    var secs  = memberCount;
-    var mins  = Math.ceil(secs / 60);
-    var slow  = memberCount > 50;
-    var warn  = memberCount > 45;
+    var secs = memberCount;
+    var mins = Math.ceil(secs / 60);
     note.style.display = 'block';
     note.innerHTML =
       '&#9201; Sends are throttled at 1 email/sec to protect your Gmail account. ' +
-      'This list will take ~' + (secs < 60 ? secs + ' seconds' : mins + ' minute' + (mins > 1 ? 's' : '')) + '.' +
-      (warn ? '<br><strong>Lists over 45 recipients may time out.</strong> Consider splitting into smaller groups.' : '');
-    note.style.borderColor = warn ? '#fca5a5' : '#fde68a';
-    note.style.background  = warn ? '#fef2f2' : '#fffbeb';
-    note.style.color       = warn ? '#991b1b' : '#92400e';
+      'This list will take ~' + (secs < 60 ? secs + ' seconds' : mins + ' minute' + (mins > 1 ? 's' : '')) + '. ' +
+      'Large lists are sent in the background — you can leave this page once sending starts.';
+    note.style.borderColor = '#fde68a';
+    note.style.background  = '#fffbeb';
+    note.style.color       = '#92400e';
   } else {
     note.style.display = 'none';
   }
