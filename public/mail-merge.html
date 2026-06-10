@@ -281,7 +281,17 @@
         </div>
         <div class="merge-preview-subject" id="preview-subject"></div>
         <div class="merge-preview-body" id="preview-body"></div>
-        <div class="merge-preview-profile" id="preview-profile" style="display:none;"></div>
+      </div>
+
+      <!-- Contact profile (Brevo only, shown whenever members are loaded) -->
+      <div id="contact-profile-wrap" style="display:none; margin-top:12px;">
+        <div class="merge-preview" style="padding:0;">
+          <div class="merge-preview-header" style="cursor:default;">
+            <span style="font-weight:600;">Contact Profile</span>
+            <span class="merge-preview-who" id="profile-who"></span>
+          </div>
+          <div class="merge-preview-profile" id="preview-profile" style="display:grid;"></div>
+        </div>
       </div>
     </div>
 
@@ -375,19 +385,21 @@ var BREVO_PROFILE_FIELDS = [
 ];
 
 function renderProfile(m) {
-  var el = document.getElementById('preview-profile');
+  var wrap   = document.getElementById('contact-profile-wrap');
+  var el     = document.getElementById('preview-profile');
   var source = getSource();
-  if (source === 'circle' || !m || !m.attributes) { el.style.display = 'none'; return; }
+  if (source === 'circle' || !m) { wrap.style.display = 'none'; return; }
+  document.getElementById('profile-who').textContent = (m.name || m.email) + ' <' + m.email + '>';
+  var attrs = m.attributes || {};
   var rows = '';
   BREVO_PROFILE_FIELDS.forEach(function(f) {
-    var val = m.attributes[f.key];
-    if (val === null || val === undefined || val === '') return;
+    var val = attrs[f.key];
+    var display = (val === null || val === undefined || val === '') ? '<em style="color:var(--grey-500)">—</em>' : escHtml(String(val));
     rows += '<span class="profile-field-label">' + escHtml(f.label) + '</span>' +
-            '<span class="profile-field-value">' + escHtml(String(val)) + '</span>';
+            '<span class="profile-field-value">' + display + '</span>';
   });
-  if (!rows) { el.style.display = 'none'; return; }
   el.innerHTML = rows;
-  el.style.display = 'grid';
+  wrap.style.display = 'block';
 }
 
 function previewNav(dir) {
@@ -400,13 +412,16 @@ function updatePreview() {
   var subject = document.getElementById('subject').value;
   var body    = document.getElementById('body').value;
   var m       = previewMembers[previewIndex] || null;
+
+  // Profile section is independent — show it whenever a Brevo contact is loaded
+  renderProfile(m);
+
   if (!m || (!subject && !body)) { panel.style.display = 'none'; return; }
 
   document.getElementById('preview-who').textContent =
     (m.name || m.email) + ' <' + m.email + '>';
   document.getElementById('preview-subject').textContent = mergeFields(subject, m) || '(no subject)';
   document.getElementById('preview-body').textContent    = mergeFields(body,    m) || '(no body)';
-  renderProfile(m);
   document.getElementById('preview-count').textContent   =
     (previewIndex + 1) + ' / ' + previewMembers.length;
   document.getElementById('preview-prev').disabled = previewIndex === 0;
@@ -558,6 +573,7 @@ function resetSendButtons() {
   document.getElementById('btn-send').disabled = true;
   document.getElementById('send-count').textContent = '0';
   document.getElementById('merge-preview').style.display = 'none';
+  document.getElementById('contact-profile-wrap').style.display = 'none';
 }
 
 function updateSendButton() {
