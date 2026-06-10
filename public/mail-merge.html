@@ -93,8 +93,13 @@
 
     /* ── Merge preview ── */
     .merge-preview { margin-top: 20px; border: 1px solid var(--grey-200); border-radius: 8px; overflow: hidden; display: none; }
-    .merge-preview-header { padding: 8px 14px; background: var(--grey-100); border-bottom: 1px solid var(--grey-200); font-size: 0.75rem; font-weight: 600; color: var(--grey-500); display: flex; align-items: center; gap: 6px; }
-    .merge-preview-who { font-weight: 400; color: var(--grey-700); }
+    .merge-preview-header { padding: 8px 14px; background: var(--grey-100); border-bottom: 1px solid var(--grey-200); font-size: 0.75rem; font-weight: 600; color: var(--grey-500); display: flex; align-items: center; gap: 8px; }
+    .merge-preview-who { font-weight: 400; color: var(--grey-700); flex: 1; }
+    .preview-nav { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .preview-nav-btn { padding: 2px 9px; background: #fff; border: 1px solid var(--grey-200); border-radius: 5px; font-size: 0.75rem; cursor: pointer; color: var(--navy); line-height: 1.6; }
+    .preview-nav-btn:hover:not(:disabled) { border-color: var(--navy); }
+    .preview-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .preview-nav-count { font-size: 0.75rem; color: var(--grey-500); min-width: 48px; text-align: center; }
     .merge-preview-subject { padding: 10px 14px; border-bottom: 1px solid var(--grey-200); font-size: 0.875rem; font-weight: 600; color: var(--navy); }
     .merge-preview-body { padding: 12px 14px; font-size: 0.85rem; color: var(--grey-700); white-space: pre-wrap; line-height: 1.6; max-height: 200px; overflow-y: auto; }
 
@@ -237,7 +242,13 @@
       <!-- Live merge preview -->
       <div class="merge-preview" id="merge-preview">
         <div class="merge-preview-header">
-          Preview — as seen by <span class="merge-preview-who" id="preview-who"></span>
+          <span>Preview —</span>
+          <span class="merge-preview-who" id="preview-who"></span>
+          <div class="preview-nav">
+            <button class="preview-nav-btn" id="preview-prev" onclick="previewNav(-1)" disabled>&#8592;</button>
+            <span class="preview-nav-count" id="preview-count"></span>
+            <button class="preview-nav-btn" id="preview-next" onclick="previewNav(1)" disabled>&#8594;</button>
+          </div>
         </div>
         <div class="merge-preview-subject" id="preview-subject"></div>
         <div class="merge-preview-body" id="preview-body"></div>
@@ -272,9 +283,10 @@
 <script src="/eac.js"></script>
 <script>requireAuth();</script>
 <script>
-var memberCount = 0;
-var gmailEmail  = null;
-var firstMember = null;
+var memberCount   = 0;
+var gmailEmail    = null;
+var previewMembers = [];
+var previewIndex   = 0;
 var sourcesData = { circleGroups: [], brevoLists: [] };
 
 eacAuthReady.then(function() {
@@ -309,15 +321,26 @@ function mergeFields(template, m) {
     .replace(/\{\{email\}\}/g,      m.email || '');
 }
 
+function previewNav(dir) {
+  previewIndex = Math.max(0, Math.min(previewMembers.length - 1, previewIndex + dir));
+  updatePreview();
+}
+
 function updatePreview() {
   var panel   = document.getElementById('merge-preview');
   var subject = document.getElementById('subject').value;
   var body    = document.getElementById('body').value;
-  if (!firstMember || (!subject && !body)) { panel.style.display = 'none'; return; }
+  var m       = previewMembers[previewIndex] || null;
+  if (!m || (!subject && !body)) { panel.style.display = 'none'; return; }
+
   document.getElementById('preview-who').textContent =
-    (firstMember.name || firstMember.email) + ' <' + firstMember.email + '>';
-  document.getElementById('preview-subject').textContent = mergeFields(subject, firstMember) || '(no subject)';
-  document.getElementById('preview-body').textContent    = mergeFields(body,    firstMember) || '(no body)';
+    (m.name || m.email) + ' <' + m.email + '>';
+  document.getElementById('preview-subject').textContent = mergeFields(subject, m) || '(no subject)';
+  document.getElementById('preview-body').textContent    = mergeFields(body,    m) || '(no body)';
+  document.getElementById('preview-count').textContent   =
+    (previewIndex + 1) + ' / ' + previewMembers.length;
+  document.getElementById('preview-prev').disabled = previewIndex === 0;
+  document.getElementById('preview-next').disabled = previewIndex === previewMembers.length - 1;
   panel.style.display = 'block';
 }
 
@@ -422,9 +445,9 @@ async function onAudienceChange() {
   try {
     var res  = await fetch('/api/mail-merge?action=members&source=' + source + '&sourceId=' + sourceId);
     var data = await res.json();
-    memberCount = data.count || 0;
-    var members = data.members || [];
-    firstMember = members[0] || null;
+    memberCount    = data.count || 0;
+    previewMembers = data.members || [];
+    previewIndex   = 0;
     updatePreview();
 
     var sample = members.slice(0, 5).map(function(m) {
@@ -446,8 +469,9 @@ async function onAudienceChange() {
 // ── Send ─────────────────────────────────────────────────────────────────────
 
 function resetSendButtons() {
-  memberCount = 0;
-  firstMember = null;
+  memberCount    = 0;
+  previewMembers = [];
+  previewIndex   = 0;
   document.getElementById('btn-test').disabled = true;
   document.getElementById('btn-send').disabled = true;
   document.getElementById('send-count').textContent = '0';
