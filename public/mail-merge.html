@@ -450,10 +450,10 @@ async function onAudienceChange() {
     previewIndex   = 0;
     updatePreview();
 
-    var sample = members.slice(0, 5).map(function(m) {
+    var sample = previewMembers.slice(0, 5).map(function(m) {
       return '<div class="member-list-item">· ' + escHtml(m.name || m.email) + ' &lt;' + escHtml(m.email) + '&gt;</div>';
     }).join('');
-    var more = members.length > 5 ? '<div class="member-list-item" style="color:var(--grey-400)">… and ' + (members.length - 5) + ' more</div>' : '';
+    var more = previewMembers.length > 5 ? '<div class="member-list-item" style="color:var(--grey-400)">… and ' + (previewMembers.length - 5) + ' more</div>' : '';
 
     preview.innerHTML =
       '<span class="member-count-big">' + memberCount + '</span> member' + (memberCount !== 1 ? 's' : '') +
