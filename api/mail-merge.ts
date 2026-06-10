@@ -53,11 +53,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // ── POST ───────────────────────────────────────────────────────────────────
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { source, sourceId, subject, body, testOnly } = req.body as {
+  const { source, sourceId, subject, body, replyTo, testOnly } = req.body as {
     source?:   string
     sourceId?: number
     subject?:  string
     body?:     string
+    replyTo?:  string
     testOnly?: boolean
   }
 
@@ -97,7 +98,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       email:      m.email      || '',
     }
     try {
-      await sendViaGmail(session.email, m.email, merge(subject, vars), merge(body, vars))
+      await sendViaGmail(session.email, m.email, merge(subject, vars), merge(body, vars), replyTo || undefined)
       sent++
       console.log(`[mail-merge] sent to ${m.email} (${sent}/${recipients.length})`)
     } catch (err: any) {

@@ -119,6 +119,7 @@ export async function sendViaGmail(
   to: string,
   subject: string,
   body: string,
+  replyTo?: string,
 ): Promise<void> {
   const tokenRes = await fetch(
     sbUrl(`gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}&select=refresh_token,gmail_email`),
@@ -133,15 +134,17 @@ export async function sendViaGmail(
   const accessToken = await getAccessToken(refreshToken)
 
   // RFC 2822 message
-  const raw = [
+  const headers = [
     `From: ${fromEmail}`,
     `To: ${to}`,
+    ...(replyTo ? [`Reply-To: ${replyTo}`] : []),
     `Subject: ${subject}`,
     `MIME-Version: 1.0`,
     `Content-Type: text/plain; charset=utf-8`,
     '',
     body,
-  ].join('\r\n')
+  ]
+  const raw = headers.join('\r\n')
 
   const sendRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
     method: 'POST',

@@ -226,6 +226,12 @@
       </div>
 
       <div class="form-group" style="margin-bottom:16px;">
+        <label for="reply-to">Reply-To <span style="font-weight:400;color:var(--grey-500)">(optional)</span></label>
+        <input type="email" id="reply-to" placeholder="e.g. kelly@expertauthor.community">
+        <div class="form-hint">If set, replies will go to this address instead of your Gmail.</div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
         <label for="subject">Subject</label>
         <input type="text" id="subject" placeholder="e.g. A note for you, {{first_name}}">
       </div>
@@ -511,11 +517,13 @@ function updateSendButton() {
 }
 
 function buildPayload(testOnly) {
+  var replyTo = document.getElementById('reply-to').value.trim();
   return {
     source:   getSource(),
     sourceId: Number(getSourceId()),
     subject:  document.getElementById('subject').value,
     body:     document.getElementById('body').value,
+    ...(replyTo ? { replyTo } : {}),
     testOnly: !!testOnly,
   };
 }
