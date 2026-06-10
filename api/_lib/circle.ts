@@ -84,9 +84,9 @@ export interface CircleMember {
 }
 
 /**
- * List all access groups for the community.
+ * List all space groups for the community.
  */
-export async function listAccessGroups(): Promise<{ id: number; name: string }[]> {
+export async function listSpaceGroups(): Promise<{ id: number; name: string }[]> {
   try {
     const all: { id: number; name: string }[] = []
     let page = 1
@@ -96,7 +96,7 @@ export async function listAccessGroups(): Promise<{ id: number; name: string }[]
         per_page:     '100',
         page:         String(page),
       })
-      const data = await circleFetch(`access_groups?${params}`, true)
+      const data = await circleFetch(`space_groups?${params}`)
       if (!data) break
       const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
       for (const g of records) all.push({ id: g.id as number, name: g.name as string })
@@ -105,26 +105,45 @@ export async function listAccessGroups(): Promise<{ id: number; name: string }[]
     }
     return all
   } catch (err) {
-    console.error('[circle] listAccessGroups failed:', err)
+    console.error('[circle] listSpaceGroups failed:', err)
     return []
   }
 }
 
 /**
- * Fetch all community members that belong to a given access group.
+ * Fetch all community members in a space group.
  *
- * Step 1: page through access_group_community_members (admin API) to collect
- *         community_member_id values — the join table has no email/name.
- * Step 2: fetch each member record by ID in parallel batches of 20.
+ * Step 1: page through space_group_members to collect community_member_ids.
+ * Step 2: page through community_members and keep those whose id is in the set.
  */
-export async function getMembersInAccessGroup(accessGroupId: number): Promise<CircleMember[]> {
-  // Strategy: fetch all community members (with email/name), then batch-check each
-  // member's access groups in parallel. Circle's REST API has no reverse lookup endpoint.
-
-  // Step 1 — fetch all community members
-  type RawMember = { id: number; email: string; name: string; first_name: string; last_name: string }
-  const allMembers: RawMember[] = []
+export async function getMembersInSpaceGroup(spaceGroupId: number): Promise<CircleMember[]> {
+  // Step 1 — collect community_member_ids
+  const memberIds: number[] = []
   let page = 1
+  while (true) {
+    const params = new URLSearchParams({
+      space_group_id: String(spaceGroupId),
+      community_id:   process.env.CIRCLE_COMMUNITY_ID!,
+      per_page:       '100',
+      page:           String(page),
+    })
+    const data = await circleFetch(`space_group_members?${params}`)
+    if (!data) break
+    const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
+    for (const r of records) {
+      const mid = r.community_member_id ?? r.member_id
+      if (mid) memberIds.push(Number(mid))
+    }
+    if (!data.has_next_page) break
+    page++
+  }
+
+  if (memberIds.length === 0) return []
+  const idSet = new Set(memberIds)
+
+  // Step 2 — page through all community members, keep those in the id set
+  const members: CircleMember[] = []
+  page = 1
   while (true) {
     const params = new URLSearchParams({
       community_id: process.env.CIRCLE_COMMUNITY_ID!,
@@ -136,35 +155,18 @@ export async function getMembersInAccessGroup(accessGroupId: number): Promise<Ci
     const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
     if (records.length === 0) break
     for (const m of records) {
-      if (m.email && m.id) allMembers.push({
-        id:         Number(m.id),
+      if (!m.email || !idSet.has(Number(m.id))) continue
+      const firstName = (m.first_name ?? '') as string
+      const lastName  = (m.last_name  ?? '') as string
+      members.push({
         email:      m.email as string,
-        name:       (m.name as string) || `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() || m.email,
-        first_name: (m.first_name ?? '') as string,
-        last_name:  (m.last_name  ?? '') as string,
+        name:       (m.name as string) || `${firstName} ${lastName}`.trim() || m.email,
+        first_name: firstName,
+        last_name:  lastName,
       })
     }
-    if (!data.has_next_page) break
+    if (!data.has_next_page || members.length >= idSet.size) break
     page++
-  }
-
-  // Step 2 — check each member's access groups in parallel batches of 10
-  const members: CircleMember[] = []
-  const BATCH = 10
-  for (let i = 0; i < allMembers.length; i += BATCH) {
-    const batch = allMembers.slice(i, i + BATCH)
-    const results = await Promise.all(batch.map(async (m) => {
-      const params = new URLSearchParams({
-        community_member_id: String(m.id),
-        community_id:        process.env.CIRCLE_COMMUNITY_ID!,
-        per_page:            '50',
-      })
-      const data = await circleFetch(`community_member_access_groups?${params}`)
-      if (!data) return null
-      const groups: any[] = data.records ?? []
-      return groups.some(g => Number(g.id) === accessGroupId) ? m : null
-    }))
-    for (const m of results) if (m) members.push(m)
   }
 
   return members

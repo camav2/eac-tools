@@ -121,6 +121,11 @@
     .btn-confirm { padding: 9px 18px; background: var(--navy); color: #fff; border: none; border-radius: 7px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
     .btn-confirm:hover { background: var(--navy-light); }
 
+    /* ── Source radio ── */
+    .source-option { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid var(--grey-200); border-radius: 7px; cursor: pointer; font-size: 0.875rem; font-weight: 500; }
+    .source-option input[type="radio"] { accent-color: var(--navy); }
+    .source-option:has(input:checked) { border-color: var(--navy); background: #f0f0ff; }
+
     /* ── Loading ── */
     .loading { color: var(--grey-500); font-size: 0.9rem; }
     .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--grey-200); border-top-color: var(--navy); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
@@ -140,7 +145,7 @@
 <div class="page-wrap">
   <div class="page-eyebrow">Admin</div>
   <h1 class="page-title">Mail Merge <span class="admin-badge">Admin only</span></h1>
-  <p class="page-sub">Send personalised plain-text emails to a Circle access group via your Gmail account.</p>
+  <p class="page-sub">Send personalised plain-text emails to a Circle space group or Brevo list via your Gmail account.</p>
 
   <!-- Gmail connection banner -->
   <div class="connect-bar disconnected" id="connect-bar">
@@ -159,14 +164,37 @@
     <!-- Step 1: Audience -->
     <div class="card">
       <div class="card-title"><span class="step-num">1</span> Audience</div>
-      <div class="form-group">
-        <label for="access-group">Access group</label>
-        <select id="access-group">
-          <option value="">Loading groups…</option>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Source</label>
+        <div style="display:flex;gap:10px;">
+          <label class="source-option">
+            <input type="radio" name="source" value="circle" checked onchange="onSourceChange()">
+            <span>Circle Space Group</span>
+          </label>
+          <label class="source-option">
+            <input type="radio" name="source" value="brevo" onchange="onSourceChange()">
+            <span>Brevo List</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" id="circle-group-wrap">
+        <label for="circle-group">Space group</label>
+        <select id="circle-group">
+          <option value="">Loading…</option>
         </select>
       </div>
+
+      <div class="form-group" id="brevo-list-wrap" style="display:none;">
+        <label for="brevo-list">Brevo list</label>
+        <select id="brevo-list">
+          <option value="">Loading…</option>
+        </select>
+      </div>
+
       <div class="member-preview" id="member-preview">
-        Select a group to preview members.
+        Select a source to preview members.
       </div>
     </div>
 
@@ -230,16 +258,13 @@
 <script>
 var memberCount = 0;
 var gmailEmail  = null;
+var sourcesData = { circleGroups: [], brevoLists: [] };
 
 eacAuthReady.then(function() {
-  if (!eacUser || !eacUser.isAdmin) {
-    window.location.replace('/dashboard');
-    return;
-  }
+  if (!eacUser || !eacUser.isAdmin) { window.location.replace('/dashboard'); return; }
   checkGmailStatus();
-  loadGroups();
+  loadSources();
 
-  // Toast for OAuth result
   var params = new URLSearchParams(window.location.search);
   if (params.get('connected') === '1') {
     showResult('info', 'Gmail connected — you\'re ready to send.');
@@ -251,6 +276,11 @@ eacAuthReady.then(function() {
   }
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('subject').addEventListener('input', updateSendButton);
+  document.getElementById('body').addEventListener('input', updateSendButton);
+});
+
 // ── Gmail status ──────────────────────────────────────────────────────────────
 
 async function checkGmailStatus() {
@@ -259,38 +289,27 @@ async function checkGmailStatus() {
     var data = await res.json();
     gmailEmail = data.gmailEmail || null;
     renderConnectBar(data.connected, data.gmailEmail);
-  } catch (e) {
-    renderConnectBar(false, null);
-  }
+  } catch (e) { renderConnectBar(false, null); }
 }
 
 function renderConnectBar(connected, email) {
-  var bar = document.getElementById('connect-bar');
+  var bar  = document.getElementById('connect-bar');
   var form = document.getElementById('merge-form');
   document.getElementById('from-email').textContent = email || '—';
-
   if (connected) {
     bar.className = 'connect-bar connected';
     bar.innerHTML =
-      '<div class="connect-bar-text">' +
-        '<div class="connect-bar-label">&#10003; Sending from ' + escHtml(email) + '</div>' +
-        '<div class="connect-bar-sub">Emails will be sent via this Gmail account.</div>' +
-      '</div>' +
-      '<div class="connect-bar-actions">' +
-        '<a class="btn-connect" href="/api/mail-merge-auth">Reconnect</a>' +
-        '<button class="btn-disconnect" onclick="disconnectGmail()">Disconnect</button>' +
-      '</div>';
+      '<div class="connect-bar-text"><div class="connect-bar-label">&#10003; Sending from ' + escHtml(email) + '</div>' +
+      '<div class="connect-bar-sub">Emails will be sent via this Gmail account.</div></div>' +
+      '<div class="connect-bar-actions"><a class="btn-connect" href="/api/mail-merge-auth">Reconnect</a>' +
+      '<button class="btn-disconnect" onclick="disconnectGmail()">Disconnect</button></div>';
     form.style.display = 'flex';
   } else {
     bar.className = 'connect-bar disconnected';
     bar.innerHTML =
-      '<div class="connect-bar-text">' +
-        '<div class="connect-bar-label">Gmail not connected</div>' +
-        '<div class="connect-bar-sub">Connect your Google account to start sending.</div>' +
-      '</div>' +
-      '<div class="connect-bar-actions">' +
-        '<a class="btn-connect" href="/api/mail-merge-auth">Connect Gmail &rarr;</a>' +
-      '</div>';
+      '<div class="connect-bar-text"><div class="connect-bar-label">Gmail not connected</div>' +
+      '<div class="connect-bar-sub">Connect your Google account to start sending.</div></div>' +
+      '<div class="connect-bar-actions"><a class="btn-connect" href="/api/mail-merge-auth">Connect Gmail &rarr;</a></div>';
     form.style.display = 'none';
   }
 }
@@ -301,42 +320,67 @@ async function disconnectGmail() {
   renderConnectBar(false, null);
 }
 
-// ── Groups ───────────────────────────────────────────────────────────────────
+// ── Sources ───────────────────────────────────────────────────────────────────
 
-async function loadGroups() {
-  var sel = document.getElementById('access-group');
+async function loadSources() {
   try {
-    var res  = await fetch('/api/mail-merge?action=groups');
+    var res  = await fetch('/api/mail-merge?action=sources');
     var data = await res.json();
-    var groups = data.groups || [];
-    if (groups.length === 0) {
-      sel.innerHTML = '<option value="">No groups found</option>';
-      return;
-    }
-    sel.innerHTML = '<option value="">Select a group…</option>' +
-      groups.map(function(g) {
-        return '<option value="' + g.id + '">' + escHtml(g.name) + '</option>';
-      }).join('');
-    sel.addEventListener('change', onGroupChange);
+    sourcesData = data;
+    populateCircleSelect(data.circleGroups || []);
+    populateBrevoSelect(data.brevoLists || []);
   } catch (e) {
-    sel.innerHTML = '<option value="">Failed to load groups</option>';
+    document.getElementById('circle-group').innerHTML = '<option value="">Failed to load</option>';
+    document.getElementById('brevo-list').innerHTML   = '<option value="">Failed to load</option>';
   }
 }
 
-async function onGroupChange() {
-  var groupId = document.getElementById('access-group').value;
-  var preview = document.getElementById('member-preview');
+function populateCircleSelect(groups) {
+  var sel = document.getElementById('circle-group');
+  if (!groups.length) { sel.innerHTML = '<option value="">No space groups found</option>'; return; }
+  sel.innerHTML = '<option value="">Select a space group…</option>' +
+    groups.map(function(g) { return '<option value="' + g.id + '">' + escHtml(g.name) + '</option>'; }).join('');
+  sel.addEventListener('change', onAudienceChange);
+}
+
+function populateBrevoSelect(lists) {
+  var sel = document.getElementById('brevo-list');
+  if (!lists.length) { sel.innerHTML = '<option value="">No lists found</option>'; return; }
+  sel.innerHTML = '<option value="">Select a Brevo list…</option>' +
+    lists.map(function(l) { return '<option value="' + l.id + '">' + escHtml(l.name) + ' (' + l.count + ')</option>'; }).join('');
+  sel.addEventListener('change', onAudienceChange);
+}
+
+function getSource() {
+  return document.querySelector('input[name="source"]:checked').value;
+}
+
+function getSourceId() {
+  var source = getSource();
+  var sel = source === 'brevo' ? document.getElementById('brevo-list') : document.getElementById('circle-group');
+  return sel.value;
+}
+
+function onSourceChange() {
+  var source = getSource();
+  document.getElementById('circle-group-wrap').style.display = source === 'circle' ? '' : 'none';
+  document.getElementById('brevo-list-wrap').style.display   = source === 'brevo'  ? '' : 'none';
+  resetSendButtons();
+  document.getElementById('member-preview').innerHTML = 'Select a source to preview members.';
+}
+
+async function onAudienceChange() {
+  var source   = getSource();
+  var sourceId = getSourceId();
+  var preview  = document.getElementById('member-preview');
   resetSendButtons();
 
-  if (!groupId) {
-    preview.innerHTML = 'Select a group to preview members.';
-    return;
-  }
+  if (!sourceId) { preview.innerHTML = 'Select a source to preview members.'; return; }
 
   preview.innerHTML = '<span class="spinner"></span> Loading members…';
 
   try {
-    var res  = await fetch('/api/mail-merge?action=members&accessGroupId=' + groupId);
+    var res  = await fetch('/api/mail-merge?action=members&source=' + source + '&sourceId=' + sourceId);
     var data = await res.json();
     memberCount = data.count || 0;
     var members = data.members || [];
@@ -347,7 +391,8 @@ async function onGroupChange() {
     var more = members.length > 5 ? '<div class="member-list-item" style="color:var(--grey-400)">… and ' + (members.length - 5) + ' more</div>' : '';
 
     preview.innerHTML =
-      '<span class="member-count-big">' + memberCount + '</span> member' + (memberCount !== 1 ? 's' : '') + ' in this group' +
+      '<span class="member-count-big">' + memberCount + '</span> member' + (memberCount !== 1 ? 's' : '') +
+      (source === 'brevo' ? ' in this list' : ' in this space group') +
       '<div class="member-list">' + sample + more + '</div>';
 
     updateSendButton();
@@ -366,51 +411,36 @@ function resetSendButtons() {
 }
 
 function updateSendButton() {
-  var hasGroup   = !!document.getElementById('access-group').value;
+  var hasSource  = !!getSourceId();
   var hasSubject = !!document.getElementById('subject').value.trim();
   var hasBody    = !!document.getElementById('body').value.trim();
-  var ready = hasGroup && hasSubject && hasBody;
+  var ready = hasSource && hasSubject && hasBody;
   document.getElementById('btn-test').disabled = !ready;
   document.getElementById('btn-send').disabled = !ready || memberCount === 0;
   document.getElementById('send-count').textContent = memberCount;
 }
 
-['subject', 'body'].forEach(function(id) {
-  document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById(id).addEventListener('input', updateSendButton);
-  });
-});
-
-// Called via inline oninput too — attach after DOM ready
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('subject').addEventListener('input', updateSendButton);
-  document.getElementById('body').addEventListener('input', updateSendButton);
-});
+function buildPayload(testOnly) {
+  return {
+    source:   getSource(),
+    sourceId: Number(getSourceId()),
+    subject:  document.getElementById('subject').value,
+    body:     document.getElementById('body').value,
+    testOnly: !!testOnly,
+  };
+}
 
 async function sendTest() {
   var btn = document.getElementById('btn-test');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Sending test…';
   clearResult();
-
   try {
-    var res = await fetch('/api/mail-merge', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        accessGroupId: Number(document.getElementById('access-group').value),
-        subject:       document.getElementById('subject').value,
-        body:          document.getElementById('body').value,
-        testOnly:      true,
-      }),
-    });
+    var res  = await fetch('/api/mail-merge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(buildPayload(true)) });
     var data = await res.json();
     if (!res.ok) throw new Error(data.error || 'API error');
     showResult('success', 'Test email sent to ' + escHtml(eacUser.email) + '. Check your inbox.');
-  } catch (e) {
-    showResult('error', 'Test failed: ' + e.message);
-  }
-
+  } catch (e) { showResult('error', 'Test failed: ' + e.message); }
   btn.disabled = false;
   btn.textContent = 'Send test to myself';
 }
@@ -421,9 +451,7 @@ function confirmSend() {
   document.getElementById('overlay').classList.add('open');
 }
 
-function closeDialog() {
-  document.getElementById('overlay').classList.remove('open');
-}
+function closeDialog() { document.getElementById('overlay').classList.remove('open'); }
 
 async function doSend() {
   closeDialog();
@@ -431,32 +459,14 @@ async function doSend() {
   sendBtn.disabled = true;
   sendBtn.innerHTML = '<span class="spinner"></span> Sending…';
   clearResult();
-
   try {
-    var res = await fetch('/api/mail-merge', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        accessGroupId: Number(document.getElementById('access-group').value),
-        subject:       document.getElementById('subject').value,
-        body:          document.getElementById('body').value,
-        testOnly:      false,
-      }),
-    });
+    var res  = await fetch('/api/mail-merge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(buildPayload(false)) });
     var data = await res.json();
     if (!res.ok) throw new Error(data.error || 'API error');
-
     var msg = 'Sent to ' + data.sent + ' of ' + data.total + ' members.';
-    if (data.errors && data.errors.length > 0) {
-      msg += ' Failed: ' + data.errors.join(', ');
-      showResult('error', msg);
-    } else {
-      showResult('success', msg);
-    }
-  } catch (e) {
-    showResult('error', 'Send failed: ' + e.message);
-  }
-
+    if (data.errors && data.errors.length) { msg += ' Failed: ' + data.errors.join(', '); showResult('error', msg); }
+    else showResult('success', msg);
+  } catch (e) { showResult('error', 'Send failed: ' + e.message); }
   sendBtn.disabled = false;
   sendBtn.textContent = 'Send to ' + memberCount + ' members →';
 }
@@ -470,14 +480,10 @@ function showResult(type, msg) {
   box.style.display = 'block';
 }
 
-function clearResult() {
-  var box = document.getElementById('result-box');
-  box.style.display = 'none';
-}
+function clearResult() { document.getElementById('result-box').style.display = 'none'; }
 
 function copyTag(el) {
-  var text = el.textContent;
-  navigator.clipboard.writeText(text).then(function() {
+  navigator.clipboard.writeText(el.textContent).then(function() {
     var orig = el.textContent;
     el.textContent = 'copied!';
     setTimeout(function() { el.textContent = orig; }, 1200);
@@ -488,10 +494,7 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Close dialog on overlay click
-document.getElementById('overlay').addEventListener('click', function(e) {
-  if (e.target === this) closeDialog();
-});
+document.getElementById('overlay').addEventListener('click', function(e) { if (e.target === this) closeDialog(); });
 </script>
 </body>
 </html>

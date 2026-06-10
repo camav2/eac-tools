@@ -70,6 +70,61 @@ export async function addContactToList(params: {
   }
 }
 
+// ── Mail-merge helpers ───────────────────────────────────────────────────────
+
+const BREVO_BASE = 'https://api.brevo.com/v3'
+
+async function brevoFetch(path: string, params?: URLSearchParams) {
+  const url = `${BREVO_BASE}/${path}${params ? '?' + params : ''}`
+  const res = await fetch(url, {
+    headers: { 'api-key': process.env.BREVO_API_KEY!, 'Content-Type': 'application/json' },
+  })
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    console.error('Brevo API error:', res.status, path, body.slice(0, 200))
+    return null
+  }
+  return res.json()
+}
+
+export interface BrevoSource { id: number; name: string; count: number }
+
+export async function listBrevoLists(): Promise<BrevoSource[]> {
+  const all: BrevoSource[] = []
+  let offset = 0
+  while (true) {
+    const data = await brevoFetch('contacts/lists', new URLSearchParams({ limit: '50', offset: String(offset) }))
+    if (!data) break
+    const lists: any[] = data.lists ?? []
+    for (const l of lists) all.push({ id: l.id, name: l.name, count: l.uniqueSubscribers ?? 0 })
+    if (lists.length < 50) break
+    offset += 50
+  }
+  return all
+}
+
+export interface BrevoMember { email: string; name: string; first_name: string; last_name: string }
+
+export async function getMembersFromBrevoList(listId: number): Promise<BrevoMember[]> {
+  const members: BrevoMember[] = []
+  let offset = 0
+  while (true) {
+    const data = await brevoFetch(`contacts/lists/${listId}/contacts`, new URLSearchParams({ limit: '500', offset: String(offset) }))
+    if (!data) break
+    const contacts: any[] = data.contacts ?? []
+    for (const c of contacts) {
+      if (!c.email) continue
+      const a = c.attributes ?? {}
+      const fn = (a.FIRSTNAME ?? a.firstname ?? '') as string
+      const ln = (a.LASTNAME  ?? a.lastname  ?? '') as string
+      members.push({ email: c.email, name: `${fn} ${ln}`.trim() || c.email, first_name: fn, last_name: ln })
+    }
+    if (contacts.length < 500) break
+    offset += 500
+  }
+  return members
+}
+
 /**
  * Send a transactional email via a Brevo template.
  * Best-effort — errors are logged but not re-thrown.

@@ -1,18 +1,19 @@
 /*
  * Mail merge API
  *
- * GET  /api/mail-merge?action=groups                     → list Circle access groups
- * GET  /api/mail-merge?action=members&accessGroupId={n}  → list members in group
- * POST /api/mail-merge                                   → send merge emails
- *   { accessGroupId, subject, body, testOnly? }
+ * GET  /api/mail-merge?action=sources                     → { circleGroups, brevoLists }
+ * GET  /api/mail-merge?action=members&source=circle&sourceId={n}
+ * GET  /api/mail-merge?action=members&source=brevo&sourceId={n}
+ * POST /api/mail-merge { source, sourceId, subject, body, testOnly? }
  *
- * Admin-only. Emails are sent plain-text via the admin's connected Gmail account.
- * Supported merge fields: {{first_name}} {{last_name}} {{name}} {{email}}
+ * Admin-only. Emails sent plain-text via the admin's connected Gmail.
+ * Merge fields: {{first_name}} {{last_name}} {{name}} {{email}}
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAuth } from './_lib/auth'
-import { listAccessGroups, getMembersInAccessGroup } from './_lib/circle'
+import { listSpaceGroups, getMembersInSpaceGroup } from './_lib/circle'
+import { listBrevoLists, getMembersFromBrevoList } from './_lib/brevo'
 import { getConnectedEmail, sendViaGmail } from './_lib/gmail'
 
 function merge(template: string, vars: Record<string, string>): string {
@@ -28,39 +29,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // ── GET ────────────────────────────────────────────────────────────────────
   if (req.method === 'GET') {
-    const { action, accessGroupId } = req.query as Record<string, string>
+    const { action, source, sourceId } = req.query as Record<string, string>
 
-    if (action === 'groups') {
-      const groups = await listAccessGroups()
-      return res.json({ groups })
+    if (action === 'sources') {
+      const [circleGroups, brevoLists] = await Promise.all([
+        listSpaceGroups(),
+        listBrevoLists(),
+      ])
+      return res.json({ circleGroups, brevoLists })
     }
 
-    if (action === 'members' && accessGroupId) {
-      const members = await getMembersInAccessGroup(Number(accessGroupId))
+    if (action === 'members' && source && sourceId) {
+      const id = Number(sourceId)
+      const members = source === 'brevo'
+        ? await getMembersFromBrevoList(id)
+        : await getMembersInSpaceGroup(id)
       return res.json({ members, count: members.length })
     }
 
-    return res.status(400).json({ error: 'Missing action or accessGroupId' })
+    return res.status(400).json({ error: 'Missing action or required params' })
   }
 
   // ── POST ───────────────────────────────────────────────────────────────────
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { accessGroupId, subject, body, testOnly } = req.body as {
-    accessGroupId?: number
-    subject?:       string
-    body?:          string
-    testOnly?:      boolean
+  const { source, sourceId, subject, body, testOnly } = req.body as {
+    source?:   string
+    sourceId?: number
+    subject?:  string
+    body?:     string
+    testOnly?: boolean
   }
 
-  if (!accessGroupId || !subject?.trim() || !body?.trim()) {
-    return res.status(400).json({ error: 'accessGroupId, subject, and body are required' })
+  if (!source || !sourceId || !subject?.trim() || !body?.trim()) {
+    return res.status(400).json({ error: 'source, sourceId, subject, and body are required' })
   }
 
   const gmailEmail = await getConnectedEmail(session.email)
-  if (!gmailEmail) return res.status(400).json({ error: 'No Gmail account connected — visit /mail-merge to connect' })
+  if (!gmailEmail) return res.status(400).json({ error: 'No Gmail account connected' })
 
-  // For test send, use the admin's own details as the single recipient
   const recipients = testOnly
     ? [{
         email:      session.email,
@@ -68,11 +75,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         first_name: session.name.split(' ')[0] ?? session.name,
         last_name:  session.name.split(' ').slice(1).join(' '),
       }]
-    : await getMembersInAccessGroup(Number(accessGroupId))
+    : source === 'brevo'
+      ? await getMembersFromBrevoList(Number(sourceId))
+      : await getMembersInSpaceGroup(Number(sourceId))
 
-  if (recipients.length === 0) {
-    return res.json({ ok: true, sent: 0, total: 0 })
-  }
+  if (recipients.length === 0) return res.json({ ok: true, sent: 0, total: 0 })
 
   const errors: string[] = []
   let sent = 0
@@ -84,7 +91,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       name:       m.name       || m.first_name || '',
       email:      m.email      || '',
     }
-
     try {
       await sendViaGmail(session.email, m.email, merge(subject, vars), merge(body, vars))
       sent++
@@ -96,9 +102,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   return res.json({
-    ok:     errors.length < recipients.length,
+    ok:    errors.length < recipients.length,
     sent,
-    total:  recipients.length,
+    total: recipients.length,
     ...(errors.length > 0 ? { errors } : {}),
   })
 }
