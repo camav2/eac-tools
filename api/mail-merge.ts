@@ -20,6 +20,32 @@ function merge(template: string, vars: Record<string, string>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? `{{${key}}}`)
 }
 
+// ── Supabase REST ─────────────────────────────────────────────────────────────
+
+function sbUrl(path: string) {
+  return `${(process.env.SUPABASE_URL ?? '').replace(/\/$/, '')}/rest/v1/${path}`
+}
+
+function sbHeaders() {
+  return {
+    'apikey':        process.env.SUPABASE_SERVICE_KEY!,
+    'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+    'Content-Type':  'application/json',
+    'Prefer':        'return=representation',
+  }
+}
+
+async function createJob(data: Record<string, unknown>): Promise<string | null> {
+  const res = await fetch(sbUrl('mail_merge_jobs'), {
+    method:  'POST',
+    headers: sbHeaders(),
+    body:    JSON.stringify(data),
+  })
+  if (!res.ok) { console.error('Failed to create job:', await res.text()); return null }
+  const rows = await res.json() as any[]
+  return rows[0]?.id ?? null
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
 
@@ -70,49 +96,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const gmailEmail = await getConnectedEmail(session.email)
   if (!gmailEmail) return res.status(400).json({ error: 'No Gmail account connected' })
 
-  const recipients = testOnly
-    ? [{
-        email:      session.email,
-        name:       session.name,
-        first_name: session.name.split(' ')[0] ?? session.name,
-        last_name:  session.name.split(' ').slice(1).join(' '),
-      }]
-    : source === 'brevo-list'    ? await getMembersFromBrevoList(Number(sourceId))
-    : source === 'brevo-segment' ? await getMembersFromBrevoSegment(Number(sourceId))
-    : await getMembersInSpaceGroup(Number(sourceId))
+  // ── Test send: immediate, no queue ─────────────────────────────────────────
+  if (testOnly) {
+    const m = { email: session.email, name: session.name, first_name: session.name.split(' ')[0] ?? session.name, last_name: session.name.split(' ').slice(1).join(' ') }
+    const vars: Record<string, string> = { first_name: m.first_name, last_name: m.last_name, name: m.name, email: m.email }
+    try {
+      await sendViaGmail(session.email, m.email, merge(subject, vars), merge(body, vars), replyTo || undefined)
+      return res.json({ ok: true, sent: 1, total: 1 })
+    } catch (err: any) {
+      return res.status(500).json({ error: err?.message ?? 'Send failed' })
+    }
+  }
+
+  // ── Full send: fetch recipients, create queued job ─────────────────────────
+  const recipients = source === 'brevo-list'    ? await getMembersFromBrevoList(Number(sourceId))
+                   : source === 'brevo-segment' ? await getMembersFromBrevoSegment(Number(sourceId))
+                   : await getMembersInSpaceGroup(Number(sourceId))
 
   if (recipients.length === 0) return res.json({ ok: true, sent: 0, total: 0 })
 
-  // Throttle sends to protect the Gmail account from rate-limiting.
-  // Default: 1000ms between each email. Override with MAIL_MERGE_DELAY_MS env var.
-  const delayMs = Math.max(0, Number(process.env.MAIL_MERGE_DELAY_MS ?? 1000))
-  const sleep   = (ms: number) => new Promise(r => setTimeout(r, ms))
-
-  const errors: string[] = []
-  let sent = 0
-
-  for (const m of recipients) {
-    const vars: Record<string, string> = {
-      first_name: m.first_name || m.name.split(' ')[0] || '',
-      last_name:  m.last_name  || m.name.split(' ').slice(1).join(' ') || '',
-      name:       m.name       || m.first_name || '',
-      email:      m.email      || '',
-    }
-    try {
-      await sendViaGmail(session.email, m.email, merge(subject, vars), merge(body, vars), replyTo || undefined)
-      sent++
-      console.log(`[mail-merge] sent to ${m.email} (${sent}/${recipients.length})`)
-    } catch (err: any) {
-      console.error(`[mail-merge] failed for ${m.email}:`, err?.message)
-      errors.push(m.email)
-    }
-    if (sent < recipients.length) await sleep(delayMs)
-  }
-
-  return res.json({
-    ok:    errors.length < recipients.length,
-    sent,
-    total: recipients.length,
-    ...(errors.length > 0 ? { errors } : {}),
+  const jobId = await createJob({
+    admin_email: session.email,
+    recipients,
+    subject,
+    body,
+    reply_to:    replyTo || null,
+    total_count: recipients.length,
   })
+
+  if (!jobId) return res.status(500).json({ error: 'Failed to create send job' })
+
+  return res.json({ jobId, total: recipients.length })
 }

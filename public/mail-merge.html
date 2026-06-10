@@ -125,6 +125,12 @@
     .result-box.error   { background: #fee2e2; color: #991b1b; }
     .result-box.info    { background: #dbeafe; color: #1e40af; }
 
+    /* ── Progress bar ── */
+    .progress-wrap { margin-top: 16px; display: none; }
+    .progress-label { font-size: 0.82rem; color: var(--grey-500); margin-bottom: 6px; }
+    .progress-bar-track { height: 8px; background: var(--grey-200); border-radius: 99px; overflow: hidden; }
+    .progress-bar-fill  { height: 100%; background: var(--navy); border-radius: 99px; transition: width 0.4s ease; width: 0%; }
+
     /* ── Confirm overlay ── */
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 200; }
     .overlay.open { display: flex; }
@@ -283,6 +289,10 @@
         <button class="btn-send" id="btn-send" onclick="confirmSend()" disabled>Send to <span id="send-count">0</span> members &rarr;</button>
       </div>
       <div class="throttle-note" id="throttle-note" style="display:none;"></div>
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-label" id="progress-label">Sending…</div>
+        <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar"></div></div>
+      </div>
       <div class="result-box" id="result-box" style="margin-top:16px;"></div>
     </div>
 
@@ -576,19 +586,68 @@ function closeDialog() { document.getElementById('overlay').classList.remove('op
 
 async function doSend() {
   closeDialog();
-  var sendBtn = document.getElementById('btn-send');
+  var sendBtn  = document.getElementById('btn-send');
+  var testBtn  = document.getElementById('btn-test');
+  var progress = document.getElementById('progress-wrap');
+  var bar      = document.getElementById('progress-bar');
+  var label    = document.getElementById('progress-label');
   sendBtn.disabled = true;
-  sendBtn.innerHTML = '<span class="spinner"></span> Sending…';
+  testBtn.disabled = true;
+  sendBtn.innerHTML = '<span class="spinner"></span> Queuing…';
   clearResult();
+  progress.style.display = 'none';
+
+  var jobId, total;
   try {
     var res  = await fetch('/api/mail-merge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(buildPayload(false)) });
     var data = await res.json();
     if (!res.ok) throw new Error(data.error || 'API error');
-    var msg = 'Sent to ' + data.sent + ' of ' + data.total + ' members.';
-    if (data.errors && data.errors.length) { msg += ' Failed: ' + data.errors.join(', '); showResult('error', msg); }
-    else showResult('success', msg);
-  } catch (e) { showResult('error', 'Send failed: ' + e.message); }
-  sendBtn.disabled = false;
+    if (data.sent !== undefined) {
+      // 0 recipients edge case
+      showResult('success', 'Nothing to send.');
+      sendBtn.disabled = false; testBtn.disabled = false;
+      sendBtn.textContent = 'Send to ' + memberCount + ' members →';
+      return;
+    }
+    jobId = data.jobId;
+    total = data.total;
+  } catch (e) {
+    showResult('error', 'Failed to queue: ' + e.message);
+    sendBtn.disabled = false; testBtn.disabled = false;
+    sendBtn.textContent = 'Send to ' + memberCount + ' members →';
+    return;
+  }
+
+  // ── Poll worker until done ──────────────────────────────────────────────────
+  sendBtn.innerHTML = '<span class="spinner"></span> Sending…';
+  progress.style.display = 'block';
+  bar.style.width = '0%';
+  label.textContent = 'Sending 0 of ' + total + '…';
+
+  var sent = 0;
+  var errors = [];
+  while (sent < total) {
+    try {
+      var wRes  = await fetch('/api/mail-merge-worker?jobId=' + encodeURIComponent(jobId), { method: 'POST' });
+      var wData = await wRes.json();
+      sent   = wData.sent   || sent;
+      errors = wData.errors || errors;
+      var pct = Math.round((sent / total) * 100);
+      bar.style.width     = pct + '%';
+      label.textContent   = 'Sending ' + sent + ' of ' + total + '…';
+      if (wData.status === 'completed' || wData.status === 'failed') break;
+    } catch (e) {
+      showResult('error', 'Worker error: ' + e.message);
+      break;
+    }
+  }
+
+  progress.style.display = 'none';
+  var msg = 'Sent to ' + sent + ' of ' + total + ' members.';
+  if (errors.length) { msg += ' Failed: ' + errors.join(', '); showResult('error', msg); }
+  else showResult('success', msg);
+
+  sendBtn.disabled = false; testBtn.disabled = false;
   sendBtn.textContent = 'Send to ' + memberCount + ' members →';
 }
 
