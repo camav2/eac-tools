@@ -41,6 +41,10 @@
     {
       "source": "/isbn-wizard",
       "destination": "/isbn-wizard.html"
+    },
+    {
+      "source": "/mail-merge",
+      "destination": "/mail-merge.html"
     }
   ]
 }

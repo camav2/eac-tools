@@ -74,6 +74,72 @@ export async function getCircleAccessGroup(email: string): Promise<AccessGroup |
   }
 }
 
+export interface CircleMember {
+  email:      string
+  name:       string
+  first_name: string
+  last_name:  string
+}
+
+/**
+ * List all access groups for the community.
+ */
+export async function listAccessGroups(): Promise<{ id: number; name: string }[]> {
+  try {
+    const params = new URLSearchParams({
+      community_id: process.env.CIRCLE_COMMUNITY_ID!,
+      per_page:     '100',
+    })
+    const data = await circleFetch(`access_groups?${params}`)
+    if (!data) return []
+    const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
+    return records.map(g => ({ id: g.id as number, name: g.name as string }))
+  } catch (err) {
+    console.error('[circle] listAccessGroups failed:', err)
+    return []
+  }
+}
+
+/**
+ * Fetch all community members that belong to a given access group.
+ * Paginates automatically. Returns email + name fields.
+ */
+export async function getMembersInAccessGroup(accessGroupId: number): Promise<CircleMember[]> {
+  const members: CircleMember[] = []
+  let page = 1
+
+  while (true) {
+    const params = new URLSearchParams({
+      community_id:    process.env.CIRCLE_COMMUNITY_ID!,
+      access_group_id: String(accessGroupId),
+      per_page:        '100',
+      page:            String(page),
+    })
+    const data = await circleFetch(`community_members?${params}`)
+    if (!data) break
+
+    const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
+    if (records.length === 0) break
+
+    for (const m of records) {
+      if (!m.email) continue
+      const firstName = (m.first_name ?? '') as string
+      const lastName  = (m.last_name  ?? '') as string
+      members.push({
+        email:      m.email as string,
+        name:       (m.name as string) || `${firstName} ${lastName}`.trim() || m.email,
+        first_name: firstName,
+        last_name:  lastName,
+      })
+    }
+
+    if (records.length < 100) break
+    page++
+  }
+
+  return members
+}
+
 /**
  * Returns true if the given email belongs to the admin access group.
  * Group name is configured via CIRCLE_ADMIN_GROUP (default: "Administrator").

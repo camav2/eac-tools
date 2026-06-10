@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mail Merge — EAC Tools</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #00003D;
+      --navy-light: #1a1a5e;
+      --grey-100: #f3f4f6;
+      --grey-200: #e5e7eb;
+      --grey-500: #6b7280;
+      --grey-700: #374151;
+      --green: #059669;
+      --amber: #d97706;
+      --red: #dc2626;
+      --radius: 10px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fb; color: var(--navy); min-height: 100vh; }
+
+    /* ── Header ── */
+    .site-header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 60px; background: #fff; border-bottom: 1px solid var(--grey-200); position: sticky; top: 0; z-index: 100; }
+    .header-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--navy); }
+    .header-logo-img { width: 28px; height: 28px; }
+    .header-logo-text { font-weight: 700; font-size: 1rem; letter-spacing: -0.01em; }
+    .beta-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .header-auth { position: relative; display: flex; align-items: center; }
+    .header-user-btn { display: flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+    .header-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+    .header-avatar-placeholder { width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+    .header-user-name { font-size: 0.875rem; font-weight: 500; }
+    .header-chevron { opacity: 0.5; }
+    .header-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--grey-200); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,10,0.1); min-width: 180px; padding: 4px; }
+    .header-dropdown.open { display: block; }
+    .dropdown-item { display: block; width: 100%; text-align: left; padding: 8px 12px; border-radius: 5px; font-size: 0.875rem; color: var(--navy); text-decoration: none; background: none; border: none; cursor: pointer; }
+    .dropdown-item:hover { background: var(--grey-100); }
+    .dropdown-divider { height: 1px; background: var(--grey-200); margin: 4px 0; }
+    .dropdown-logout { color: var(--red); }
+
+    /* ── Page ── */
+    .page-wrap { max-width: 780px; margin: 0 auto; padding: 48px 24px 80px; }
+    .page-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-500); margin-bottom: 8px; }
+    .page-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; display: flex; align-items: center; gap: 12px; }
+    .admin-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .page-sub { color: var(--grey-500); font-size: 0.95rem; margin-top: 8px; }
+
+    /* ── Gmail connect banner ── */
+    .connect-bar { margin-top: 32px; padding: 18px 20px; border-radius: var(--radius); border: 1px solid; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .connect-bar.disconnected { background: #fff7ed; border-color: #fed7aa; }
+    .connect-bar.connected    { background: #f0fdf4; border-color: #bbf7d0; }
+    .connect-bar-text { font-size: 0.9rem; }
+    .connect-bar-label { font-weight: 700; }
+    .connect-bar-sub { font-size: 0.8rem; color: var(--grey-500); margin-top: 3px; }
+    .connect-bar-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .btn-connect { padding: 9px 18px; background: var(--navy); color: #fff; border: none; border-radius: 7px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn-connect:hover { background: var(--navy-light); }
+    .btn-disconnect { padding: 8px 14px; background: none; color: var(--grey-500); border: 1px solid var(--grey-200); border-radius: 7px; font-size: 0.8rem; cursor: pointer; }
+    .btn-disconnect:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Main form ── */
+    .merge-form { margin-top: 40px; display: flex; flex-direction: column; gap: 28px; }
+
+    /* ── Card sections ── */
+    .card { background: #fff; border: 1px solid var(--grey-200); border-radius: var(--radius); padding: 28px; }
+    .card-title { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--grey-500); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .step-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: var(--navy); color: #fff; border-radius: 50%; font-size: 0.7rem; font-weight: 800; flex-shrink: 0; }
+
+    /* ── Form controls ── */
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 0.8rem; font-weight: 600; color: var(--grey-700); }
+    select, input[type="text"], textarea {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--grey-200);
+      border-radius: 7px; font-size: 0.875rem; outline: none;
+      transition: border-color 0.15s; font-family: inherit; color: var(--navy);
+      background: #fff;
+    }
+    select:focus, input[type="text"]:focus, textarea:focus { border-color: var(--navy); }
+    select:disabled, input:disabled, textarea:disabled { background: var(--grey-100); color: var(--grey-500); cursor: not-allowed; }
+    textarea { resize: vertical; min-height: 160px; line-height: 1.6; }
+    .form-hint { font-size: 0.75rem; color: var(--grey-500); }
+    .merge-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+    .merge-tag { font-family: monospace; font-size: 0.75rem; background: var(--grey-100); border: 1px solid var(--grey-200); padding: 2px 8px; border-radius: 5px; color: var(--navy-light); cursor: pointer; user-select: all; }
+    .merge-tag:hover { background: var(--grey-200); }
+
+    /* ── Member preview ── */
+    .member-preview { margin-top: 14px; padding: 12px 14px; background: var(--grey-100); border-radius: 8px; font-size: 0.85rem; color: var(--grey-700); min-height: 40px; }
+    .member-count-big { font-size: 1.4rem; font-weight: 800; color: var(--navy); margin-right: 4px; }
+    .member-list { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
+    .member-list-item { font-size: 0.8rem; color: var(--grey-500); }
+
+    /* ── From field ── */
+    .from-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--grey-200); border-radius: 7px; background: var(--grey-100); }
+    .from-label { font-size: 0.75rem; font-weight: 700; color: var(--grey-500); text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; }
+    .from-email { font-size: 0.875rem; color: var(--grey-700); }
+
+    /* ── Send buttons ── */
+    .send-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .btn-test { padding: 11px 22px; background: #fff; color: var(--navy); border: 1px solid var(--grey-200); border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+    .btn-test:hover { border-color: var(--navy); }
+    .btn-send { padding: 11px 22px; background: var(--navy); color: #fff; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+    .btn-send:hover { background: var(--navy-light); }
+    .btn-test:disabled, .btn-send:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Result / status ── */
+    .result-box { padding: 16px 18px; border-radius: 8px; font-size: 0.88rem; display: none; }
+    .result-box.success { background: #d1fae5; color: #065f46; }
+    .result-box.error   { background: #fee2e2; color: #991b1b; }
+    .result-box.info    { background: #dbeafe; color: #1e40af; }
+
+    /* ── Confirm overlay ── */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 200; }
+    .overlay.open { display: flex; }
+    .dialog { background: #fff; border-radius: var(--radius); padding: 32px; max-width: 420px; width: 90%; }
+    .dialog-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 10px; }
+    .dialog-body  { font-size: 0.9rem; color: var(--grey-700); margin-bottom: 24px; line-height: 1.5; }
+    .dialog-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-cancel { padding: 9px 18px; background: none; border: 1px solid var(--grey-200); border-radius: 7px; font-size: 0.875rem; cursor: pointer; }
+    .btn-confirm { padding: 9px 18px; background: var(--navy); color: #fff; border: none; border-radius: 7px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+    .btn-confirm:hover { background: var(--navy-light); }
+
+    /* ── Loading ── */
+    .loading { color: var(--grey-500); font-size: 0.9rem; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--grey-200); border-top-color: var(--navy); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="header-logo" href="https://hub.expertauthor.community">
+    <img class="header-logo-img" src="/eac-logo.png" alt="EAC" onerror="this.style.display='none'">
+    <span class="header-logo-text">Author Hub</span><span class="beta-badge">Beta</span>
+  </a>
+  <div class="header-auth" id="header-auth"></div>
+</header>
+
+<div class="page-wrap">
+  <div class="page-eyebrow">Admin</div>
+  <h1 class="page-title">Mail Merge <span class="admin-badge">Admin only</span></h1>
+  <p class="page-sub">Send personalised plain-text emails to a Circle access group via your Gmail account.</p>
+
+  <!-- Gmail connection banner -->
+  <div class="connect-bar disconnected" id="connect-bar">
+    <div class="connect-bar-text">
+      <div class="connect-bar-label">Gmail not connected</div>
+      <div class="connect-bar-sub">Connect your Google account to start sending.</div>
+    </div>
+    <div class="connect-bar-actions">
+      <a class="btn-connect" href="/api/mail-merge-auth" id="btn-connect">Connect Gmail &rarr;</a>
+    </div>
+  </div>
+
+  <!-- Main form (hidden until gmail connected) -->
+  <div class="merge-form" id="merge-form" style="display:none;">
+
+    <!-- Step 1: Audience -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">1</span> Audience</div>
+      <div class="form-group">
+        <label for="access-group">Access group</label>
+        <select id="access-group">
+          <option value="">Loading groups…</option>
+        </select>
+      </div>
+      <div class="member-preview" id="member-preview">
+        Select a group to preview members.
+      </div>
+    </div>
+
+    <!-- Step 2: Message -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">2</span> Message</div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>From</label>
+        <div class="from-row">
+          <span class="from-label">From</span>
+          <span class="from-email" id="from-email">—</span>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label for="subject">Subject</label>
+        <input type="text" id="subject" placeholder="e.g. A note for you, {{first_name}}">
+      </div>
+
+      <div class="form-group">
+        <label for="body">Message body</label>
+        <textarea id="body" placeholder="Dear {{first_name}},&#10;&#10;…"></textarea>
+        <div class="form-hint">Click a merge tag to copy it, then paste into your subject or body.</div>
+        <div class="merge-tags">
+          <span class="merge-tag" onclick="copyTag(this)" title="Click to copy">{{first_name}}</span>
+          <span class="merge-tag" onclick="copyTag(this)" title="Click to copy">{{last_name}}</span>
+          <span class="merge-tag" onclick="copyTag(this)" title="Click to copy">{{name}}</span>
+          <span class="merge-tag" onclick="copyTag(this)" title="Click to copy">{{email}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Send -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">3</span> Send</div>
+      <div class="send-row">
+        <button class="btn-test" id="btn-test" onclick="sendTest()" disabled>Send test to myself</button>
+        <button class="btn-send" id="btn-send" onclick="confirmSend()" disabled>Send to <span id="send-count">0</span> members &rarr;</button>
+      </div>
+      <div class="result-box" id="result-box" style="margin-top:16px;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Confirm dialog -->
+<div class="overlay" id="overlay">
+  <div class="dialog">
+    <div class="dialog-title">Confirm send</div>
+    <div class="dialog-body" id="dialog-body">You are about to send this email to <strong id="dialog-count">0</strong> members. This cannot be undone.</div>
+    <div class="dialog-actions">
+      <button class="btn-cancel" onclick="closeDialog()">Cancel</button>
+      <button class="btn-confirm" id="btn-confirm" onclick="doSend()">Send now</button>
+    </div>
+  </div>
+</div>
+
+<script src="/eac.js"></script>
+<script>requireAuth();</script>
+<script>
+var memberCount = 0;
+var gmailEmail  = null;
+
+eacAuthReady.then(function() {
+  if (!eacUser || !eacUser.isAdmin) {
+    window.location.replace('/dashboard');
+    return;
+  }
+  checkGmailStatus();
+  loadGroups();
+
+  // Toast for OAuth result
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('connected') === '1') {
+    showResult('info', 'Gmail connected — you\'re ready to send.');
+    history.replaceState({}, '', '/mail-merge');
+  }
+  if (params.get('error') === 'oauth_failed') {
+    showResult('error', 'Gmail connection failed. Please try again.');
+    history.replaceState({}, '', '/mail-merge');
+  }
+});
+
+// ── Gmail status ──────────────────────────────────────────────────────────────
+
+async function checkGmailStatus() {
+  try {
+    var res  = await fetch('/api/mail-merge-auth?action=status');
+    var data = await res.json();
+    gmailEmail = data.gmailEmail || null;
+    renderConnectBar(data.connected, data.gmailEmail);
+  } catch (e) {
+    renderConnectBar(false, null);
+  }
+}
+
+function renderConnectBar(connected, email) {
+  var bar = document.getElementById('connect-bar');
+  var form = document.getElementById('merge-form');
+  document.getElementById('from-email').textContent = email || '—';
+
+  if (connected) {
+    bar.className = 'connect-bar connected';
+    bar.innerHTML =
+      '<div class="connect-bar-text">' +
+        '<div class="connect-bar-label">&#10003; Sending from ' + escHtml(email) + '</div>' +
+        '<div class="connect-bar-sub">Emails will be sent via this Gmail account.</div>' +
+      '</div>' +
+      '<div class="connect-bar-actions">' +
+        '<a class="btn-connect" href="/api/mail-merge-auth">Reconnect</a>' +
+        '<button class="btn-disconnect" onclick="disconnectGmail()">Disconnect</button>' +
+      '</div>';
+    form.style.display = 'flex';
+  } else {
+    bar.className = 'connect-bar disconnected';
+    bar.innerHTML =
+      '<div class="connect-bar-text">' +
+        '<div class="connect-bar-label">Gmail not connected</div>' +
+        '<div class="connect-bar-sub">Connect your Google account to start sending.</div>' +
+      '</div>' +
+      '<div class="connect-bar-actions">' +
+        '<a class="btn-connect" href="/api/mail-merge-auth">Connect Gmail &rarr;</a>' +
+      '</div>';
+    form.style.display = 'none';
+  }
+}
+
+async function disconnectGmail() {
+  if (!confirm('Disconnect Gmail? You will need to reconnect to send again.')) return;
+  await fetch('/api/mail-merge-auth?action=disconnect');
+  renderConnectBar(false, null);
+}
+
+// ── Groups ───────────────────────────────────────────────────────────────────
+
+async function loadGroups() {
+  var sel = document.getElementById('access-group');
+  try {
+    var res  = await fetch('/api/mail-merge?action=groups');
+    var data = await res.json();
+    var groups = data.groups || [];
+    if (groups.length === 0) {
+      sel.innerHTML = '<option value="">No groups found</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">Select a group…</option>' +
+      groups.map(function(g) {
+        return '<option value="' + g.id + '">' + escHtml(g.name) + '</option>';
+      }).join('');
+    sel.addEventListener('change', onGroupChange);
+  } catch (e) {
+    sel.innerHTML = '<option value="">Failed to load groups</option>';
+  }
+}
+
+async function onGroupChange() {
+  var groupId = document.getElementById('access-group').value;
+  var preview = document.getElementById('member-preview');
+  resetSendButtons();
+
+  if (!groupId) {
+    preview.innerHTML = 'Select a group to preview members.';
+    return;
+  }
+
+  preview.innerHTML = '<span class="spinner"></span> Loading members…';
+
+  try {
+    var res  = await fetch('/api/mail-merge?action=members&accessGroupId=' + groupId);
+    var data = await res.json();
+    memberCount = data.count || 0;
+    var members = data.members || [];
+
+    var sample = members.slice(0, 5).map(function(m) {
+      return '<div class="member-list-item">· ' + escHtml(m.name || m.email) + ' &lt;' + escHtml(m.email) + '&gt;</div>';
+    }).join('');
+    var more = members.length > 5 ? '<div class="member-list-item" style="color:var(--grey-400)">… and ' + (members.length - 5) + ' more</div>' : '';
+
+    preview.innerHTML =
+      '<span class="member-count-big">' + memberCount + '</span> member' + (memberCount !== 1 ? 's' : '') + ' in this group' +
+      '<div class="member-list">' + sample + more + '</div>';
+
+    updateSendButton();
+  } catch (e) {
+    preview.innerHTML = 'Failed to load members.';
+  }
+}
+
+// ── Send ─────────────────────────────────────────────────────────────────────
+
+function resetSendButtons() {
+  memberCount = 0;
+  document.getElementById('btn-test').disabled = true;
+  document.getElementById('btn-send').disabled = true;
+  document.getElementById('send-count').textContent = '0';
+}
+
+function updateSendButton() {
+  var hasGroup   = !!document.getElementById('access-group').value;
+  var hasSubject = !!document.getElementById('subject').value.trim();
+  var hasBody    = !!document.getElementById('body').value.trim();
+  var ready = hasGroup && hasSubject && hasBody;
+  document.getElementById('btn-test').disabled = !ready;
+  document.getElementById('btn-send').disabled = !ready || memberCount === 0;
+  document.getElementById('send-count').textContent = memberCount;
+}
+
+['subject', 'body'].forEach(function(id) {
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById(id).addEventListener('input', updateSendButton);
+  });
+});
+
+// Called via inline oninput too — attach after DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('subject').addEventListener('input', updateSendButton);
+  document.getElementById('body').addEventListener('input', updateSendButton);
+});
+
+async function sendTest() {
+  var btn = document.getElementById('btn-test');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Sending test…';
+  clearResult();
+
+  try {
+    var res = await fetch('/api/mail-merge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        accessGroupId: Number(document.getElementById('access-group').value),
+        subject:       document.getElementById('subject').value,
+        body:          document.getElementById('body').value,
+        testOnly:      true,
+      }),
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'API error');
+    showResult('success', 'Test email sent to ' + escHtml(eacUser.email) + '. Check your inbox.');
+  } catch (e) {
+    showResult('error', 'Test failed: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Send test to myself';
+}
+
+function confirmSend() {
+  if (memberCount === 0) return;
+  document.getElementById('dialog-count').textContent = memberCount;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeDialog() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+async function doSend() {
+  closeDialog();
+  var sendBtn = document.getElementById('btn-send');
+  sendBtn.disabled = true;
+  sendBtn.innerHTML = '<span class="spinner"></span> Sending…';
+  clearResult();
+
+  try {
+    var res = await fetch('/api/mail-merge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        accessGroupId: Number(document.getElementById('access-group').value),
+        subject:       document.getElementById('subject').value,
+        body:          document.getElementById('body').value,
+        testOnly:      false,
+      }),
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'API error');
+
+    var msg = 'Sent to ' + data.sent + ' of ' + data.total + ' members.';
+    if (data.errors && data.errors.length > 0) {
+      msg += ' Failed: ' + data.errors.join(', ');
+      showResult('error', msg);
+    } else {
+      showResult('success', msg);
+    }
+  } catch (e) {
+    showResult('error', 'Send failed: ' + e.message);
+  }
+
+  sendBtn.disabled = false;
+  sendBtn.textContent = 'Send to ' + memberCount + ' members →';
+}
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+
+function showResult(type, msg) {
+  var box = document.getElementById('result-box');
+  box.className = 'result-box ' + type;
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+
+function clearResult() {
+  var box = document.getElementById('result-box');
+  box.style.display = 'none';
+}
+
+function copyTag(el) {
+  var text = el.textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    var orig = el.textContent;
+    el.textContent = 'copied!';
+    setTimeout(function() { el.textContent = orig; }, 1200);
+  });
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Close dialog on overlay click
+document.getElementById('overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeDialog();
+});
+</script>
+</body>
+</html>
