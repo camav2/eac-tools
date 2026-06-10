@@ -103,14 +103,20 @@ export async function listBrevoLists(): Promise<BrevoSource[]> {
   return all
 }
 
-export interface BrevoMember { email: string; name: string; first_name: string; last_name: string }
+export interface BrevoMember {
+  email:      string
+  name:       string
+  first_name: string
+  last_name:  string
+  attributes?: Record<string, unknown>
+}
 
 function parseBrevoContact(c: any): BrevoMember | null {
   if (!c.email) return null
   const a  = c.attributes ?? {}
   const fn = (a.FIRSTNAME ?? a.firstname ?? '') as string
   const ln = (a.LASTNAME  ?? a.lastname  ?? '') as string
-  return { email: c.email, name: `${fn} ${ln}`.trim() || c.email, first_name: fn, last_name: ln }
+  return { email: c.email, name: `${fn} ${ln}`.trim() || c.email, first_name: fn, last_name: ln, attributes: a }
 }
 
 export async function getMembersFromBrevoList(listId: number): Promise<BrevoMember[]> {

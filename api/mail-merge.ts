@@ -115,9 +115,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (recipients.length === 0) return res.json({ ok: true, sent: 0, total: 0 })
 
+  // Strip attributes — only needed for preview, not for sending
+  const jobRecipients = recipients.map(({ email, name, first_name, last_name }) => ({ email, name, first_name, last_name }))
+
   const jobId = await createJob({
     admin_email: session.email,
-    recipients,
+    recipients:  jobRecipients,
     subject,
     body,
     reply_to:    replyTo || null,

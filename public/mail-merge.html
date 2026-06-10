@@ -102,6 +102,9 @@
     .preview-nav-count { font-size: 0.75rem; color: var(--grey-500); min-width: 48px; text-align: center; }
     .merge-preview-subject { padding: 10px 14px; border-bottom: 1px solid var(--grey-200); font-size: 0.875rem; font-weight: 600; color: var(--navy); }
     .merge-preview-body { padding: 12px 14px; font-size: 0.85rem; color: var(--grey-700); white-space: pre-wrap; line-height: 1.6; max-height: 200px; overflow-y: auto; }
+    .merge-preview-profile { padding: 12px 14px; border-top: 1px solid var(--grey-200); display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; }
+    .profile-field-label { font-size: 0.72rem; font-weight: 600; color: var(--grey-500); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; padding-top: 2px; }
+    .profile-field-value { font-size: 0.8rem; color: var(--grey-700); }
 
     /* ── From field ── */
     .from-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--grey-200); border-radius: 7px; background: var(--grey-100); }
@@ -278,6 +281,7 @@
         </div>
         <div class="merge-preview-subject" id="preview-subject"></div>
         <div class="merge-preview-body" id="preview-body"></div>
+        <div class="merge-preview-profile" id="preview-profile" style="display:none;"></div>
       </div>
     </div>
 
@@ -352,6 +356,40 @@ function mergeFields(template, m) {
     .replace(/\{\{email\}\}/g,      m.email || '');
 }
 
+var BREVO_PROFILE_FIELDS = [
+  { key: 'INTAKE',                         label: 'Intake' },
+  { key: 'EOI_INTAKE',                     label: 'EOI Intake' },
+  { key: 'APPLICATION_INTAKE',             label: 'Application Intake' },
+  { key: 'OPENHOUSE_WAITLIST',             label: 'Open House Waitlist' },
+  { key: 'LAST_OPEN_HOUSE_REGISTER',       label: 'Open House Register' },
+  { key: 'LAST_OPEN_HOUSE_ATTEND',         label: 'Open House Attended' },
+  { key: 'LAST_COMM_BOOK_LAUNCH_REGISTER', label: 'Book Launch Register' },
+  { key: 'LAST_COMM_BOOK_LAUNCH_ATTEND',   label: 'Book Launch Attended' },
+  { key: 'QUIZ_TYPE',                      label: 'Quiz Type' },
+  { key: 'ROLE',                           label: 'Role' },
+  { key: 'JOB_TITLE',                      label: 'Job Title' },
+  { key: 'COMPANY',                        label: 'Company' },
+  { key: 'COUNTRY',                        label: 'Country' },
+  { key: 'LINKEDIN',                       label: 'LinkedIn' },
+  { key: 'LINKEDIN_PROFILE',               label: 'LinkedIn Profile' },
+];
+
+function renderProfile(m) {
+  var el = document.getElementById('preview-profile');
+  var source = getSource();
+  if (source === 'circle' || !m || !m.attributes) { el.style.display = 'none'; return; }
+  var rows = '';
+  BREVO_PROFILE_FIELDS.forEach(function(f) {
+    var val = m.attributes[f.key];
+    if (val === null || val === undefined || val === '') return;
+    rows += '<span class="profile-field-label">' + escHtml(f.label) + '</span>' +
+            '<span class="profile-field-value">' + escHtml(String(val)) + '</span>';
+  });
+  if (!rows) { el.style.display = 'none'; return; }
+  el.innerHTML = rows;
+  el.style.display = 'grid';
+}
+
 function previewNav(dir) {
   previewIndex = Math.max(0, Math.min(previewMembers.length - 1, previewIndex + dir));
   updatePreview();
@@ -368,6 +406,7 @@ function updatePreview() {
     (m.name || m.email) + ' <' + m.email + '>';
   document.getElementById('preview-subject').textContent = mergeFields(subject, m) || '(no subject)';
   document.getElementById('preview-body').textContent    = mergeFields(body,    m) || '(no body)';
+  renderProfile(m);
   document.getElementById('preview-count').textContent   =
     (previewIndex + 1) + ' / ' + previewMembers.length;
   document.getElementById('preview-prev').disabled = previewIndex === 0;
