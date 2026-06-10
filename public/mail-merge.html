@@ -108,6 +108,9 @@
     .from-label { font-size: 0.75rem; font-weight: 700; color: var(--grey-500); text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; }
     .from-email { font-size: 0.875rem; color: var(--grey-700); }
 
+    /* ── Throttle note ── */
+    .throttle-note { margin-top: 12px; padding: 10px 14px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 7px; font-size: 0.8rem; color: #92400e; line-height: 1.5; }
+
     /* ── Send buttons ── */
     .send-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
     .btn-test { padding: 11px 22px; background: #fff; color: var(--navy); border: 1px solid var(--grey-200); border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
@@ -262,6 +265,7 @@
         <button class="btn-test" id="btn-test" onclick="sendTest()" disabled>Send test to myself</button>
         <button class="btn-send" id="btn-send" onclick="confirmSend()" disabled>Send to <span id="send-count">0</span> members &rarr;</button>
       </div>
+      <div class="throttle-note" id="throttle-note" style="display:none;"></div>
       <div class="result-box" id="result-box" style="margin-top:16px;"></div>
     </div>
 
@@ -486,6 +490,24 @@ function updateSendButton() {
   document.getElementById('btn-test').disabled = !ready;
   document.getElementById('btn-send').disabled = !ready || memberCount === 0;
   document.getElementById('send-count').textContent = memberCount;
+
+  var note = document.getElementById('throttle-note');
+  if (memberCount > 0 && ready) {
+    var secs  = memberCount;
+    var mins  = Math.ceil(secs / 60);
+    var slow  = memberCount > 50;
+    var warn  = memberCount > 45;
+    note.style.display = 'block';
+    note.innerHTML =
+      '&#9201; Sends are throttled at 1 email/sec to protect your Gmail account. ' +
+      'This list will take ~' + (secs < 60 ? secs + ' seconds' : mins + ' minute' + (mins > 1 ? 's' : '')) + '.' +
+      (warn ? '<br><strong>Lists over 45 recipients may time out.</strong> Consider splitting into smaller groups.' : '');
+    note.style.borderColor = warn ? '#fca5a5' : '#fde68a';
+    note.style.background  = warn ? '#fef2f2' : '#fffbeb';
+    note.style.color       = warn ? '#991b1b' : '#92400e';
+  } else {
+    note.style.display = 'none';
+  }
 }
 
 function buildPayload(testOnly) {

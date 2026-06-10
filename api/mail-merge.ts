@@ -81,6 +81,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (recipients.length === 0) return res.json({ ok: true, sent: 0, total: 0 })
 
+  // Throttle sends to protect the Gmail account from rate-limiting.
+  // Default: 1000ms between each email. Override with MAIL_MERGE_DELAY_MS env var.
+  const delayMs = Math.max(0, Number(process.env.MAIL_MERGE_DELAY_MS ?? 1000))
+  const sleep   = (ms: number) => new Promise(r => setTimeout(r, ms))
+
   const errors: string[] = []
   let sent = 0
 
@@ -99,6 +104,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error(`[mail-merge] failed for ${m.email}:`, err?.message)
       errors.push(m.email)
     }
+    if (sent < recipients.length) await sleep(delayMs)
   }
 
   return res.json({
