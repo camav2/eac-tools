@@ -117,45 +117,18 @@ export async function listSpaceGroups(): Promise<{ id: number; name: string }[]>
  * Step 2: page through community_members and keep those whose id is in the set.
  */
 export async function getMembersInSpaceGroup(spaceGroupId: number): Promise<CircleMember[]> {
-  // Step 1 — collect community_member_ids
-  const memberIds: number[] = []
+  // Each space_group_members record includes a nested community_member object
+  // with email, name, first_name, last_name — no second lookup needed.
+  const members: CircleMember[] = []
   let page = 1
   while (true) {
-    const params = new URLSearchParams({
-      space_group_id: String(spaceGroupId),
-      community_id:   process.env.CIRCLE_COMMUNITY_ID!,
-      per_page:       '100',
-      page:           String(page),
-    })
-    const data = await circleFetch(`space_group_members?${params}`, true)
+    const params = new URLSearchParams({ per_page: '100', page: String(page) })
+    const data = await circleFetch(`space_group_members?space_group_id=${spaceGroupId}&${params}`, true)
     if (!data) break
     const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
     for (const r of records) {
-      const mid = r.community_member_id ?? r.member_id
-      if (mid) memberIds.push(Number(mid))
-    }
-    if (!data.has_next_page) break
-    page++
-  }
-
-  if (memberIds.length === 0) return []
-  const idSet = new Set(memberIds)
-
-  // Step 2 — page through all community members, keep those in the id set
-  const members: CircleMember[] = []
-  page = 1
-  while (true) {
-    const params = new URLSearchParams({
-      community_id: process.env.CIRCLE_COMMUNITY_ID!,
-      per_page:     '100',
-      page:         String(page),
-    })
-    const data = await circleFetch(`community_members?${params}`, true)
-    if (!data) break
-    const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
-    if (records.length === 0) break
-    for (const m of records) {
-      if (!m.email || !idSet.has(Number(m.id))) continue
+      const m = r.community_member
+      if (!m?.email) continue
       const firstName = (m.first_name ?? '') as string
       const lastName  = (m.last_name  ?? '') as string
       members.push({
@@ -165,10 +138,9 @@ export async function getMembersInSpaceGroup(spaceGroupId: number): Promise<Circ
         last_name:  lastName,
       })
     }
-    if (!data.has_next_page || members.length >= idSet.size) break
+    if (!data.has_next_page) break
     page++
   }
-
   return members
 }
 
