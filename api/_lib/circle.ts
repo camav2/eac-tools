@@ -26,7 +26,8 @@ async function circleFetch(path: string, admin = false) {
     },
   })
   if (!res.ok) {
-    console.error('Circle API error:', res.status, path)
+    const body = await res.text().catch(() => '')
+    console.error('Circle API error:', res.status, path, body.slice(0, 200))
     return null
   }
   return res.json()
@@ -117,22 +118,21 @@ export async function listAccessGroups(): Promise<{ id: number; name: string }[]
  * Step 2: fetch each member record by ID in parallel batches of 20.
  */
 export async function getMembersInAccessGroup(accessGroupId: number): Promise<CircleMember[]> {
-  // Step 1 — collect community_member_ids via community_member_access_groups
+  // Step 1 — collect community_member_ids from the join table
+  // Endpoint: access_group_community_members?access_group_id=N (public v2 API)
   const memberIds: number[] = []
   let page = 1
   while (true) {
     const params = new URLSearchParams({
       access_group_id: String(accessGroupId),
-      community_id:    process.env.CIRCLE_COMMUNITY_ID!,
       per_page:        '100',
       page:            String(page),
     })
-    const data = await circleFetch(`community_member_access_groups?${params}`)
+    const data = await circleFetch(`access_group_community_members?${params}`)
     if (!data) break
     const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
-    if (records.length === 0) break
     for (const r of records) if (r.community_member_id) memberIds.push(Number(r.community_member_id))
-    if (records.length < 100) break
+    if (!data.has_next_page) break
     page++
   }
 
