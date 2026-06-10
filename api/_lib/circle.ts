@@ -117,46 +117,56 @@ export async function listAccessGroups(): Promise<{ id: number; name: string }[]
  * Step 2: fetch each member record by ID in parallel batches of 20.
  */
 export async function getMembersInAccessGroup(accessGroupId: number): Promise<CircleMember[]> {
-  // Step 1 — collect community_member_ids
+  // Step 1 — collect community_member_ids via community_member_access_groups
   const memberIds: number[] = []
   let page = 1
   while (true) {
     const params = new URLSearchParams({
       access_group_id: String(accessGroupId),
+      community_id:    process.env.CIRCLE_COMMUNITY_ID!,
       per_page:        '100',
       page:            String(page),
     })
-    const data = await circleFetch(`access_group_community_members?${params}`, true)
+    const data = await circleFetch(`community_member_access_groups?${params}`)
     if (!data) break
-    const records: any[] = data.records ?? []
+    const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
+    if (records.length === 0) break
     for (const r of records) if (r.community_member_id) memberIds.push(Number(r.community_member_id))
-    if (!data.has_next_page) break
+    if (records.length < 100) break
     page++
   }
 
   if (memberIds.length === 0) return []
+  const idSet = new Set(memberIds)
 
-  // Step 2 — fetch member details in parallel chunks
+  // Step 2 — page through all community members, keep those in the id set
   const members: CircleMember[] = []
-  const CHUNK = 20
-  for (let i = 0; i < memberIds.length; i += CHUNK) {
-    const chunk = memberIds.slice(i, i + CHUNK)
-    const results = await Promise.all(
-      chunk.map(id =>
-        circleFetch(`community_members/${id}`, true).catch(() => null)
-      )
-    )
-    for (const m of results) {
-      if (!m || !m.email) continue
+  page = 1
+  while (true) {
+    const params = new URLSearchParams({
+      community_id: process.env.CIRCLE_COMMUNITY_ID!,
+      per_page:     '100',
+      page:         String(page),
+    })
+    const data = await circleFetch(`community_members?${params}`)
+    if (!data) break
+    const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
+    if (records.length === 0) break
+
+    for (const m of records) {
+      if (!m.email || !idSet.has(Number(m.id))) continue
       const firstName = (m.first_name ?? '') as string
       const lastName  = (m.last_name  ?? '') as string
       members.push({
-        email:      m.email      as string,
+        email:      m.email as string,
         name:       (m.name as string) || `${firstName} ${lastName}`.trim() || m.email,
         first_name: firstName,
         last_name:  lastName,
       })
     }
+
+    if (records.length < 100 || members.length >= idSet.size) break
+    page++
   }
 
   return members
