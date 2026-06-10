@@ -118,34 +118,13 @@ export async function listAccessGroups(): Promise<{ id: number; name: string }[]
  * Step 2: fetch each member record by ID in parallel batches of 20.
  */
 export async function getMembersInAccessGroup(accessGroupId: number): Promise<CircleMember[]> {
-  // Step 1 — page through ALL community member-group relationships, filter by access_group_id in code.
-  // Circle's REST API has no reverse access_group→members endpoint, so we scan the join table.
-  const memberIds: number[] = []
+  // Strategy: fetch all community members (with email/name), then batch-check each
+  // member's access groups in parallel. Circle's REST API has no reverse lookup endpoint.
+
+  // Step 1 — fetch all community members
+  type RawMember = { id: number; email: string; name: string; first_name: string; last_name: string }
+  const allMembers: RawMember[] = []
   let page = 1
-  while (true) {
-    const params = new URLSearchParams({
-      community_id: process.env.CIRCLE_COMMUNITY_ID!,
-      per_page:     '100',
-      page:         String(page),
-    })
-    const data = await circleFetch(`community_member_access_groups?${params}`)
-    if (!data) break
-    const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
-    for (const r of records) {
-      if (Number(r.access_group_id) === accessGroupId && r.community_member_id) {
-        memberIds.push(Number(r.community_member_id))
-      }
-    }
-    if (!data.has_next_page) break
-    page++
-  }
-
-  if (memberIds.length === 0) return []
-  const idSet = new Set(memberIds)
-
-  // Step 2 — page through all community members, keep those in the id set
-  const members: CircleMember[] = []
-  page = 1
   while (true) {
     const params = new URLSearchParams({
       community_id: process.env.CIRCLE_COMMUNITY_ID!,
@@ -156,21 +135,36 @@ export async function getMembersInAccessGroup(accessGroupId: number): Promise<Ci
     if (!data) break
     const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
     if (records.length === 0) break
-
     for (const m of records) {
-      if (!m.email || !idSet.has(Number(m.id))) continue
-      const firstName = (m.first_name ?? '') as string
-      const lastName  = (m.last_name  ?? '') as string
-      members.push({
+      if (m.email && m.id) allMembers.push({
+        id:         Number(m.id),
         email:      m.email as string,
-        name:       (m.name as string) || `${firstName} ${lastName}`.trim() || m.email,
-        first_name: firstName,
-        last_name:  lastName,
+        name:       (m.name as string) || `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() || m.email,
+        first_name: (m.first_name ?? '') as string,
+        last_name:  (m.last_name  ?? '') as string,
       })
     }
-
-    if (records.length < 100 || members.length >= idSet.size) break
+    if (!data.has_next_page) break
     page++
+  }
+
+  // Step 2 — check each member's access groups in parallel batches of 10
+  const members: CircleMember[] = []
+  const BATCH = 10
+  for (let i = 0; i < allMembers.length; i += BATCH) {
+    const batch = allMembers.slice(i, i + BATCH)
+    const results = await Promise.all(batch.map(async (m) => {
+      const params = new URLSearchParams({
+        community_member_id: String(m.id),
+        community_id:        process.env.CIRCLE_COMMUNITY_ID!,
+        per_page:            '50',
+      })
+      const data = await circleFetch(`community_member_access_groups?${params}`)
+      if (!data) return null
+      const groups: any[] = data.records ?? []
+      return groups.some(g => Number(g.id) === accessGroupId) ? m : null
+    }))
+    for (const m of results) if (m) members.push(m)
   }
 
   return members
