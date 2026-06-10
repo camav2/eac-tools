@@ -231,6 +231,22 @@
       <div class="member-preview" id="member-preview">
         Select a source to preview members.
       </div>
+
+      <!-- Contact profile (Brevo only) -->
+      <div id="contact-profile-wrap" style="display:none; margin-top:16px;">
+        <div class="merge-preview" style="padding:0;">
+          <div class="merge-preview-header" style="cursor:default;">
+            <span style="font-weight:600;">Contact Profile</span>
+            <span class="merge-preview-who" id="profile-who" style="flex:1; margin-left:8px;"></span>
+            <div class="preview-nav">
+              <button class="preview-nav-btn" id="profile-prev" onclick="previewNav(-1)" disabled>&#8592;</button>
+              <span class="preview-nav-count" id="profile-count"></span>
+              <button class="preview-nav-btn" id="profile-next" onclick="previewNav(1)" disabled>&#8594;</button>
+            </div>
+          </div>
+          <div class="merge-preview-profile" id="preview-profile"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Step 2: Message -->
@@ -283,16 +299,6 @@
         <div class="merge-preview-body" id="preview-body"></div>
       </div>
 
-      <!-- Contact profile (Brevo only, shown whenever members are loaded) -->
-      <div id="contact-profile-wrap" style="display:none; margin-top:12px;">
-        <div class="merge-preview" style="padding:0;">
-          <div class="merge-preview-header" style="cursor:default;">
-            <span style="font-weight:600;">Contact Profile</span>
-            <span class="merge-preview-who" id="profile-who"></span>
-          </div>
-          <div class="merge-preview-profile" id="preview-profile" style="display:grid;"></div>
-        </div>
-      </div>
     </div>
 
     <!-- Step 3: Send -->
@@ -390,6 +396,9 @@ function renderProfile(m) {
   var source = getSource();
   if (source === 'circle' || !m) { wrap.style.display = 'none'; return; }
   document.getElementById('profile-who').textContent = (m.name || m.email) + ' <' + m.email + '>';
+  document.getElementById('profile-count').textContent = (previewIndex + 1) + ' / ' + previewMembers.length;
+  document.getElementById('profile-prev').disabled = previewIndex === 0;
+  document.getElementById('profile-next').disabled = previewIndex === previewMembers.length - 1;
   var attrs = m.attributes || {};
   var rows = '';
   BREVO_PROFILE_FIELDS.forEach(function(f) {
