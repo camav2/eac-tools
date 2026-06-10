@@ -96,7 +96,7 @@ export async function listSpaceGroups(): Promise<{ id: number; name: string }[]>
         per_page:     '100',
         page:         String(page),
       })
-      const data = await circleFetch(`space_groups?${params}`)
+      const data = await circleFetch(`space_groups?${params}`, true)
       if (!data) break
       const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
       for (const g of records) all.push({ id: g.id as number, name: g.name as string })
