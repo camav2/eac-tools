@@ -13,7 +13,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAuth } from './_lib/auth'
 import { listSpaceGroups, getMembersInSpaceGroup } from './_lib/circle'
-import { listBrevoLists, getMembersFromBrevoList } from './_lib/brevo'
+import { listBrevoLists, getMembersFromBrevoList, listBrevoSegments, getMembersFromBrevoSegment } from './_lib/brevo'
 import { getConnectedEmail, sendViaGmail } from './_lib/gmail'
 
 function merge(template: string, vars: Record<string, string>): string {
@@ -32,18 +32,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { action, source, sourceId } = req.query as Record<string, string>
 
     if (action === 'sources') {
-      const [circleGroups, brevoLists] = await Promise.all([
+      const [circleGroups, brevoLists, brevoSegments] = await Promise.all([
         listSpaceGroups(),
         listBrevoLists(),
+        listBrevoSegments(),
       ])
-      return res.json({ circleGroups, brevoLists })
+      return res.json({ circleGroups, brevoLists, brevoSegments })
     }
 
     if (action === 'members' && source && sourceId) {
       const id = Number(sourceId)
-      const members = source === 'brevo'
-        ? await getMembersFromBrevoList(id)
-        : await getMembersInSpaceGroup(id)
+      const members = source === 'brevo-list'    ? await getMembersFromBrevoList(id)
+                    : source === 'brevo-segment' ? await getMembersFromBrevoSegment(id)
+                    : await getMembersInSpaceGroup(id)
       return res.json({ members, count: members.length })
     }
 
@@ -76,9 +77,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         first_name: session.name.split(' ')[0] ?? session.name,
         last_name:  session.name.split(' ').slice(1).join(' '),
       }]
-    : source === 'brevo'
-      ? await getMembersFromBrevoList(Number(sourceId))
-      : await getMembersInSpaceGroup(Number(sourceId))
+    : source === 'brevo-list'    ? await getMembersFromBrevoList(Number(sourceId))
+    : source === 'brevo-segment' ? await getMembersFromBrevoSegment(Number(sourceId))
+    : await getMembersInSpaceGroup(Number(sourceId))
 
   if (recipients.length === 0) return res.json({ ok: true, sent: 0, total: 0 })
 

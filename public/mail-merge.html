@@ -182,14 +182,18 @@
 
       <div class="form-group" style="margin-bottom:14px;">
         <label>Source</label>
-        <div style="display:flex;gap:10px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <label class="source-option">
             <input type="radio" name="source" value="circle" checked onchange="onSourceChange()">
             <span>Circle Space Group</span>
           </label>
           <label class="source-option">
-            <input type="radio" name="source" value="brevo" onchange="onSourceChange()">
+            <input type="radio" name="source" value="brevo-list" onchange="onSourceChange()">
             <span>Brevo List</span>
+          </label>
+          <label class="source-option">
+            <input type="radio" name="source" value="brevo-segment" onchange="onSourceChange()">
+            <span>Brevo Segment</span>
           </label>
         </div>
       </div>
@@ -204,6 +208,13 @@
       <div class="form-group" id="brevo-list-wrap" style="display:none;">
         <label for="brevo-list">Brevo list</label>
         <select id="brevo-list">
+          <option value="">Loading…</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="brevo-segment-wrap" style="display:none;">
+        <label for="brevo-segment">Brevo segment</label>
+        <select id="brevo-segment">
           <option value="">Loading…</option>
         </select>
       </div>
@@ -402,6 +413,7 @@ async function loadSources() {
     sourcesData = data;
     populateCircleSelect(data.circleGroups || []);
     populateBrevoSelect(data.brevoLists || []);
+    populateBrevoSegmentSelect(data.brevoSegments || []);
   } catch (e) {
     document.getElementById('circle-group').innerHTML = '<option value="">Failed to load</option>';
     document.getElementById('brevo-list').innerHTML   = '<option value="">Failed to load</option>';
@@ -424,20 +436,31 @@ function populateBrevoSelect(lists) {
   sel.addEventListener('change', onAudienceChange);
 }
 
+function populateBrevoSegmentSelect(segments) {
+  var sel = document.getElementById('brevo-segment');
+  if (!segments.length) { sel.innerHTML = '<option value="">No segments found</option>'; return; }
+  sel.innerHTML = '<option value="">Select a Brevo segment…</option>' +
+    segments.map(function(s) { return '<option value="' + s.id + '">' + escHtml(s.name) + '</option>'; }).join('');
+  sel.addEventListener('change', onAudienceChange);
+}
+
 function getSource() {
   return document.querySelector('input[name="source"]:checked').value;
 }
 
 function getSourceId() {
   var source = getSource();
-  var sel = source === 'brevo' ? document.getElementById('brevo-list') : document.getElementById('circle-group');
-  return sel.value;
+  var id = source === 'brevo-list'    ? document.getElementById('brevo-list').value
+         : source === 'brevo-segment' ? document.getElementById('brevo-segment').value
+         : document.getElementById('circle-group').value;
+  return id;
 }
 
 function onSourceChange() {
   var source = getSource();
-  document.getElementById('circle-group-wrap').style.display = source === 'circle' ? '' : 'none';
-  document.getElementById('brevo-list-wrap').style.display   = source === 'brevo'  ? '' : 'none';
+  document.getElementById('circle-group-wrap').style.display    = source === 'circle'         ? '' : 'none';
+  document.getElementById('brevo-list-wrap').style.display      = source === 'brevo-list'     ? '' : 'none';
+  document.getElementById('brevo-segment-wrap').style.display   = source === 'brevo-segment'  ? '' : 'none';
   resetSendButtons();
   document.getElementById('member-preview').innerHTML = 'Select a source to preview members.';
 }
@@ -467,7 +490,7 @@ async function onAudienceChange() {
 
     preview.innerHTML =
       '<span class="member-count-big">' + memberCount + '</span> member' + (memberCount !== 1 ? 's' : '') +
-      (source === 'brevo' ? ' in this list' : ' in this space group') +
+      (source === 'brevo-list' ? ' in this list' : source === 'brevo-segment' ? ' in this segment' : ' in this space group') +
       '<div class="member-list">' + sample + more + '</div>';
 
     updateSendButton();

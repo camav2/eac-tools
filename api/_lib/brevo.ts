@@ -105,6 +105,14 @@ export async function listBrevoLists(): Promise<BrevoSource[]> {
 
 export interface BrevoMember { email: string; name: string; first_name: string; last_name: string }
 
+function parseBrevoContact(c: any): BrevoMember | null {
+  if (!c.email) return null
+  const a  = c.attributes ?? {}
+  const fn = (a.FIRSTNAME ?? a.firstname ?? '') as string
+  const ln = (a.LASTNAME  ?? a.lastname  ?? '') as string
+  return { email: c.email, name: `${fn} ${ln}`.trim() || c.email, first_name: fn, last_name: ln }
+}
+
 export async function getMembersFromBrevoList(listId: number): Promise<BrevoMember[]> {
   const members: BrevoMember[] = []
   let offset = 0
@@ -112,13 +120,35 @@ export async function getMembersFromBrevoList(listId: number): Promise<BrevoMemb
     const data = await brevoFetch(`contacts/lists/${listId}/contacts`, new URLSearchParams({ limit: '500', offset: String(offset) }))
     if (!data) break
     const contacts: any[] = data.contacts ?? []
-    for (const c of contacts) {
-      if (!c.email) continue
-      const a = c.attributes ?? {}
-      const fn = (a.FIRSTNAME ?? a.firstname ?? '') as string
-      const ln = (a.LASTNAME  ?? a.lastname  ?? '') as string
-      members.push({ email: c.email, name: `${fn} ${ln}`.trim() || c.email, first_name: fn, last_name: ln })
-    }
+    for (const c of contacts) { const m = parseBrevoContact(c); if (m) members.push(m) }
+    if (contacts.length < 500) break
+    offset += 500
+  }
+  return members
+}
+
+export async function listBrevoSegments(): Promise<BrevoSource[]> {
+  const all: BrevoSource[] = []
+  let offset = 0
+  while (true) {
+    const data = await brevoFetch('contacts/segments', new URLSearchParams({ limit: '50', offset: String(offset) }))
+    if (!data) break
+    const segments: any[] = data.segments ?? []
+    for (const s of segments) all.push({ id: s.id, name: s.segmentName, count: 0 })
+    if (segments.length < 50) break
+    offset += 50
+  }
+  return all
+}
+
+export async function getMembersFromBrevoSegment(segmentId: number): Promise<BrevoMember[]> {
+  const members: BrevoMember[] = []
+  let offset = 0
+  while (true) {
+    const data = await brevoFetch('contacts', new URLSearchParams({ segmentId: String(segmentId), limit: '500', offset: String(offset) }))
+    if (!data) break
+    const contacts: any[] = data.contacts ?? []
+    for (const c of contacts) { const m = parseBrevoContact(c); if (m) members.push(m) }
     if (contacts.length < 500) break
     offset += 500
   }
