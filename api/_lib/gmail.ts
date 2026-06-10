@@ -12,7 +12,7 @@
  */
 
 const REDIRECT_URI = 'https://hub.expertauthor.community/api/mail-merge-auth'
-const SCOPE = 'https://www.googleapis.com/auth/gmail.send'
+const SCOPE = 'https://www.googleapis.com/auth/gmail.send email'
 
 // ── OAuth URL ────────────────────────────────────────────────────────────────
 
