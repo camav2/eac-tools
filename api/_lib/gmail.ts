@@ -67,6 +67,11 @@ async function getAccessToken(refreshToken: string): Promise<string> {
 
 // ── Supabase REST (gmail_tokens table) ──────────────────────────────────────
 
+function sbUrl(path: string) {
+  const base = (process.env.SUPABASE_URL ?? '').replace(/\/$/, '')
+  return `${base}/rest/v1/${path}`
+}
+
 function sbHeaders() {
   return {
     'apikey':        process.env.SUPABASE_SERVICE_KEY!,
@@ -77,7 +82,7 @@ function sbHeaders() {
 }
 
 export async function storeTokens(adminEmail: string, refreshToken: string, gmailEmail: string): Promise<void> {
-  const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/gmail_tokens`, {
+  const res = await fetch(sbUrl('gmail_tokens'), {
     method: 'POST',
     headers: { ...sbHeaders(), Prefer: 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify({
@@ -92,7 +97,7 @@ export async function storeTokens(adminEmail: string, refreshToken: string, gmai
 
 export async function getConnectedEmail(adminEmail: string): Promise<string | null> {
   const res = await fetch(
-    `${process.env.SUPABASE_URL}/rest/v1/gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}&select=gmail_email`,
+    sbUrl(`gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}&select=gmail_email`),
     { headers: sbHeaders() },
   )
   if (!res.ok) return null
@@ -102,7 +107,7 @@ export async function getConnectedEmail(adminEmail: string): Promise<string | nu
 
 export async function disconnectGmail(adminEmail: string): Promise<void> {
   await fetch(
-    `${process.env.SUPABASE_URL}/rest/v1/gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}`,
+    sbUrl(`gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}`),
     { method: 'DELETE', headers: sbHeaders() },
   )
 }
@@ -116,7 +121,7 @@ export async function sendViaGmail(
   body: string,
 ): Promise<void> {
   const tokenRes = await fetch(
-    `${process.env.SUPABASE_URL}/rest/v1/gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}&select=refresh_token,gmail_email`,
+    sbUrl(`gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}&select=refresh_token,gmail_email`),
     { headers: sbHeaders() },
   )
   const rows = tokenRes.ok ? await tokenRes.json() as { refresh_token: string; gmail_email: string }[] : []

@@ -17,8 +17,9 @@ interface AccessGroup {
   name: string
 }
 
-async function circleFetch(path: string) {
-  const res = await fetch(`https://app.circle.so/api/v2/${path}`, {
+async function circleFetch(path: string, admin = false) {
+  const base = admin ? 'https://app.circle.so/api/admin/v2' : 'https://app.circle.so/api/v2'
+  const res = await fetch(`${base}/${path}`, {
     headers: {
       Authorization:  `Token ${process.env.CIRCLE_API_TOKEN}`,
       'Content-Type': 'application/json',
@@ -86,14 +87,22 @@ export interface CircleMember {
  */
 export async function listAccessGroups(): Promise<{ id: number; name: string }[]> {
   try {
-    const params = new URLSearchParams({
-      community_id: process.env.CIRCLE_COMMUNITY_ID!,
-      per_page:     '100',
-    })
-    const data = await circleFetch(`access_groups?${params}`)
-    if (!data) return []
-    const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
-    return records.map(g => ({ id: g.id as number, name: g.name as string }))
+    const all: { id: number; name: string }[] = []
+    let page = 1
+    while (true) {
+      const params = new URLSearchParams({
+        community_id: process.env.CIRCLE_COMMUNITY_ID!,
+        per_page:     '100',
+        page:         String(page),
+      })
+      const data = await circleFetch(`access_groups?${params}`, true)
+      if (!data) break
+      const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
+      for (const g of records) all.push({ id: g.id as number, name: g.name as string })
+      if (!data.has_next_page) break
+      page++
+    }
+    return all
   } catch (err) {
     console.error('[circle] listAccessGroups failed:', err)
     return []
