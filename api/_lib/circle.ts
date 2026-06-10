@@ -111,39 +111,52 @@ export async function listAccessGroups(): Promise<{ id: number; name: string }[]
 
 /**
  * Fetch all community members that belong to a given access group.
- * Paginates automatically. Returns email + name fields.
+ *
+ * Step 1: page through access_group_community_members (admin API) to collect
+ *         community_member_id values — the join table has no email/name.
+ * Step 2: fetch each member record by ID in parallel batches of 20.
  */
 export async function getMembersInAccessGroup(accessGroupId: number): Promise<CircleMember[]> {
-  const members: CircleMember[] = []
+  // Step 1 — collect community_member_ids
+  const memberIds: number[] = []
   let page = 1
-
   while (true) {
     const params = new URLSearchParams({
-      community_id:    process.env.CIRCLE_COMMUNITY_ID!,
       access_group_id: String(accessGroupId),
       per_page:        '100',
       page:            String(page),
     })
-    const data = await circleFetch(`community_members?${params}`)
+    const data = await circleFetch(`access_group_community_members?${params}`, true)
     if (!data) break
+    const records: any[] = data.records ?? []
+    for (const r of records) if (r.community_member_id) memberIds.push(Number(r.community_member_id))
+    if (!data.has_next_page) break
+    page++
+  }
 
-    const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
-    if (records.length === 0) break
+  if (memberIds.length === 0) return []
 
-    for (const m of records) {
-      if (!m.email) continue
+  // Step 2 — fetch member details in parallel chunks
+  const members: CircleMember[] = []
+  const CHUNK = 20
+  for (let i = 0; i < memberIds.length; i += CHUNK) {
+    const chunk = memberIds.slice(i, i + CHUNK)
+    const results = await Promise.all(
+      chunk.map(id =>
+        circleFetch(`community_members/${id}`, true).catch(() => null)
+      )
+    )
+    for (const m of results) {
+      if (!m || !m.email) continue
       const firstName = (m.first_name ?? '') as string
       const lastName  = (m.last_name  ?? '') as string
       members.push({
-        email:      m.email as string,
+        email:      m.email      as string,
         name:       (m.name as string) || `${firstName} ${lastName}`.trim() || m.email,
         first_name: firstName,
         last_name:  lastName,
       })
     }
-
-    if (records.length < 100) break
-    page++
   }
 
   return members
