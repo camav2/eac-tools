@@ -127,7 +127,7 @@ export async function getMembersInSpaceGroup(spaceGroupId: number): Promise<Circ
       per_page:       '100',
       page:           String(page),
     })
-    const data = await circleFetch(`space_group_members?${params}`)
+    const data = await circleFetch(`space_group_members?${params}`, true)
     if (!data) break
     const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
     for (const r of records) {
