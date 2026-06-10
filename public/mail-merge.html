@@ -91,6 +91,13 @@
     .member-list { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
     .member-list-item { font-size: 0.8rem; color: var(--grey-500); }
 
+    /* ── Merge preview ── */
+    .merge-preview { margin-top: 20px; border: 1px solid var(--grey-200); border-radius: 8px; overflow: hidden; display: none; }
+    .merge-preview-header { padding: 8px 14px; background: var(--grey-100); border-bottom: 1px solid var(--grey-200); font-size: 0.75rem; font-weight: 600; color: var(--grey-500); display: flex; align-items: center; gap: 6px; }
+    .merge-preview-who { font-weight: 400; color: var(--grey-700); }
+    .merge-preview-subject { padding: 10px 14px; border-bottom: 1px solid var(--grey-200); font-size: 0.875rem; font-weight: 600; color: var(--navy); }
+    .merge-preview-body { padding: 12px 14px; font-size: 0.85rem; color: var(--grey-700); white-space: pre-wrap; line-height: 1.6; max-height: 200px; overflow-y: auto; }
+
     /* ── From field ── */
     .from-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--grey-200); border-radius: 7px; background: var(--grey-100); }
     .from-label { font-size: 0.75rem; font-weight: 700; color: var(--grey-500); text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; }
@@ -226,6 +233,15 @@
           <span class="merge-tag" onclick="copyTag(this)" title="Click to copy">{{email}}</span>
         </div>
       </div>
+
+      <!-- Live merge preview -->
+      <div class="merge-preview" id="merge-preview">
+        <div class="merge-preview-header">
+          Preview — as seen by <span class="merge-preview-who" id="preview-who"></span>
+        </div>
+        <div class="merge-preview-subject" id="preview-subject"></div>
+        <div class="merge-preview-body" id="preview-body"></div>
+      </div>
     </div>
 
     <!-- Step 3: Send -->
@@ -258,6 +274,7 @@
 <script>
 var memberCount = 0;
 var gmailEmail  = null;
+var firstMember = null;
 var sourcesData = { circleGroups: [], brevoLists: [] };
 
 eacAuthReady.then(function() {
@@ -277,9 +294,32 @@ eacAuthReady.then(function() {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('subject').addEventListener('input', updateSendButton);
-  document.getElementById('body').addEventListener('input', updateSendButton);
+  document.getElementById('subject').addEventListener('input', function() { updateSendButton(); updatePreview(); });
+  document.getElementById('body').addEventListener('input', function() { updateSendButton(); updatePreview(); });
 });
+
+function mergeFields(template, m) {
+  if (!m) return template;
+  var firstName = m.first_name || (m.name || '').split(' ')[0] || '';
+  var lastName  = m.last_name  || (m.name || '').split(' ').slice(1).join(' ') || '';
+  return template
+    .replace(/\{\{first_name\}\}/g, firstName)
+    .replace(/\{\{last_name\}\}/g,  lastName)
+    .replace(/\{\{name\}\}/g,       m.name  || firstName)
+    .replace(/\{\{email\}\}/g,      m.email || '');
+}
+
+function updatePreview() {
+  var panel   = document.getElementById('merge-preview');
+  var subject = document.getElementById('subject').value;
+  var body    = document.getElementById('body').value;
+  if (!firstMember || (!subject && !body)) { panel.style.display = 'none'; return; }
+  document.getElementById('preview-who').textContent =
+    (firstMember.name || firstMember.email) + ' <' + firstMember.email + '>';
+  document.getElementById('preview-subject').textContent = mergeFields(subject, firstMember) || '(no subject)';
+  document.getElementById('preview-body').textContent    = mergeFields(body,    firstMember) || '(no body)';
+  panel.style.display = 'block';
+}
 
 // ── Gmail status ──────────────────────────────────────────────────────────────
 
@@ -384,6 +424,8 @@ async function onAudienceChange() {
     var data = await res.json();
     memberCount = data.count || 0;
     var members = data.members || [];
+    firstMember = members[0] || null;
+    updatePreview();
 
     var sample = members.slice(0, 5).map(function(m) {
       return '<div class="member-list-item">· ' + escHtml(m.name || m.email) + ' &lt;' + escHtml(m.email) + '&gt;</div>';
@@ -405,9 +447,11 @@ async function onAudienceChange() {
 
 function resetSendButtons() {
   memberCount = 0;
+  firstMember = null;
   document.getElementById('btn-test').disabled = true;
   document.getElementById('btn-send').disabled = true;
   document.getElementById('send-count').textContent = '0';
+  document.getElementById('merge-preview').style.display = 'none';
 }
 
 function updateSendButton() {
