@@ -445,9 +445,41 @@ eacAuthReady.then(function() {
   }
 });
 
+// ── State persistence ─────────────────────────────────────────────────────────
+
+var STATE_KEY = 'eac-mail-merge-v1';
+
+function saveState() {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify({
+      source:   getSource(),
+      sourceId: getSourceId(),
+      subject:  document.getElementById('subject').value,
+      body:     getBodyHtml(),
+      replyTo:  document.getElementById('reply-to').value.trim(),
+    }));
+  } catch(e) {}
+}
+
+function loadSavedState() {
+  try { return JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch(e) { return null; }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('subject').addEventListener('input', function() { updateSendButton(); updatePreview(); });
-  quill.on('text-change', function() { updateSendButton(); updatePreview(); });
+  // Restore fields that don't need the dropdown to be populated first
+  var saved = loadSavedState();
+  if (saved) {
+    var radio = document.querySelector('input[name="source"][value="' + saved.source + '"]');
+    if (radio) { radio.checked = true; onSourceChange(); }
+    if (saved.subject) document.getElementById('subject').value = saved.subject;
+    if (saved.replyTo) document.getElementById('reply-to').value = saved.replyTo;
+    if (saved.body)    { quill.root.innerHTML = saved.body; quill.history.clear(); }
+    updateSendButton();
+  }
+
+  document.getElementById('subject').addEventListener('input', function() { updateSendButton(); updatePreview(); saveState(); });
+  document.getElementById('reply-to').addEventListener('input', saveState);
+  quill.on('text-change', function() { updateSendButton(); updatePreview(); saveState(); });
 });
 
 var TITLE_PREFIX_RE = /^(dr|mr|mrs|ms|miss|prof|sir|mx|rev|hon)\.?$/i;
@@ -707,6 +739,17 @@ async function loadSources() {
     populateCircleSelect(data.circleGroups || []);
     populateBrevoSelect(data.brevoLists || []);
     populateBrevoSegmentSelect(data.brevoSegments || []);
+
+    // Restore saved source selection now that dropdowns are populated
+    var saved = loadSavedState();
+    if (saved && saved.sourceId) {
+      var selId = saved.source === 'brevo-list'    ? 'brevo-list'
+                : saved.source === 'brevo-segment' ? 'brevo-segment'
+                : 'circle-group';
+      var sel = document.getElementById(selId);
+      if (sel) { sel.value = saved.sourceId; }
+      if (getSourceId()) onAudienceChange();
+    }
   } catch (e) {
     document.getElementById('circle-group').innerHTML = '<option value="">Failed to load</option>';
     document.getElementById('brevo-list').innerHTML   = '<option value="">Failed to load</option>';
@@ -765,6 +808,7 @@ function onSourceChange() {
   document.getElementById('brevo-segment-wrap').style.display   = source === 'brevo-segment'  ? '' : 'none';
   resetSendButtons();
   document.getElementById('member-preview').innerHTML = 'Select a source to preview members.';
+  saveState();
 }
 
 async function onAudienceChange() {
@@ -796,6 +840,7 @@ async function onAudienceChange() {
       '<div class="member-list">' + sample + more + '</div>';
 
     updateSendButton();
+    saveState();
   } catch (e) {
     preview.innerHTML = 'Failed to load members.';
   }
