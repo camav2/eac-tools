@@ -76,7 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (action === 'history') {
       const r = await fetch(
-        sbUrl('mail_merge_jobs?select=id,subject,created_at,admin_email,sent_count,total_count,excluded_count,excluded_emails&status=eq.completed&order=created_at.desc&limit=20'),
+        sbUrl('mail_merge_jobs?select=id,subject,created_at,admin_email,sent_count,total_count,excluded_count,excluded_emails,source_label&status=eq.completed&order=created_at.desc&limit=20'),
         { headers: sbHeaders() }
       )
       const jobs = r.ok ? await r.json() : []
@@ -101,7 +101,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // ── POST ───────────────────────────────────────────────────────────────────
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { source, sourceId, subject, body, replyTo, testOnly, excludedEmails } = req.body as {
+  const { source, sourceId, subject, body, replyTo, testOnly, excludedEmails, sourceLabel } = req.body as {
     source?:         string
     sourceId?:       number
     subject?:        string
@@ -109,6 +109,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     replyTo?:        string
     testOnly?:       boolean
     excludedEmails?: string[]
+    sourceLabel?:    string
   }
 
   if (!source || !sourceId || !subject?.trim() || !body?.trim()) {
@@ -152,6 +153,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     total_count:     recipients.length,
     excluded_count:  excluded.size,
     excluded_emails: excluded.size > 0 ? Array.from(excluded) : [],
+    source_label:    sourceLabel || null,
   })
 
   if (!jobId) return res.status(500).json({ error: 'Failed to create send job' })

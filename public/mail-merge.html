@@ -109,6 +109,7 @@
     /* ── Exclude button ── */
     .btn-exclude { padding: 2px 10px; border: 1px solid var(--red); color: var(--red); background: none; border-radius: 4px; font-size: 0.72rem; font-weight: 600; cursor: pointer; flex-shrink: 0; }
     .history-excluded { margin-top: 4px; font-size: 0.72rem; color: #b91c1c; }
+    .history-source { margin-top: 3px; font-size: 0.72rem; color: var(--grey-500); }
     .btn-exclude:hover { background: #fef2f2; }
     .btn-exclude.is-excluded { background: var(--red); color: #fff; }
     .btn-exclude.is-excluded:hover { background: #b91c1c; }
@@ -567,8 +568,9 @@ function renderHistory(jobs) {
           excEmails.map(function(e) { return escHtml(e); }).join(', ') +
           '</div>';
       }
+      var sourceHtml = j.source_label ? '<div class="history-source">' + escHtml(j.source_label) + '</div>' : '';
       return '<tr><td>' + d + '</td><td>' + escHtml(j.subject) + excHtml + '</td><td>' +
-        escHtml(j.admin_email) + '</td><td>' + countCell + '</td></tr>';
+        escHtml(j.admin_email) + '</td><td>' + countCell + sourceHtml + '</td></tr>';
     }).join('') +
     '</tbody></table>';
 }
@@ -664,6 +666,15 @@ function getSourceId() {
   return id;
 }
 
+function getSourceLabel() {
+  var source = getSource();
+  var sel = source === 'brevo-list'    ? document.getElementById('brevo-list')
+          : source === 'brevo-segment' ? document.getElementById('brevo-segment')
+          : document.getElementById('circle-group');
+  var opt = sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null;
+  return opt ? opt.text : '';
+}
+
 function onSourceChange() {
   var source = getSource();
   document.getElementById('circle-group-wrap').style.display    = source === 'circle'         ? '' : 'none';
@@ -753,8 +764,9 @@ function updateSendButton() {
 }
 
 function buildPayload(testOnly) {
-  var replyTo  = document.getElementById('reply-to').value.trim();
-  var excluded = Array.from(excludedEmails);
+  var replyTo      = document.getElementById('reply-to').value.trim();
+  var excluded     = Array.from(excludedEmails);
+  var sourceLabel  = getSourceLabel();
   return {
     source:   getSource(),
     sourceId: Number(getSourceId()),
@@ -762,6 +774,7 @@ function buildPayload(testOnly) {
     body:     document.getElementById('body').value,
     ...(replyTo              ? { replyTo }                       : {}),
     ...(excluded.length > 0 ? { excludedEmails: excluded }      : {}),
+    ...(sourceLabel          ? { sourceLabel }                   : {}),
     testOnly: !!testOnly,
   };
 }
