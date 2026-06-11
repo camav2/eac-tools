@@ -12,7 +12,12 @@
  */
 
 const REDIRECT_URI = 'https://hub.expertauthor.community/api/mail-merge-auth'
-const SCOPE = 'https://www.googleapis.com/auth/gmail.send email profile'
+const SCOPE = [
+  'https://www.googleapis.com/auth/gmail.send',
+  'https://www.googleapis.com/auth/gmail.settings.basic',
+  'https://www.googleapis.com/auth/userinfo.profile',
+  'https://www.googleapis.com/auth/userinfo.email',
+].join(' ')
 
 // ── OAuth URL ────────────────────────────────────────────────────────────────
 
@@ -58,11 +63,28 @@ export async function exchangeCode(code: string): Promise<{ refreshToken: string
     headers: { Authorization: `Bearer ${data.access_token}` },
   }).then(r => r.json())
 
-  return {
-    refreshToken: data.refresh_token,
-    gmailEmail:   info.email as string,
-    displayName:  (info.name as string) || '',
+  const gmailEmail  = info.email as string
+  const displayName = (info.name as string) || ''
+
+  // Write the name into Gmail's "Send mail as" settings — this is what Gmail
+  // actually uses as the sender display name, not the From header in raw messages.
+  if (displayName) {
+    try {
+      await fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/settings/sendAs/${encodeURIComponent(gmailEmail)}`,
+        {
+          method:  'PATCH',
+          headers: { Authorization: `Bearer ${data.access_token}`, 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ displayName }),
+        }
+      )
+      console.log(`[gmail] sendAs display name set to "${displayName}" for ${gmailEmail}`)
+    } catch (e) {
+      console.warn('[gmail] sendAs update failed (non-fatal):', e)
+    }
   }
+
+  return { refreshToken: data.refresh_token, gmailEmail, displayName }
 }
 
 async function getAccessToken(refreshToken: string): Promise<string> {
