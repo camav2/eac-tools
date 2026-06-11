@@ -752,8 +752,8 @@ function updateSendButton() {
     var mins = Math.ceil(count / 60);
     note.style.display = 'block';
     note.innerHTML =
-      '&#9201; Sends are throttled at 1 email/sec to protect your Gmail account. ' +
-      'This list will take ~' + (count < 60 ? count + ' seconds' : mins + ' minute' + (mins > 1 ? 's' : '')) + '. ' +
+      '&#9201; Sends are throttled at ~2 emails/sec to protect your Gmail account. ' +
+      'This list will take ~' + (count < 120 ? Math.ceil(count / 2) + ' seconds' : Math.ceil(count / 120) + ' minute' + (Math.ceil(count / 120) > 1 ? 's' : '')) + '. ' +
       'Large lists are sent in the background — you can leave this page once sending starts.';
     note.style.borderColor = '#fde68a';
     note.style.background  = '#fffbeb';
