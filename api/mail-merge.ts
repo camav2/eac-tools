@@ -76,7 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (action === 'history') {
       const r = await fetch(
-        sbUrl('mail_merge_jobs?select=id,subject,created_at,admin_email,sent_count,total_count&status=eq.completed&order=created_at.desc&limit=20'),
+        sbUrl('mail_merge_jobs?select=id,subject,created_at,admin_email,sent_count,total_count,excluded_count,excluded_emails&status=eq.completed&order=created_at.desc&limit=20'),
         { headers: sbHeaders() }
       )
       const jobs = r.ok ? await r.json() : []
@@ -144,12 +144,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const jobRecipients = recipients.map(({ email, name, first_name, last_name }) => ({ email, name, first_name, last_name }))
 
   const jobId = await createJob({
-    admin_email: session.email,
-    recipients:  jobRecipients,
+    admin_email:     session.email,
+    recipients:      jobRecipients,
     subject,
     body,
-    reply_to:    replyTo || null,
-    total_count: recipients.length,
+    reply_to:        replyTo || null,
+    total_count:     recipients.length,
+    excluded_count:  excluded.size,
+    excluded_emails: excluded.size > 0 ? Array.from(excluded) : [],
   })
 
   if (!jobId) return res.status(500).json({ error: 'Failed to create send job' })
