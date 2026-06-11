@@ -155,8 +155,17 @@ export async function disconnectGmail(adminEmail: string): Promise<void> {
 
 function normalizeHtmlForEmail(html: string): string {
   return html
-    .replace(/<p><br\s*\/?><\/p>/gi, '<br>')   // empty Quill paragraphs → single line break
-    .replace(/<p(\s[^>]*)?>/gi,  '<div$1>')    // p → div (no default top/bottom margin)
+    // Convert Quill 2 bullet <ol> → <ul>, strip data-list attrs
+    .replace(/<ol>([\s\S]*?)<\/ol>/gi, (_, inner) =>
+      inner.includes('data-list="bullet"')
+        ? '<ul>' + inner + '</ul>'
+        : '<ol>' + inner + '</ol>'
+    )
+    .replace(/ data-list="[^"]*"/gi, '')
+    // Empty paragraphs (with or without <br>) → line break
+    .replace(/<p(\s[^>]*)?>\s*(<br\s*\/?>)?\s*<\/p>/gi, '<br>')
+    // p → div (avoids Gmail's 1em default paragraph margins)
+    .replace(/<p(\s[^>]*)?>/gi,  '<div$1>')
     .replace(/<\/p>/gi,          '</div>')
 }
 

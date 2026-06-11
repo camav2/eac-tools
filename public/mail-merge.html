@@ -410,7 +410,7 @@ var quill = new Quill('#body-editor', {
 
 function getBodyHtml() {
   if (!quill.getText().trim()) return '';
-  return quill.getSemanticHTML();
+  return quill.root.innerHTML;
 }
 
 var previewMembers       = [];
@@ -419,8 +419,23 @@ var sourcesData          = { circleGroups: [], brevoLists: [] };
 var gmailDisplayName     = '';
 
 function normalizeHtmlForPreview(html) {
+  // Convert Quill 2's data-list OL structure to proper UL/OL
+  var div = document.createElement('div');
+  div.innerHTML = html;
+  div.querySelectorAll('ol').forEach(function(ol) {
+    var hasBullet = ol.querySelector('li[data-list="bullet"]');
+    if (hasBullet) {
+      var ul = document.createElement('ul');
+      while (ol.firstChild) ul.appendChild(ol.firstChild);
+      ol.parentNode.replaceChild(ul, ol);
+    }
+    ol.querySelectorAll('li[data-list]').forEach(function(li) { li.removeAttribute('data-list'); });
+  });
+  div.querySelectorAll('li[data-list]').forEach(function(li) { li.removeAttribute('data-list'); });
+  html = div.innerHTML;
+  // Convert paragraphs to divs (no default top/bottom margin in Gmail)
   return html
-    .replace(/<p><br\s*\/?><\/p>/gi, '<br>')
+    .replace(/<p(\s[^>]*)?>\s*(<br\s*\/?>)?\s*<\/p>/gi, '<br>')
     .replace(/<p(\s[^>]*)?>/gi, '<div$1>')
     .replace(/<\/p>/gi, '</div>');
 }
@@ -473,7 +488,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (radio) { radio.checked = true; onSourceChange(); }
     if (saved.subject) document.getElementById('subject').value = saved.subject;
     if (saved.replyTo) document.getElementById('reply-to').value = saved.replyTo;
-    if (saved.body)    { try { var delta = quill.clipboard.convert({ html: saved.body }); quill.setContents(delta, 'silent'); } catch(e) { quill.root.innerHTML = saved.body; } }
+    if (saved.body)    { quill.root.innerHTML = saved.body; }
     updateSendButton();
   }
 
