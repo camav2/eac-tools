@@ -124,7 +124,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const m = { email: session.email, name: session.name, first_name: session.name.split(' ')[0] ?? session.name, last_name: session.name.split(' ').slice(1).join(' ') }
     const vars: Record<string, string> = { first_name: m.first_name, last_name: m.last_name, name: m.name, email: m.email }
     try {
-      await sendViaGmail(session.email, m.email, merge(subject, vars), merge(body, vars), replyTo || undefined)
+      await sendViaGmail(session.email, m.email, merge(subject, vars), merge(body, vars), replyTo || undefined, session.name, m.name)
       return res.json({ ok: true, sent: 1, total: 1 })
     } catch (err: any) {
       return res.status(500).json({ error: err?.message ?? 'Send failed' })

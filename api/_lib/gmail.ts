@@ -114,12 +114,20 @@ export async function disconnectGmail(adminEmail: string): Promise<void> {
 
 // ── Send ─────────────────────────────────────────────────────────────────────
 
+function rfc2822Addr(name: string | undefined, email: string): string {
+  if (!name?.trim()) return email
+  const safe = name.replace(/"/g, '\\"')
+  return `"${safe}" <${email}>`
+}
+
 export async function sendViaGmail(
   adminEmail: string,
   to: string,
   subject: string,
   body: string,
   replyTo?: string,
+  fromName?: string,
+  toName?: string,
 ): Promise<void> {
   const tokenRes = await fetch(
     sbUrl(`gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}&select=refresh_token,gmail_email`),
@@ -134,17 +142,20 @@ export async function sendViaGmail(
   const accessToken = await getAccessToken(refreshToken)
 
   // RFC 2822 message
-  const headers = [
-    `From: ${fromEmail}`,
-    `To: ${to}`,
+  const date = new Date().toUTCString().replace(/GMT$/, '+0000')
+  const msgHeaders = [
+    `From: ${rfc2822Addr(fromName, fromEmail)}`,
+    `To: ${rfc2822Addr(toName, to)}`,
     ...(replyTo ? [`Reply-To: ${replyTo}`] : []),
     `Subject: ${subject}`,
+    `Date: ${date}`,
     `MIME-Version: 1.0`,
     `Content-Type: text/plain; charset=utf-8`,
+    `Content-Transfer-Encoding: quoted-printable`,
     '',
     body,
   ]
-  const raw = headers.join('\r\n')
+  const raw = msgHeaders.join('\r\n')
 
   const sendRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
     method: 'POST',
