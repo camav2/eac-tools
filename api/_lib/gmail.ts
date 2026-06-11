@@ -147,10 +147,19 @@ export async function sendViaGmail(
 
   const accessToken = await getAccessToken(refreshToken)
 
+  // Fetch display name from Google account (live, so it always reflects current Google settings)
+  let resolvedName = fromName
+  try {
+    const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }).then(r => r.json())
+    if (userInfo?.name) resolvedName = userInfo.name as string
+  } catch { /* use stored display_name as fallback */ }
+
   // RFC 2822 message
   const date = new Date().toUTCString().replace(/GMT$/, '+0000')
   const msgHeaders = [
-    `From: ${rfc2822Addr(fromName, fromEmail)}`,
+    `From: ${rfc2822Addr(resolvedName, fromEmail)}`,
     `To: ${rfc2822Addr(toName, to)}`,
     ...(replyTo ? [`Reply-To: ${replyTo}`] : []),
     `Subject: ${subject}`,
