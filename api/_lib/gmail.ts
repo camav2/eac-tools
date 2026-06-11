@@ -216,7 +216,7 @@ export async function sendViaGmail(
     `MIME-Version: 1.0`,
     `Content-Type: text/html; charset=utf-8`,
     '',
-    normalizeHtmlForEmail(body),
+    '<div style="word-break:break-word;overflow-wrap:break-word;">' + normalizeHtmlForEmail(body) + '</div>',
   ]
   const raw = msgHeaders.join('\r\n')
 
