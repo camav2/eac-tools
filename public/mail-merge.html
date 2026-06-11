@@ -809,6 +809,7 @@ function onSourceChange() {
   resetSendButtons();
   document.getElementById('member-preview').innerHTML = 'Select a source to preview members.';
   saveState();
+  if (getSourceId()) onAudienceChange();
 }
 
 async function onAudienceChange() {
