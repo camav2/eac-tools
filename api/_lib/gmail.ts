@@ -142,6 +142,13 @@ export async function disconnectGmail(adminEmail: string): Promise<void> {
 
 // ── Send ─────────────────────────────────────────────────────────────────────
 
+function normalizeHtmlForEmail(html: string): string {
+  return html
+    .replace(/<p><br\s*\/?><\/p>/gi, '<br>')   // empty Quill paragraphs → single line break
+    .replace(/<p(\s[^>]*)?>/gi,  '<div$1>')    // p → div (no default top/bottom margin)
+    .replace(/<\/p>/gi,          '</div>')
+}
+
 function rfc2822Addr(name: string | undefined, email: string): string {
   if (!name?.trim()) return email
   const safe = name.replace(/"/g, '\\"')
@@ -189,7 +196,7 @@ export async function sendViaGmail(
     `MIME-Version: 1.0`,
     `Content-Type: text/html; charset=utf-8`,
     '',
-    body,
+    normalizeHtmlForEmail(body),
   ]
   const raw = msgHeaders.join('\r\n')
 
