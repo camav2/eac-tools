@@ -771,8 +771,9 @@ async function sendTest() {
 }
 
 function confirmSend() {
-  if (memberCount === 0) return;
-  document.getElementById('dialog-count').textContent = memberCount;
+  var count = effectiveCount();
+  if (count === 0) return;
+  document.getElementById('dialog-count').textContent = count;
   document.getElementById('overlay').classList.add('open');
 }
 
