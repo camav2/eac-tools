@@ -596,14 +596,10 @@ function updatePreview() {
 
   // Exclude button
   var excludeBtn = document.getElementById('btn-exclude');
-  if (isBrevo) {
-    var isExcluded = excludedEmails.has(m.email);
-    excludeBtn.textContent = isExcluded ? 'Excluded' : 'Exclude';
-    excludeBtn.classList.toggle('is-excluded', isExcluded);
-    excludeBtn.style.display = '';
-  } else {
-    excludeBtn.style.display = 'none';
-  }
+  var isExcluded = excludedEmails.has(m.email);
+  excludeBtn.textContent = isExcluded ? 'Excluded' : 'Exclude';
+  excludeBtn.classList.toggle('is-excluded', isExcluded);
+  excludeBtn.style.display = '';
 
   renderProfile(m);
   loadContactHistory(m.email);
