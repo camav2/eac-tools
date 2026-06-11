@@ -74,19 +74,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json({ members, count: members.length })
     }
 
+    if (action === 'history') {
+      const r = await fetch(
+        sbUrl('mail_merge_jobs?select=id,subject,created_at,admin_email,sent_count,total_count&status=eq.completed&order=created_at.desc&limit=20'),
+        { headers: sbHeaders() }
+      )
+      const jobs = r.ok ? await r.json() : []
+      return res.json({ jobs })
+    }
+
+    if (action === 'contact-history') {
+      const email = String(req.query.email ?? '')
+      if (!email) return res.status(400).json({ error: 'email required' })
+      const filterVal = encodeURIComponent(JSON.stringify([{ email }]))
+      const r = await fetch(
+        sbUrl(`mail_merge_jobs?select=id,subject,created_at,admin_email&status=eq.completed&recipients=cs.${filterVal}&order=created_at.desc&limit=10`),
+        { headers: sbHeaders() }
+      )
+      const jobs = r.ok ? await r.json() : []
+      return res.json({ jobs })
+    }
+
     return res.status(400).json({ error: 'Missing action or required params' })
   }
 
   // ── POST ───────────────────────────────────────────────────────────────────
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { source, sourceId, subject, body, replyTo, testOnly } = req.body as {
-    source?:   string
-    sourceId?: number
-    subject?:  string
-    body?:     string
-    replyTo?:  string
-    testOnly?: boolean
+  const { source, sourceId, subject, body, replyTo, testOnly, excludedEmails } = req.body as {
+    source?:         string
+    sourceId?:       number
+    subject?:        string
+    body?:           string
+    replyTo?:        string
+    testOnly?:       boolean
+    excludedEmails?: string[]
   }
 
   if (!source || !sourceId || !subject?.trim() || !body?.trim()) {
@@ -109,9 +131,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ── Full send: fetch recipients, create queued job ─────────────────────────
-  const recipients = source === 'brevo-list'    ? await getMembersFromBrevoList(Number(sourceId))
-                   : source === 'brevo-segment' ? await getMembersFromBrevoSegment(Number(sourceId))
-                   : await getMembersInSpaceGroup(Number(sourceId))
+  const allRecipients = source === 'brevo-list'    ? await getMembersFromBrevoList(Number(sourceId))
+                      : source === 'brevo-segment' ? await getMembersFromBrevoSegment(Number(sourceId))
+                      : await getMembersInSpaceGroup(Number(sourceId))
+
+  const excluded = new Set<string>(Array.isArray(excludedEmails) ? excludedEmails : [])
+  const recipients = excluded.size > 0 ? allRecipients.filter(r => !excluded.has(r.email)) : allRecipients
 
   if (recipients.length === 0) return res.json({ ok: true, sent: 0, total: 0 })
 
