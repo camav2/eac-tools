@@ -26,8 +26,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const adminEmail = decodeState(state)
       if (!adminEmail || !adminEmail.includes('@')) throw new Error('Invalid state')
 
-      const { refreshToken, gmailEmail } = await exchangeCode(code)
-      await storeTokens(adminEmail, refreshToken, gmailEmail)
+      const { refreshToken, gmailEmail, displayName } = await exchangeCode(code)
+      await storeTokens(adminEmail, refreshToken, gmailEmail, displayName)
       console.log(`[mail-merge-auth] Connected ${gmailEmail} for ${adminEmail}`)
       return res.redirect(302, '/mail-merge?connected=1')
     } catch (err) {

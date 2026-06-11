@@ -12,7 +12,7 @@
  */
 
 const REDIRECT_URI = 'https://hub.expertauthor.community/api/mail-merge-auth'
-const SCOPE = 'https://www.googleapis.com/auth/gmail.send email'
+const SCOPE = 'https://www.googleapis.com/auth/gmail.send email profile'
 
 // ── OAuth URL ────────────────────────────────────────────────────────────────
 
@@ -50,14 +50,19 @@ async function googleTokenPost(extra: Record<string, string>): Promise<Record<st
   return res.json()
 }
 
-export async function exchangeCode(code: string): Promise<{ refreshToken: string; gmailEmail: string }> {
+export async function exchangeCode(code: string): Promise<{ refreshToken: string; gmailEmail: string; displayName: string }> {
   const data = await googleTokenPost({ code, redirect_uri: REDIRECT_URI, grant_type: 'authorization_code' })
   if (!data.refresh_token) throw new Error('No refresh token — ensure prompt=consent was set')
 
-  const info = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${data.access_token}`)
-    .then(r => r.json())
+  const info = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    headers: { Authorization: `Bearer ${data.access_token}` },
+  }).then(r => r.json())
 
-  return { refreshToken: data.refresh_token, gmailEmail: info.email as string }
+  return {
+    refreshToken: data.refresh_token,
+    gmailEmail:   info.email as string,
+    displayName:  (info.name as string) || '',
+  }
 }
 
 async function getAccessToken(refreshToken: string): Promise<string> {
@@ -81,7 +86,7 @@ function sbHeaders() {
   }
 }
 
-export async function storeTokens(adminEmail: string, refreshToken: string, gmailEmail: string): Promise<void> {
+export async function storeTokens(adminEmail: string, refreshToken: string, gmailEmail: string, displayName?: string): Promise<void> {
   const res = await fetch(sbUrl('gmail_tokens'), {
     method: 'POST',
     headers: { ...sbHeaders(), Prefer: 'resolution=merge-duplicates,return=minimal' },
@@ -89,6 +94,7 @@ export async function storeTokens(adminEmail: string, refreshToken: string, gmai
       admin_email:   adminEmail,
       refresh_token: refreshToken,
       gmail_email:   gmailEmail,
+      display_name:  displayName || null,
       updated_at:    new Date().toISOString(),
     }),
   })
@@ -126,17 +132,17 @@ export async function sendViaGmail(
   subject: string,
   body: string,
   replyTo?: string,
-  fromName?: string,
   toName?: string,
 ): Promise<void> {
   const tokenRes = await fetch(
-    sbUrl(`gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}&select=refresh_token,gmail_email`),
+    sbUrl(`gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}&select=refresh_token,gmail_email,display_name`),
     { headers: sbHeaders() },
   )
-  const rows = tokenRes.ok ? await tokenRes.json() as { refresh_token: string; gmail_email: string }[] : []
+  const rows = tokenRes.ok ? await tokenRes.json() as { refresh_token: string; gmail_email: string; display_name: string | null }[] : []
   const row = rows[0]
-  const refreshToken = row?.refresh_token ?? null
-  const fromEmail    = row?.gmail_email   ?? null
+  const refreshToken = row?.refresh_token  ?? null
+  const fromEmail    = row?.gmail_email    ?? null
+  const fromName     = row?.display_name   ?? undefined
   if (!refreshToken || !fromEmail) throw new Error('No Gmail connected for ' + adminEmail)
 
   const accessToken = await getAccessToken(refreshToken)

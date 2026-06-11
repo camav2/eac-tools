@@ -100,7 +100,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         merge(job.subject, vars),
         merge(job.body,    vars),
         job.reply_to || undefined,
-        session.name,
         m.name || [m.first_name, m.last_name].filter(Boolean).join(' '),
       )
       sent++
