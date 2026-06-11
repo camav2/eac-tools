@@ -95,16 +95,28 @@
     /* ── Merge preview ── */
     .merge-preview { margin-top: 20px; border: 1px solid var(--grey-200); border-radius: 8px; overflow: hidden; display: none; }
     .merge-preview-header { padding: 8px 14px; background: var(--grey-100); border-bottom: 1px solid var(--grey-200); font-size: 0.75rem; font-weight: 600; color: var(--grey-500); display: flex; align-items: center; gap: 8px; }
-    .merge-preview-who { font-weight: 400; color: var(--grey-700); flex: 1; }
+    .merge-preview-who { font-weight: 400; color: var(--grey-700); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .preview-nav { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .preview-nav-btn { padding: 2px 9px; background: #fff; border: 1px solid var(--grey-200); border-radius: 5px; font-size: 0.75rem; cursor: pointer; color: var(--navy); line-height: 1.6; }
     .preview-nav-btn:hover:not(:disabled) { border-color: var(--navy); }
     .preview-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
     .preview-nav-count { font-size: 0.75rem; color: var(--grey-500); min-width: 48px; text-align: center; }
-    .merge-preview-subject { padding: 10px 14px; border-bottom: 1px solid var(--grey-200); font-size: 0.875rem; font-weight: 600; color: var(--navy); }
-    .merge-preview-body { padding: 12px 14px; font-size: 0.85rem; color: var(--grey-700); line-height: 1.6; max-height: 200px; overflow-y: auto; }
-    .merge-preview-body p { margin: 0 0 0.5em; }
-    .merge-preview-body ul, .merge-preview-body ol { padding-left: 1.4em; margin-bottom: 0.5em; }
+
+    /* ── Gmail-style email preview ── */
+    .gmail-preview-bg { background: #f6f8fc; padding: 12px; }
+    .gmail-email-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.12); padding: 20px 24px 24px; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #202124; max-height: 340px; overflow-y: auto; }
+    .gmail-subject-line { font-size: 20px; font-weight: 400; color: #202124; margin-bottom: 14px; word-break: break-word; }
+    .gmail-sender-row { display: flex; align-items: flex-start; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid #e8eaed; margin-bottom: 18px; }
+    .gmail-avatar { width: 36px; height: 36px; border-radius: 50%; background: #1a73e8; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; flex-shrink: 0; font-family: Google Sans, Arial, sans-serif; }
+    .gmail-sender-meta { flex: 1; min-width: 0; }
+    .gmail-from-name { font-weight: 600; color: #202124; font-size: 13px; }
+    .gmail-from-detail { color: #5f6368; font-size: 11.5px; margin-top: 1px; }
+    .gmail-timestamp { color: #5f6368; font-size: 11.5px; flex-shrink: 0; padding-top: 2px; }
+    .gmail-body { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #202124; }
+    .gmail-body div { margin: 0; }
+    .gmail-body ul, .gmail-body ol { padding-left: 1.4em; margin: 0.3em 0; }
+    .gmail-body a { color: #1a73e8; }
+    .gmail-body strong { font-weight: 700; }
 
     /* ── Quill editor ── */
     #body-editor-wrap .ql-toolbar { border: 1px solid var(--grey-200); border-bottom: none; border-radius: var(--radius) var(--radius) 0 0; background: var(--grey-100); }
@@ -322,8 +334,20 @@
           <div class="prev-mailed-title">&#9888; Previously received mail merges</div>
           <div id="prev-mailed-list"></div>
         </div>
-        <div class="merge-preview-subject" id="preview-subject"></div>
-        <div class="merge-preview-body" id="preview-body"></div>
+        <div class="gmail-preview-bg" id="gmail-preview-bg" style="display:none;">
+          <div class="gmail-email-card">
+            <div class="gmail-subject-line" id="preview-subject"></div>
+            <div class="gmail-sender-row">
+              <div class="gmail-avatar" id="preview-avatar"></div>
+              <div class="gmail-sender-meta">
+                <div class="gmail-from-name" id="preview-from-name"></div>
+                <div class="gmail-from-detail" id="preview-from-detail"></div>
+              </div>
+              <div class="gmail-timestamp">Just now</div>
+            </div>
+            <div class="gmail-body" id="preview-body"></div>
+          </div>
+        </div>
         <div class="merge-preview-profile" id="preview-profile" style="display:none;"></div>
       </div>
 
@@ -392,6 +416,14 @@ function getBodyHtml() {
 var previewMembers       = [];
 var previewIndex         = 0;
 var sourcesData          = { circleGroups: [], brevoLists: [] };
+var gmailDisplayName     = '';
+
+function normalizeHtmlForPreview(html) {
+  return html
+    .replace(/<p><br\s*\/?><\/p>/gi, '<br>')
+    .replace(/<p(\s[^>]*)?>/gi, '<div$1>')
+    .replace(/<\/p>/gi, '</div>');
+}
 var excludedEmails       = new Set();
 var contactHistoryCache  = {};   // email → [{id, subject, created_at, admin_email}]
 var contactHistoryTimers = {};   // email → setTimeout id
@@ -489,17 +521,21 @@ function updatePreview() {
   document.getElementById('preview-prev').disabled = previewIndex === 0;
   document.getElementById('preview-next').disabled = previewIndex === previewMembers.length - 1;
 
-  // Email content — only render when filled in
-  var subjectEl = document.getElementById('preview-subject');
-  var bodyEl    = document.getElementById('preview-body');
+  // Gmail-style email preview
+  var gmailBg = document.getElementById('gmail-preview-bg');
   if (subject || body) {
-    subjectEl.textContent = mergeFields(subject, m) || '(no subject)';
-    bodyEl.innerHTML      = mergeFields(body,    m) || '<em style="color:var(--grey-500)">(no body)</em>';
-    subjectEl.style.display = '';
-    bodyEl.style.display    = '';
+    var fromName   = gmailDisplayName || (gmailEmail ? gmailEmail.split('@')[0] : 'You');
+    var initial    = fromName.charAt(0).toUpperCase();
+    var toDetail   = 'to ' + (m.name || m.email);
+
+    document.getElementById('preview-subject').textContent  = mergeFields(subject, m) || '(no subject)';
+    document.getElementById('preview-avatar').textContent   = initial;
+    document.getElementById('preview-from-name').textContent = fromName;
+    document.getElementById('preview-from-detail').textContent = (gmailEmail || '') + ' · ' + toDetail;
+    document.getElementById('preview-body').innerHTML       = normalizeHtmlForPreview(mergeFields(body, m)) || '<span style="color:#5f6368">(no body)</span>';
+    gmailBg.style.display = '';
   } else {
-    subjectEl.style.display = 'none';
-    bodyEl.style.display    = 'none';
+    gmailBg.style.display = 'none';
   }
 
   // Exclude button
@@ -618,7 +654,8 @@ async function checkGmailStatus() {
   try {
     var res  = await fetch('/api/mail-merge-auth?action=status');
     var data = await res.json();
-    gmailEmail = data.gmailEmail || null;
+    gmailEmail       = data.gmailEmail   || null;
+    gmailDisplayName = data.displayName  || '';
     renderConnectBar(data.connected, data.gmailEmail);
   } catch (e) { renderConnectBar(false, null); }
 }

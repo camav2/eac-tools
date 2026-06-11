@@ -12,7 +12,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getSession } from './_lib/auth'
-import { getAuthUrl, decodeState, exchangeCode, storeTokens, getConnectedEmail, disconnectGmail } from './_lib/gmail'
+import { getAuthUrl, decodeState, exchangeCode, storeTokens, getConnectedEmail, getConnectedAccount, disconnectGmail } from './_lib/gmail'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
@@ -42,8 +42,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!session.isAdmin) return res.status(403).json({ error: 'Admin only' })
 
   if (action === 'status') {
-    const gmailEmail = await getConnectedEmail(session.email)
-    return res.json({ connected: !!gmailEmail, gmailEmail: gmailEmail ?? null })
+    const account = await getConnectedAccount(session.email)
+    return res.json({ connected: !!account, gmailEmail: account?.gmailEmail ?? null, displayName: account?.displayName ?? '' })
   }
 
   if (action === 'disconnect') {

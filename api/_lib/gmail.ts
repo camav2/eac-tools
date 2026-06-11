@@ -133,6 +133,17 @@ export async function getConnectedEmail(adminEmail: string): Promise<string | nu
   return rows[0]?.gmail_email ?? null
 }
 
+export async function getConnectedAccount(adminEmail: string): Promise<{ gmailEmail: string; displayName: string } | null> {
+  const res = await fetch(
+    sbUrl(`gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}&select=gmail_email,display_name`),
+    { headers: sbHeaders() },
+  )
+  if (!res.ok) return null
+  const rows = await res.json() as { gmail_email: string; display_name: string | null }[]
+  if (!rows[0]) return null
+  return { gmailEmail: rows[0].gmail_email, displayName: rows[0].display_name ?? '' }
+}
+
 export async function disconnectGmail(adminEmail: string): Promise<void> {
   await fetch(
     sbUrl(`gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}`),
