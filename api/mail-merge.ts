@@ -20,6 +20,15 @@ function merge(template: string, vars: Record<string, string>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? `{{${key}}}`)
 }
 
+const TITLE_RE = /^(dr|mr|mrs|ms|miss|prof|sir|mx|rev|hon)\.?$/i
+
+function extractFirstName(raw: string): string {
+  if (!raw?.trim()) return ''
+  const parts = raw.trim().split(/\s+/)
+  if (parts.length > 1 && TITLE_RE.test(parts[0])) parts.shift()
+  return parts[0] ?? ''
+}
+
 // ── Supabase REST ─────────────────────────────────────────────────────────────
 
 function sbUrl(path: string) {
@@ -121,7 +130,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // ── Test send: immediate, no queue ─────────────────────────────────────────
   if (testOnly) {
-    const m = { email: session.email, name: session.name, first_name: session.name.split(' ')[0] ?? session.name, last_name: session.name.split(' ').slice(1).join(' ') }
+    const m = { email: session.email, name: session.name, first_name: extractFirstName(session.name.split(' ')[0] ?? session.name), last_name: session.name.split(' ').slice(1).join(' ') }
     const vars: Record<string, string> = { first_name: m.first_name, last_name: m.last_name, name: m.name, email: m.email }
     try {
       await sendViaGmail(session.email, m.email, merge(subject, vars), merge(body, vars), replyTo || undefined, m.name)

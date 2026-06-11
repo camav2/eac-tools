@@ -20,6 +20,15 @@ function merge(template: string, vars: Record<string, string>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? `{{${key}}}`)
 }
 
+const TITLE_RE = /^(dr|mr|mrs|ms|miss|prof|sir|mx|rev|hon)\.?$/i
+
+function extractFirstName(raw: string): string {
+  if (!raw?.trim()) return ''
+  const parts = raw.trim().split(/\s+/)
+  if (parts.length > 1 && TITLE_RE.test(parts[0])) parts.shift()
+  return parts[0] ?? ''
+}
+
 // ── Supabase REST ─────────────────────────────────────────────────────────────
 
 function sbUrl(path: string) {
@@ -88,7 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   for (let i = 0; i < batch.length; i++) {
     const m = batch[i]
     const vars: Record<string, string> = {
-      first_name: m.first_name || (m.name ?? '').split(' ')[0] || '',
+      first_name: extractFirstName(m.first_name || (m.name ?? '').split(' ')[0] || ''),
       last_name:  m.last_name  || (m.name ?? '').split(' ').slice(1).join(' ') || '',
       name:       m.name       || m.first_name || '',
       email:      m.email      || '',
