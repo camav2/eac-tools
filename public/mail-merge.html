@@ -410,7 +410,7 @@ var quill = new Quill('#body-editor', {
 
 function getBodyHtml() {
   if (!quill.getText().trim()) return '';
-  return quill.root.innerHTML;
+  return quill.getSemanticHTML();
 }
 
 var previewMembers       = [];
@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (radio) { radio.checked = true; onSourceChange(); }
     if (saved.subject) document.getElementById('subject').value = saved.subject;
     if (saved.replyTo) document.getElementById('reply-to').value = saved.replyTo;
-    if (saved.body)    { quill.root.innerHTML = saved.body; try { quill.getModule('history').clear(); } catch(e) {} }
+    if (saved.body)    { try { var delta = quill.clipboard.convert({ html: saved.body }); quill.setContents(delta, 'silent'); } catch(e) { quill.root.innerHTML = saved.body; } }
     updateSendButton();
   }
 
