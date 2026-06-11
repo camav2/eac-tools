@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mail Merge — EAC Tools</title>
   <link rel="icon" type="image/png" href="/favicon.png">
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -101,7 +102,22 @@
     .preview-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
     .preview-nav-count { font-size: 0.75rem; color: var(--grey-500); min-width: 48px; text-align: center; }
     .merge-preview-subject { padding: 10px 14px; border-bottom: 1px solid var(--grey-200); font-size: 0.875rem; font-weight: 600; color: var(--navy); }
-    .merge-preview-body { padding: 12px 14px; font-size: 0.85rem; color: var(--grey-700); white-space: pre-wrap; line-height: 1.6; max-height: 200px; overflow-y: auto; }
+    .merge-preview-body { padding: 12px 14px; font-size: 0.85rem; color: var(--grey-700); line-height: 1.6; max-height: 200px; overflow-y: auto; }
+    .merge-preview-body p { margin: 0 0 0.5em; }
+    .merge-preview-body ul, .merge-preview-body ol { padding-left: 1.4em; margin-bottom: 0.5em; }
+
+    /* ── Quill editor ── */
+    #body-editor-wrap .ql-toolbar { border: 1px solid var(--grey-200); border-bottom: none; border-radius: var(--radius) var(--radius) 0 0; background: var(--grey-100); }
+    #body-editor-wrap .ql-container { border: 1px solid var(--grey-200); border-radius: 0 0 var(--radius) var(--radius); font-family: inherit; font-size: 0.92rem; }
+    #body-editor-wrap .ql-editor { min-height: 140px; color: var(--grey-700); }
+    #body-editor-wrap .ql-editor.ql-blank::before { color: var(--grey-500); font-style: normal; }
+    #body-editor-wrap .ql-editor p, #body-editor-wrap .ql-editor li { line-height: 1.6; }
+    #body-editor-wrap .ql-snow .ql-stroke { stroke: var(--grey-700); }
+    #body-editor-wrap .ql-snow .ql-fill { fill: var(--grey-700); }
+    #body-editor-wrap .ql-snow.ql-toolbar button:hover .ql-stroke,
+    #body-editor-wrap .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: var(--navy); }
+    #body-editor-wrap .ql-snow.ql-toolbar button:hover .ql-fill,
+    #body-editor-wrap .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: var(--navy); }
     .merge-preview-profile { padding: 12px 14px; border-top: 1px solid var(--grey-200); display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; }
     .profile-field-label { font-size: 0.72rem; font-weight: 600; color: var(--grey-500); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; padding-top: 2px; }
     .profile-field-value { font-size: 0.8rem; color: var(--grey-700); }
@@ -277,8 +293,10 @@
       </div>
 
       <div class="form-group">
-        <label for="body">Message body</label>
-        <textarea id="body" placeholder="Dear {{first_name}},&#10;&#10;…"></textarea>
+        <label>Message body</label>
+        <div id="body-editor-wrap">
+          <div id="body-editor"></div>
+        </div>
         <div class="form-hint">Click a merge tag to copy it, then paste into your subject or body.</div>
         <div class="merge-tags">
           <span class="merge-tag" onclick="copyTag(this)" title="Click to copy">{{first_name}}</span>
@@ -347,11 +365,30 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
 <script src="/eac.js"></script>
 <script>requireAuth();</script>
 <script>
 var memberCount          = 0;
 var gmailEmail           = null;
+var quill = new Quill('#body-editor', {
+  theme: 'snow',
+  placeholder: 'Dear {{first_name}},\n\n…',
+  modules: {
+    toolbar: [
+      ['bold'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link'],
+      ['clean'],
+    ],
+  },
+});
+
+function getBodyHtml() {
+  if (!quill.getText().trim()) return '';
+  return quill.root.innerHTML;
+}
+
 var previewMembers       = [];
 var previewIndex         = 0;
 var sourcesData          = { circleGroups: [], brevoLists: [] };
@@ -378,7 +415,7 @@ eacAuthReady.then(function() {
 
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('subject').addEventListener('input', function() { updateSendButton(); updatePreview(); });
-  document.getElementById('body').addEventListener('input', function() { updateSendButton(); updatePreview(); });
+  quill.on('text-change', function() { updateSendButton(); updatePreview(); });
 });
 
 function mergeFields(template, m) {
@@ -434,7 +471,7 @@ function previewNav(dir) {
 function updatePreview() {
   var panel   = document.getElementById('merge-preview');
   var subject = document.getElementById('subject').value;
-  var body    = document.getElementById('body').value;
+  var body    = getBodyHtml();
   var m       = previewMembers[previewIndex] || null;
   var source  = getSource();
   var isBrevo = source === 'brevo-list' || source === 'brevo-segment';
@@ -457,7 +494,7 @@ function updatePreview() {
   var bodyEl    = document.getElementById('preview-body');
   if (subject || body) {
     subjectEl.textContent = mergeFields(subject, m) || '(no subject)';
-    bodyEl.textContent    = mergeFields(body,    m) || '(no body)';
+    bodyEl.innerHTML      = mergeFields(body,    m) || '<em style="color:var(--grey-500)">(no body)</em>';
     subjectEl.style.display = '';
     bodyEl.style.display    = '';
   } else {
@@ -738,7 +775,7 @@ function effectiveCount() {
 function updateSendButton() {
   var hasSource  = !!getSourceId();
   var hasSubject = !!document.getElementById('subject').value.trim();
-  var hasBody    = !!document.getElementById('body').value.trim();
+  var hasBody    = !!quill.getText().trim();
   var ready  = hasSource && hasSubject && hasBody;
   var count  = effectiveCount();
   var excluded = excludedEmails.size;
@@ -771,7 +808,7 @@ function buildPayload(testOnly) {
     source:   getSource(),
     sourceId: Number(getSourceId()),
     subject:  document.getElementById('subject').value,
-    body:     document.getElementById('body').value,
+    body:     getBodyHtml(),
     ...(replyTo              ? { replyTo }                       : {}),
     ...(excluded.length > 0 ? { excludedEmails: excluded }      : {}),
     ...(sourceLabel          ? { sourceLabel }                   : {}),
