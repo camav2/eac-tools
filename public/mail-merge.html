@@ -488,7 +488,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (radio) { radio.checked = true; onSourceChange(); }
     if (saved.subject) document.getElementById('subject').value = saved.subject;
     if (saved.replyTo) document.getElementById('reply-to').value = saved.replyTo;
-    if (saved.body)    { quill.root.innerHTML = saved.body; }
+    if (saved.body)    { try { quill.setContents(quill.clipboard.convert({ html: saved.body }), 'silent'); } catch(e) { quill.root.innerHTML = saved.body; } }
     updateSendButton();
   }
 
