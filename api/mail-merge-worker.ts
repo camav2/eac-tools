@@ -26,7 +26,8 @@ function extractFirstName(raw: string): string {
   if (!raw?.trim()) return ''
   const parts = raw.trim().split(/\s+/)
   if (parts.length > 1 && TITLE_RE.test(parts[0])) parts.shift()
-  return parts[0] ?? ''
+  const name = parts[0] ?? ''
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
 }
 
 // ── Supabase REST ─────────────────────────────────────────────────────────────

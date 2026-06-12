@@ -502,7 +502,8 @@ function extractFirstName(raw) {
   if (!raw) return '';
   var parts = raw.trim().split(/\s+/);
   if (parts.length > 1 && TITLE_PREFIX_RE.test(parts[0])) parts.shift();
-  return parts[0] || '';
+  var name = parts[0] || '';
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 }
 
 function mergeFields(template, m) {
