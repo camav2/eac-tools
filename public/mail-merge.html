@@ -543,12 +543,12 @@ function renderProfile(m) {
   var rows = '';
   BREVO_PROFILE_FIELDS.forEach(function(f) {
     var val = attrs[f.key];
-    var display = (val === null || val === undefined || val === '') ? '<em style="color:var(--grey-500)">—</em>' : escHtml(String(val));
+    if (val === null || val === undefined || val === '') return;
     rows += '<span class="profile-field-label">' + escHtml(f.label) + '</span>' +
-            '<span class="profile-field-value">' + display + '</span>';
+            '<span class="profile-field-value">' + escHtml(String(val)) + '</span>';
   });
   el.innerHTML = rows;
-  el.style.display = 'grid';
+  el.style.display = rows ? 'grid' : 'none';
 }
 
 function previewNav(dir) {
