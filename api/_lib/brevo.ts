@@ -140,7 +140,7 @@ export async function listBrevoSegments(): Promise<BrevoSource[]> {
     const data = await brevoFetch('contacts/segments', new URLSearchParams({ limit: '50', offset: String(offset) }))
     if (!data) break
     const segments: any[] = data.segments ?? []
-    for (const s of segments) all.push({ id: s.id, name: s.segmentName, count: 0 })
+    for (const s of segments) all.push({ id: s.id, name: s.segmentName, count: s.recipientsCount ?? 0 })
     if (segments.length < 50) break
     offset += 50
   }

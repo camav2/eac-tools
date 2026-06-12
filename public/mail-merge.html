@@ -767,11 +767,15 @@ async function loadSources() {
   }
 }
 
+function sortByName(arr) {
+  return arr.slice().sort(function(a, b) { return a.name.localeCompare(b.name); });
+}
+
 function populateCircleSelect(groups) {
   var sel = document.getElementById('circle-group');
   if (!groups.length) { sel.innerHTML = '<option value="">No space groups found</option>'; return; }
   sel.innerHTML = '<option value="">Select a space group…</option>' +
-    groups.map(function(g) { return '<option value="' + g.id + '">' + escHtml(g.name) + '</option>'; }).join('');
+    sortByName(groups).map(function(g) { return '<option value="' + g.id + '">' + escHtml(g.name) + '</option>'; }).join('');
   sel.addEventListener('change', onAudienceChange);
 }
 
@@ -779,7 +783,7 @@ function populateBrevoSelect(lists) {
   var sel = document.getElementById('brevo-list');
   if (!lists.length) { sel.innerHTML = '<option value="">No lists found</option>'; return; }
   sel.innerHTML = '<option value="">Select a Brevo list…</option>' +
-    lists.map(function(l) { return '<option value="' + l.id + '">' + escHtml(l.name) + ' (' + l.count + ')</option>'; }).join('');
+    sortByName(lists).map(function(l) { return '<option value="' + l.id + '">' + escHtml(l.name) + ' (' + l.count + ')</option>'; }).join('');
   sel.addEventListener('change', onAudienceChange);
 }
 
@@ -787,7 +791,7 @@ function populateBrevoSegmentSelect(segments) {
   var sel = document.getElementById('brevo-segment');
   if (!segments.length) { sel.innerHTML = '<option value="">No segments found</option>'; return; }
   sel.innerHTML = '<option value="">Select a Brevo segment…</option>' +
-    segments.map(function(s) { return '<option value="' + s.id + '">' + escHtml(s.name) + '</option>'; }).join('');
+    sortByName(segments).map(function(s) { return '<option value="' + s.id + '">' + escHtml(s.name) + (s.count ? ' (' + s.count + ')' : '') + '</option>'; }).join('');
   sel.addEventListener('change', onAudienceChange);
 }
 
