@@ -155,11 +155,11 @@ export async function disconnectGmail(adminEmail: string): Promise<void> {
 
 function normalizeHtmlForEmail(html: string): string {
   return html
-    // Convert Quill 2 bullet <ol> → <ul>, strip data-list attrs
+    // Convert Quill 2 bullet <ol> → <ul>, strip data-list attrs, zero list margins
     .replace(/<ol>([\s\S]*?)<\/ol>/gi, (_, inner) =>
       inner.includes('data-list="bullet"')
-        ? '<ul>' + inner + '</ul>'
-        : '<ol>' + inner + '</ol>'
+        ? '<ul style="margin:0;padding-left:1.4em;">' + inner + '</ul>'
+        : '<ol style="margin:0;padding-left:1.4em;">' + inner + '</ol>'
     )
     .replace(/ data-list="[^"]*"/gi, '')
     // Empty paragraphs (with or without <br>) → line break
