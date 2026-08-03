@@ -48,6 +48,10 @@
     {
       "source": "/mail-merge",
       "destination": "/mail-merge.html"
+    },
+    {
+      "source": "/qna-admin",
+      "destination": "/qna-admin.html"
     }
   ]
 }

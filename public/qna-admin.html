@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Author Editorial Q&A — EAC Tools</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #00003D;
+      --navy-light: #1a1a5e;
+      --grey-100: #f3f4f6;
+      --grey-200: #e5e7eb;
+      --grey-500: #6b7280;
+      --grey-700: #374151;
+      --green: #059669;
+      --amber: #d97706;
+      --red: #dc2626;
+      --radius: 10px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fb; color: var(--navy); min-height: 100vh; }
+
+    /* ── Header ── */
+    .site-header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 60px; background: #fff; border-bottom: 1px solid var(--grey-200); position: sticky; top: 0; z-index: 100; }
+    .header-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--navy); }
+    .header-logo-img { width: 28px; height: 28px; }
+    .header-logo-text { font-weight: 700; font-size: 1rem; letter-spacing: -0.01em; }
+    .beta-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .header-auth { position: relative; display: flex; align-items: center; }
+
+    /* ── Page ── */
+    .page-wrap { max-width: 1080px; margin: 0 auto; padding: 48px 24px 80px; }
+    .page-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-500); margin-bottom: 8px; }
+    .page-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; display: flex; align-items: center; gap: 12px; }
+    .admin-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
+    .page-sub { color: var(--grey-500); font-size: 0.95rem; margin-top: 8px; max-width: 640px; }
+
+    /* ── Author table ── */
+    .authors-table-wrap { margin-top: 32px; background: #fff; border: 1px solid var(--grey-200); border-radius: var(--radius); overflow: hidden; }
+    .authors-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .authors-table th { text-align: left; padding: 12px 16px; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--grey-500); border-bottom: 2px solid var(--grey-200); background: var(--grey-100); }
+    .authors-table td { padding: 14px 16px; border-bottom: 1px solid var(--grey-200); vertical-align: top; }
+    .authors-table tr:last-child td { border-bottom: none; }
+    .authors-table tr:hover td { background: #fafbfc; }
+    .author-name { font-weight: 700; }
+    .book-title { color: var(--grey-700); }
+    .book-date { color: var(--grey-500); font-size: 0.8rem; white-space: nowrap; }
+
+    .bucket-pill { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 99px; }
+    .bucket-recent      { background: #d1fae5; color: #065f46; }
+    .bucket-established { background: #dbeafe; color: #1d4ed8; }
+    .bucket-none         { background: var(--grey-100); color: var(--grey-500); }
+
+    .status-pill { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: var(--grey-100); color: var(--grey-700); }
+    .status-Published          { background: #d1fae5; color: #065f46; }
+    .status-Approved           { background: #ede9fe; color: #5b21b6; }
+    .status-Draft-Ready        { background: #dbeafe; color: #1d4ed8; }
+    .status-Author-Responded   { background: #cffafe; color: #155e75; }
+    .status-Sent-to-Author     { background: #ffedd5; color: #9a3412; }
+    .status-Questions-Generated{ background: #fef9c3; color: #854d0e; }
+    .status-Skipped            { background: #fee2e2; color: #991b1b; }
+
+    /* ── Loading / empty / error ── */
+    .loading, .empty-state { color: var(--grey-500); font-size: 0.9rem; padding: 40px 16px; text-align: center; }
+    .error-state { color: var(--red); font-size: 0.9rem; padding: 40px 16px; text-align: center; }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="header-logo" href="https://hub.expertauthor.community">
+    <img class="header-logo-img" src="/eac-logo.png" alt="EAC" onerror="this.style.display='none'">
+    <span class="header-logo-text">Author Hub</span><span class="beta-badge">Beta</span>
+  </a>
+  <div class="header-auth" id="header-auth"></div>
+</header>
+
+<div class="page-wrap">
+  <div class="page-eyebrow">Admin</div>
+  <h1 class="page-title">Author Editorial Q&amp;A <span class="admin-badge">Admin only</span></h1>
+  <p class="page-sub">EAC's authors, listed by publish date. Not testimonials — magazine-style interviews about what writing and publishing actually taught them, published to their author page.</p>
+
+  <div id="authors-content">
+    <p class="loading">Loading authors…</p>
+  </div>
+</div>
+
+<script src="/eac.js"></script>
+<script>requireAuth();</script>
+<script>
+eacAuthReady.then(function() {
+  if (!eacUser || !eacUser.isAdmin) {
+    window.location.replace('/dashboard');
+    return;
+  }
+  loadAuthors();
+});
+
+async function loadAuthors() {
+  var container = document.getElementById('authors-content');
+  try {
+    var res = await fetch('/api/qna-authors');
+    if (!res.ok) throw new Error('API error ' + res.status);
+    var data = await res.json();
+    renderAuthors(data.authors || []);
+  } catch (err) {
+    container.innerHTML = '<p class="error-state">Failed to load authors: ' + escHtml(err.message) + '</p>';
+  }
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function bucketPill(bucket) {
+  if (bucket === 'Recent') return '<span class="bucket-pill bucket-recent">Recent</span>';
+  if (bucket === 'Established') return '<span class="bucket-pill bucket-established">Established</span>';
+  return '<span class="bucket-pill bucket-none">Unassigned</span>';
+}
+
+function statusPill(status) {
+  var cls = 'status-' + String(status).replace(/\s+/g, '-');
+  return '<span class="status-pill ' + cls + '">' + escHtml(status) + '</span>';
+}
+
+function renderAuthors(authors) {
+  var container = document.getElementById('authors-content');
+
+  if (!authors.length) {
+    container.innerHTML = '<p class="empty-state">No authors found in the Webflow Books collection.</p>';
+    return;
+  }
+
+  var rows = authors.map(function(a) {
+    return '<tr>' +
+      '<td><div class="author-name">' + escHtml(a.authorName) + '</div></td>' +
+      '<td><div class="book-title">' + escHtml(a.bookTitle) + '</div></td>' +
+      '<td><span class="book-date">' + formatDate(a.publishedDate) + '</span></td>' +
+      '<td>' + bucketPill(a.bucket) + '</td>' +
+      '<td>' + statusPill(a.status) + '</td>' +
+    '</tr>';
+  }).join('');
+
+  container.innerHTML =
+    '<div class="authors-table-wrap">' +
+      '<table class="authors-table">' +
+        '<thead><tr><th>Author</th><th>Book</th><th>Published</th><th>Bucket</th><th>Status</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>' +
+    '</div>';
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
