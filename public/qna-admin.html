@@ -61,10 +61,12 @@
     .book-title { color: var(--grey-700); }
     .book-date { color: var(--grey-500); font-size: 0.8rem; white-space: nowrap; }
 
-    .bucket-pill { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 99px; }
-    .bucket-recent      { background: #d1fae5; color: #065f46; }
-    .bucket-established { background: #dbeafe; color: #1d4ed8; }
-    .bucket-none         { background: var(--grey-100); color: var(--grey-500); }
+    .bucket-buttons { display: inline-flex; gap: 6px; }
+    .bucket-btn { font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--grey-200); background: #fff; color: var(--grey-500); cursor: pointer; transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
+    .bucket-btn:hover:not(:disabled) { border-color: var(--grey-500); color: var(--grey-700); }
+    .bucket-btn:disabled { opacity: 0.5; cursor: default; }
+    .bucket-btn-recent.active      { background: #d1fae5; color: #065f46; border-color: #d1fae5; }
+    .bucket-btn-established.active { background: #dbeafe; color: #1d4ed8; border-color: #dbeafe; }
 
     .status-pill { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: var(--grey-100); color: var(--grey-700); }
     .status-Published          { background: #d1fae5; color: #065f46; }
@@ -103,6 +105,8 @@
 <script src="/eac.js"></script>
 <script>requireAuth();</script>
 <script>
+var currentAuthors = [];
+
 eacAuthReady.then(function() {
   if (!eacUser || !eacUser.isAdmin) {
     window.location.replace('/dashboard');
@@ -111,15 +115,54 @@ eacAuthReady.then(function() {
   loadAuthors();
 });
 
+document.getElementById('authors-content').addEventListener('click', function(e) {
+  var btn = e.target.closest('.bucket-btn');
+  if (!btn) return;
+  assignBucket(btn.dataset.authorId, btn.dataset.bucket, btn);
+});
+
 async function loadAuthors() {
   var container = document.getElementById('authors-content');
   try {
     var res = await fetch('/api/qna-authors');
     if (!res.ok) throw new Error('API error ' + res.status);
     var data = await res.json();
-    renderAuthors(data.authors || []);
+    currentAuthors = data.authors || [];
+    renderAuthors(currentAuthors);
   } catch (err) {
     container.innerHTML = '<p class="error-state">Failed to load authors: ' + escHtml(err.message) + '</p>';
+  }
+}
+
+async function assignBucket(authorItemId, bucket, btnEl) {
+  var author = currentAuthors.find(function(a) { return a.authorItemId === authorItemId; });
+  if (!author) return;
+
+  var wrap = btnEl.closest('.bucket-buttons');
+  wrap.querySelectorAll('.bucket-btn').forEach(function(b) { b.disabled = true; });
+
+  try {
+    var res = await fetch('/api/qna-authors', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        authorItemId:  author.authorItemId,
+        bookItemId:    author.bookItemId,
+        authorName:    author.authorName,
+        bookTitle:     author.bookTitle,
+        publishedDate: author.publishedDate,
+        bucket:        bucket,
+      }),
+    });
+    if (!res.ok) throw new Error('API error ' + res.status);
+    var data = await res.json();
+    author.bucket = data.bucket;
+    author.status = data.status;
+    author.recordId = data.recordId;
+    renderAuthors(currentAuthors);
+  } catch (err) {
+    alert('Failed to save bucket: ' + err.message);
+    wrap.querySelectorAll('.bucket-btn').forEach(function(b) { b.disabled = false; });
   }
 }
 
@@ -130,10 +173,14 @@ function formatDate(iso) {
   return d.toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function bucketPill(bucket) {
-  if (bucket === 'Recent') return '<span class="bucket-pill bucket-recent">Recent</span>';
-  if (bucket === 'Established') return '<span class="bucket-pill bucket-established">Established</span>';
-  return '<span class="bucket-pill bucket-none">Unassigned</span>';
+function bucketButtons(a) {
+  var recentActive = a.bucket === 'Recent' ? ' active' : '';
+  var establishedActive = a.bucket === 'Established' ? ' active' : '';
+  var id = escHtml(a.authorItemId);
+  return '<div class="bucket-buttons">' +
+    '<button type="button" class="bucket-btn bucket-btn-recent' + recentActive + '" data-author-id="' + id + '" data-bucket="Recent">Recent</button>' +
+    '<button type="button" class="bucket-btn bucket-btn-established' + establishedActive + '" data-author-id="' + id + '" data-bucket="Established">Established</button>' +
+  '</div>';
 }
 
 function statusPill(status) {
@@ -157,7 +204,7 @@ function renderAuthors(authors) {
       '<td><div class="author-cell">' + photo + '<div class="author-name">' + escHtml(a.authorName) + '</div></div></td>' +
       '<td><div class="book-title">' + escHtml(a.bookTitle) + '</div></td>' +
       '<td><span class="book-date">' + formatDate(a.publishedDate) + '</span></td>' +
-      '<td>' + bucketPill(a.bucket) + '</td>' +
+      '<td>' + bucketButtons(a) + '</td>' +
       '<td>' + statusPill(a.status) + '</td>' +
     '</tr>';
   }).join('');

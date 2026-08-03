@@ -29,6 +29,25 @@ async function atGet(path: string) {
   return res.json()
 }
 
+async function atWrite(method: 'POST' | 'PATCH', path: string, fields: Record<string, unknown>) {
+  const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${QNA_TABLE}${path}`
+  const res = await fetch(url, {
+    method,
+    headers: {
+      Authorization:  `Bearer ${process.env.AIRTABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ fields }),
+  })
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`Airtable ${method} failed: ${res.status} ${body.slice(0, 300)}`)
+  }
+  return res.json()
+}
+
+const VALID_BUCKETS = ['Recent', 'Established'] as const
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
 
@@ -61,6 +80,51 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (err) {
       console.error('[qna-authors] GET failed:', err)
       return res.status(500).json({ error: 'Failed to load authors' })
+    }
+  }
+
+  if (req.method === 'POST') {
+    try {
+      const { authorItemId, bookItemId, authorName, bookTitle, publishedDate, bucket } = req.body ?? {}
+
+      if (!authorItemId || typeof authorItemId !== 'string') {
+        return res.status(400).json({ error: 'authorItemId is required' })
+      }
+      if (!VALID_BUCKETS.includes(bucket)) {
+        return res.status(400).json({ error: 'bucket must be Recent or Established' })
+      }
+
+      // Re-fetch rather than trust a client-supplied recordId — keeps this
+      // handler the single source of truth for create-vs-update.
+      const pipelineData = await atGet('?pageSize=100')
+      const existing = (pipelineData.records ?? []).find(
+        (r: any) => r.fields['Webflow Author Item ID'] === authorItemId
+      )
+
+      let record: any
+      if (existing) {
+        record = await atWrite('PATCH', `/${existing.id}`, { Bucket: bucket })
+      } else {
+        record = await atWrite('POST', '', {
+          'Author Name':             authorName ?? '',
+          'Book Title':              bookTitle ?? '',
+          'Bucket':                  bucket,
+          'Status':                  'Not Started',
+          'Book Published Date':     publishedDate ?? undefined,
+          'Webflow Author Item ID':  authorItemId,
+          'Webflow Book Item ID':    bookItemId ?? '',
+          'Source Tool':             'editorial-qna',
+        })
+      }
+
+      return res.status(200).json({
+        recordId: record.id,
+        bucket:   record.fields.Bucket,
+        status:   record.fields.Status,
+      })
+    } catch (err) {
+      console.error('[qna-authors] POST failed:', err)
+      return res.status(500).json({ error: 'Failed to save bucket assignment' })
     }
   }
 
