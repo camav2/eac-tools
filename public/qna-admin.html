@@ -28,6 +28,17 @@
     .header-logo-text { font-weight: 700; font-size: 1rem; letter-spacing: -0.01em; }
     .beta-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
     .header-auth { position: relative; display: flex; align-items: center; }
+    .header-user-btn { display: flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+    .header-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+    .header-avatar-placeholder { width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+    .header-user-name { font-size: 0.875rem; font-weight: 500; }
+    .header-chevron { opacity: 0.5; }
+    .header-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--grey-200); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,10,0.1); min-width: 180px; padding: 4px; }
+    .header-dropdown.open { display: block; }
+    .dropdown-item { display: block; width: 100%; text-align: left; padding: 8px 12px; border-radius: 5px; font-size: 0.875rem; color: var(--navy); text-decoration: none; background: none; border: none; cursor: pointer; }
+    .dropdown-item:hover { background: var(--grey-100); }
+    .dropdown-divider { height: 1px; background: var(--grey-200); margin: 4px 0; }
+    .dropdown-logout { color: var(--red); }
 
     /* ── Page ── */
     .page-wrap { max-width: 1080px; margin: 0 auto; padding: 48px 24px 80px; }
