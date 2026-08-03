@@ -54,6 +54,9 @@
     .authors-table td { padding: 14px 16px; border-bottom: 1px solid var(--grey-200); vertical-align: top; }
     .authors-table tr:last-child td { border-bottom: none; }
     .authors-table tr:hover td { background: #fafbfc; }
+    .author-cell { display: flex; align-items: center; gap: 10px; }
+    .author-photo { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .author-photo-placeholder { width: 32px; height: 32px; border-radius: 50%; background: var(--grey-200); color: var(--grey-500); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; }
     .author-name { font-weight: 700; }
     .book-title { color: var(--grey-700); }
     .book-date { color: var(--grey-500); font-size: 0.8rem; white-space: nowrap; }
@@ -147,8 +150,11 @@ function renderAuthors(authors) {
   }
 
   var rows = authors.map(function(a) {
+    var photo = a.authorPhotoUrl
+      ? '<img class="author-photo" src="' + escHtml(a.authorPhotoUrl) + '" alt="">'
+      : '<div class="author-photo-placeholder">' + escHtml(initials(a.authorName)) + '</div>';
     return '<tr>' +
-      '<td><div class="author-name">' + escHtml(a.authorName) + '</div></td>' +
+      '<td><div class="author-cell">' + photo + '<div class="author-name">' + escHtml(a.authorName) + '</div></div></td>' +
       '<td><div class="book-title">' + escHtml(a.bookTitle) + '</div></td>' +
       '<td><span class="book-date">' + formatDate(a.publishedDate) + '</span></td>' +
       '<td>' + bucketPill(a.bucket) + '</td>' +
@@ -163,6 +169,12 @@ function renderAuthors(authors) {
         '<tbody>' + rows + '</tbody>' +
       '</table>' +
     '</div>';
+}
+
+function initials(name) {
+  var parts = String(name).trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
 }
 
 function escHtml(str) {

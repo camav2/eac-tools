@@ -57,6 +57,7 @@ export interface AuthorListEntry {
   authorItemId: string
   authorName: string
   authorSlug: string
+  authorPhotoUrl?: string
   bookItemId: string
   bookTitle: string
   publishedDate: string | null
@@ -84,6 +85,7 @@ export async function listAuthorsChronological(): Promise<AuthorListEntry[]> {
         authorItemId:  b.fieldData['author-2'] as string,
         authorName:    author?.fieldData?.name ?? '(unknown author)',
         authorSlug:    author?.fieldData?.slug ?? '',
+        authorPhotoUrl: linkUrl(author?.fieldData?.['author-headshot']),
         bookItemId:    b.id as string,
         bookTitle:     b.fieldData?.name ?? '(untitled)',
         publishedDate: b.fieldData?.['book-published-date'] ?? null,
