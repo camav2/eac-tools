@@ -145,6 +145,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ ok: true })
   } catch (err) {
     console.error('[qna-audio] upload failed:', err)
-    return res.status(500).json({ error: 'Upload failed. Please try again.' })
+    // Surface the underlying reason rather than a generic message. An author
+    // seeing this can't act on the detail, but it's the difference between
+    // "something broke" and a diagnosable report — and the alternative was
+    // reading server logs to find a one-line bug.
+    const detail = err instanceof Error ? err.message : ''
+    return res.status(500).json({
+      error: detail ? `Upload failed: ${detail}` : 'Upload failed. Please try again.',
+    })
   }
 }

@@ -23,7 +23,15 @@ function headers(extra: Record<string, string> = {}) {
   return { Authorization: `Bearer ${key}`, apikey: key, ...extra }
 }
 
-/** Idempotent — a 409 means the bucket already exists, which is success. */
+/**
+ * Idempotent bucket creation.
+ *
+ * Supabase signals "already exists" as HTTP 400 with {"statusCode":"409",
+ * "code":"BucketAlreadyExists"} in the *body* — the HTTP status does not
+ * reflect it. Checking res.status alone therefore treats the normal
+ * steady-state case as a fatal error, which is exactly what happened: the
+ * first upload succeeded and every one after it failed.
+ */
 async function ensureBucket(): Promise<void> {
   const res = await fetch(storageUrl('/bucket'), {
     method: 'POST',
@@ -36,8 +44,12 @@ async function ensureBucket(): Promise<void> {
       allowed_mime_types: ['audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/wav'],
     }),
   })
-  if (res.ok || res.status === 409) return
+  if (res.ok) return
+
   const body = await res.text().catch(() => '')
+  if (res.status === 409 || /BucketAlreadyExists|already exists|"statusCode":"409"/i.test(body)) {
+    return // already provisioned — the desired end state
+  }
   throw new Error(`Supabase bucket create failed: ${res.status} ${body.slice(0, 200)}`)
 }
 
@@ -50,22 +62,42 @@ export function extensionFor(contentType: string): string {
   return 'bin'
 }
 
-/** Returns the storage path (not a URL) — URLs are minted on demand. */
+function putObject(path: string, data: Buffer, contentType: string) {
+  return fetch(storageUrl(`/object/${BUCKET}/${path}`), {
+    method: 'POST',
+    headers: headers({ 'Content-Type': contentType, 'x-upsert': 'true' }),
+    body: new Uint8Array(data),
+  })
+}
+
+/**
+ * Returns the storage path (not a URL) — URLs are minted on demand.
+ *
+ * Uploads first and only provisions the bucket if the upload reports it
+ * missing, rather than calling ensureBucket() every time. The steady state
+ * (bucket exists) is then a single request, and the provisioning path runs
+ * once in the tool's lifetime instead of on every recording.
+ */
 export async function uploadAudio(
   path: string,
   data: Buffer,
   contentType: string
 ): Promise<string> {
-  await ensureBucket()
+  let res = await putObject(path, data, contentType)
 
-  const res = await fetch(storageUrl(`/object/${BUCKET}/${path}`), {
-    method: 'POST',
-    headers: headers({ 'Content-Type': contentType, 'x-upsert': 'true' }),
-    body: new Uint8Array(data),
-  })
   if (!res.ok) {
     const body = await res.text().catch(() => '')
-    throw new Error(`Supabase upload failed: ${res.status} ${body.slice(0, 200)}`)
+    if (res.status === 404 || /Bucket not found|NoSuchBucket/i.test(body)) {
+      await ensureBucket()
+      res = await putObject(path, data, contentType)
+    } else {
+      throw new Error(`Supabase upload failed: ${res.status} ${body.slice(0, 200)}`)
+    }
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`Supabase upload failed after bucket create: ${res.status} ${body.slice(0, 200)}`)
   }
   return path
 }
