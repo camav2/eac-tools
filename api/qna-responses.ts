@@ -17,7 +17,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getSession } from './_lib/auth'
-import { signedUrlFor, downloadAudio } from './_lib/qna-storage'
+import { signedUrlFor, downloadAudio, extensionFor } from './_lib/qna-storage'
 import { transcribeAudio } from './_lib/elevenlabs'
 
 // A single long recording can take a while through Scribe; the default 15s
@@ -131,10 +131,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const { buffer, contentType } = await downloadAudio(target.audioPath)
+      const audioType = target.audioType || contentType
+
+      // The filename extension matters: Scribe uses it to identify the
+      // container format, and an extensionless file transcribes to nothing.
       const transcript = await transcribeAudio(
         buffer,
-        target.audioType || contentType,
-        `q${questionIndex}`
+        audioType,
+        `q${questionIndex}.${extensionFor(audioType)}`
+      )
+
+      console.log(
+        `[qna-responses] transcribed q${questionIndex}: ` +
+        `${buffer.length} bytes ${audioType} -> ${transcript.text.length} chars`
       )
 
       responses[questionIndex] = { ...target, transcript: transcript.text }

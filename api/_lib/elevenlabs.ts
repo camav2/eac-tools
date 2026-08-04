@@ -20,6 +20,12 @@ export interface Transcript {
   languageCode?: string
 }
 
+/**
+ * `filename` must carry a real extension (.webm / .m4a / …). Scribe uses it to
+ * identify the container format — an extensionless file is accepted with a
+ * 200 and transcribes to an empty string rather than erroring, which is a
+ * genuinely confusing failure to debug.
+ */
 export async function transcribeAudio(
   buffer: Buffer,
   contentType: string,
@@ -44,7 +50,15 @@ export async function transcribeAudio(
 
   const data = await res.json()
   if (typeof data.text !== 'string') {
-    throw new Error('ElevenLabs STT returned no text')
+    throw new Error('ElevenLabs STT returned no text field')
+  }
+  // Treat empty text as a failure, not a result. Saving "" looks identical to
+  // "never transcribed" in the admin UI, so the operator sees the button reset
+  // with no explanation and no way to tell the two apart.
+  if (!data.text.trim()) {
+    throw new Error(
+      'Transcription came back empty — the recording may be silent, or the audio format was not recognised.'
+    )
   }
   return { text: data.text, languageCode: data.language_code }
 }
