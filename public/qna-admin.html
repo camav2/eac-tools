@@ -374,6 +374,75 @@ function renderReviewPanel(author, data) {
   document.getElementById('generate-btn').addEventListener('click', function() { generateQuestionsForAuthor(author); });
   document.getElementById('save-btn').addEventListener('click', function() { saveQuestionsForAuthor(author); });
   document.getElementById('send-btn').addEventListener('click', function() { createIntakeLink(author, false); });
+
+  showExistingLink(author);
+}
+
+/* Surfaces a link that was minted earlier, so it's available on every visit
+ * rather than only in the moment it was created. */
+async function showExistingLink(author) {
+  try {
+    var res = await fetch('/api/qna-send?authorItemId=' + encodeURIComponent(author.authorItemId));
+    if (!res.ok) return;
+    var data = await res.json();
+    if (!data.url) return;
+    var btn = document.getElementById('send-btn');
+    if (btn) btn.textContent = 'Create a new link';
+    renderLinkArea(author, data.url, data.submittedAt);
+  } catch (err) { /* non-critical — the Create button still works */ }
+}
+
+function renderLinkArea(author, url, submittedAt) {
+  var area = document.getElementById('link-area');
+  if (!area) return;
+  area.innerHTML =
+    '<div class="link-row">' +
+      '<input class="link-input" id="link-input" readonly value="' + escHtml(url) + '">' +
+      '<button type="button" class="copy-btn" id="copy-btn">Copy</button>' +
+      '<a class="copy-btn" href="' + escHtml(url) + '" target="_blank" rel="noopener" ' +
+        'style="background:#fff;color:var(--navy);border:1px solid var(--navy);text-decoration:none">Open</a>' +
+    '</div>' +
+    (submittedAt
+      ? '<p class="send-sub" style="margin-top:12px">Submitted ' + escHtml(formatDate(submittedAt)) +
+        ' — the link now shows a thank-you page. Reopen it to edit or resubmit.</p>' +
+        '<button type="button" class="send-btn" id="reopen-btn" style="margin-top:4px">Reopen for editing</button>'
+      : '') +
+    '<button type="button" class="regen-link" id="regen-btn">Issue a new link (invalidates this one)</button>';
+
+  document.getElementById('copy-btn').addEventListener('click', function() {
+    var input = document.getElementById('link-input');
+    input.select();
+    navigator.clipboard.writeText(input.value).then(function() {
+      var b = document.getElementById('copy-btn');
+      b.textContent = 'Copied';
+      setTimeout(function() { b.textContent = 'Copy'; }, 1800);
+    });
+  });
+  document.getElementById('regen-btn').addEventListener('click', function() { createIntakeLink(author, true); });
+  var reopenBtn = document.getElementById('reopen-btn');
+  if (reopenBtn) reopenBtn.addEventListener('click', function() { reopenSubmission(author); });
+}
+
+async function reopenSubmission(author) {
+  var btn = document.getElementById('reopen-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Reopening…'; }
+  try {
+    var res = await fetch('/api/qna-send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: author.authorItemId, action: 'reopen' }),
+    });
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      throw new Error(e.error || ('API error ' + res.status));
+    }
+    var data = await res.json();
+    author.status = data.status;
+    renderLinkArea(author, data.url, null);
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Reopen for editing'; }
+    alert('Could not reopen: ' + err.message);
+  }
 }
 
 async function createIntakeLink(author, regenerate) {
@@ -396,24 +465,7 @@ async function createIntakeLink(author, regenerate) {
     }
     var data = await res.json();
     author.status = data.status;
-
-    area.innerHTML =
-      '<div class="link-row">' +
-        '<input class="link-input" id="link-input" readonly value="' + escHtml(data.url) + '">' +
-        '<button type="button" class="copy-btn" id="copy-btn">Copy</button>' +
-      '</div>' +
-      '<button type="button" class="regen-link" id="regen-btn">Issue a new link (invalidates this one)</button>';
-
-    document.getElementById('copy-btn').addEventListener('click', function() {
-      var input = document.getElementById('link-input');
-      input.select();
-      navigator.clipboard.writeText(input.value).then(function() {
-        var b = document.getElementById('copy-btn');
-        b.textContent = 'Copied';
-        setTimeout(function() { b.textContent = 'Copy'; }, 1800);
-      });
-    });
-    document.getElementById('regen-btn').addEventListener('click', function() { createIntakeLink(author, true); });
+    renderLinkArea(author, data.url, null);
   } catch (err) {
     area.innerHTML = '<p class="send-sub err" style="margin-top:14px;color:var(--red)">' + escHtml(err.message) + '</p>';
   } finally {
@@ -544,6 +596,11 @@ function renderResponses(authorItemId, data) {
           '<span class="review-status" id="all-status" style="margin-left:12px"></span>'
         : '') +
       '<div style="margin-top:20px">' + blocks + '</div>' +
+      '<div class="send-panel">' +
+        '<div class="send-title">Intake link</div>' +
+        '<div class="send-sub">The author\'s link — reopen the submission to edit or resubmit.</div>' +
+        '<div id="link-area"></div>' +
+      '</div>' +
     '</div>';
 
   document.querySelectorAll('[data-tq]').forEach(function(b) {
@@ -551,6 +608,9 @@ function renderResponses(authorItemId, data) {
   });
   var allBtn = document.getElementById('transcribe-all');
   if (allBtn) allBtn.addEventListener('click', function() { transcribeAll(authorItemId, data); });
+
+  var author = currentAuthors.find(function(a) { return a.authorItemId === authorItemId; });
+  if (author) showExistingLink(author);
 }
 
 async function transcribeOne(authorItemId, i) {

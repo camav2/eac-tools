@@ -1,12 +1,16 @@
 /*
  * Author Editorial Q&A — mint an intake link
  *
+ * GET  ?authorItemId=…  → the current link, if one has been minted
  * POST — admin-only. Generates (or returns the existing) opaque token for an
  *        author and flips the pipeline row to "Sent to Author". Returns the
  *        link for Cam to send manually — nothing is emailed from here.
  *
  * Re-minting is deliberate: POST with regenerate=true issues a fresh token and
  * invalidates the old link (useful if a link is forwarded or leaks).
+ *
+ * POST with action=reopen lifts the submitted marker so a response can be
+ * edited and resubmitted, keeping the answers already given.
  *
  * Env vars required:
  *   JWT_SECRET, AIRTABLE_API_KEY, AIRTABLE_BASE_ID, AIRTABLE_QNA_TABLE_ID
@@ -52,11 +56,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!session) return res.status(401).json({ error: 'Unauthorised' })
   if (!session.isAdmin) return res.status(403).json({ error: 'Forbidden — not admin' })
 
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-
   try {
-    const { authorItemId, regenerate } = req.body ?? {}
-    if (!authorItemId || typeof authorItemId !== 'string') {
+    const authorItemId = String(
+      (req.method === 'GET' ? req.query.authorItemId : req.body?.authorItemId) ?? ''
+    )
+    if (!authorItemId) {
       return res.status(400).json({ error: 'authorItemId is required' })
     }
 
@@ -66,6 +70,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     )
     if (!row) {
       return res.status(404).json({ error: 'No pipeline row — assign a bucket first' })
+    }
+
+    // GET — report the current link so the admin panel can show it on open
+    // rather than only in the moment it was minted.
+    if (req.method === 'GET') {
+      const t = row.fields['Intake Token']
+      return res.status(200).json({
+        url:         t ? `${INTAKE_BASE_URL}?token=${encodeURIComponent(t)}` : null,
+        status:      row.fields.Status ?? '',
+        submittedAt: row.fields['Author Submitted At'] ?? null,
+      })
+    }
+
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+    const { regenerate, action } = req.body ?? {}
+
+    // Reopen — clears the submission so the author (or Cam, when testing) can
+    // edit and resubmit. Answers, recordings and transcripts are all kept; only
+    // the "submitted" marker is lifted. This is also the answer to an author
+    // emailing "can I add something?" after sending.
+    if (action === 'reopen') {
+      if (!row.fields['Author Submitted At']) {
+        return res.status(400).json({ error: 'That response is not submitted.' })
+      }
+      await atPatch(row.id, {
+        'Author Submitted At': null,
+        'Status':              'Sent to Author',
+      })
+      const t = row.fields['Intake Token']
+      return res.status(200).json({
+        reopened: true,
+        status:   'Sent to Author',
+        url:      t ? `${INTAKE_BASE_URL}?token=${encodeURIComponent(t)}` : null,
+      })
     }
 
     // Questions must exist before a link can be sent — otherwise the author
@@ -96,7 +135,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       status: shouldAdvance ? 'Sent to Author' : currentStatus,
     })
   } catch (err) {
-    console.error('[qna-send] POST failed:', err)
+    console.error('[qna-send] request failed:', err)
     return res.status(500).json({ error: 'Failed to create intake link' })
   }
 }
