@@ -23,6 +23,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { tokensMatch } from './_lib/qna-tokens'
+import { signedUrlFor } from './_lib/qna-storage'
 
 const QNA_TABLE = process.env.AIRTABLE_QNA_TABLE_ID!
 
@@ -72,6 +73,43 @@ function parseJsonField(raw: unknown): any[] | null {
   }
 }
 
+function parseJsonObject(raw: unknown): Record<string, string> {
+  if (typeof raw !== 'string' || !raw) return {}
+  try {
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+/**
+ * Signs Kelly's voice clips for playback. Best-effort throughout: the voiced
+ * intro is a nice touch, not a dependency — a signing failure must never stop
+ * an author from answering, so a broken clip is simply absent.
+ *
+ * A long expiry is fine here: unlike an author's own recording, these are
+ * Kelly reading questions that the page already shows in full.
+ */
+async function signVoiceClips(row: any, questionCount: number) {
+  const map = parseJsonObject(row.fields['Voice Audio'])
+  if (!Object.keys(map).length) return { intro: null, questions: [] as (string | null)[] }
+
+  const sign = (path?: string) =>
+    path
+      ? signedUrlFor(path, 86400).catch(err => {
+          console.error('[qna-intake] voice sign failed:', err)
+          return null
+        })
+      : Promise.resolve(null)
+
+  const [intro, ...questions] = await Promise.all([
+    sign(map.intro),
+    ...Array.from({ length: questionCount }, (_, i) => sign(map[`q${i}`])),
+  ])
+  return { intro, questions }
+}
+
 /** Author-facing view of a pipeline row. Never widen this without a reason. */
 function publicView(row: any) {
   const questions = parseJsonField(row.fields['Question Set']) ?? []
@@ -103,7 +141,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!row) return res.status(404).json({ error: 'This link is not valid.' })
 
     if (req.method === 'GET') {
-      return res.status(200).json(publicView(row))
+      const view = publicView(row)
+      const voice = await signVoiceClips(row, view.questions.length).catch(err => {
+        console.error('[qna-intake] voice signing failed:', err)
+        return { intro: null, questions: [] as (string | null)[] }
+      })
+      return res.status(200).json({ ...view, voice })
     }
 
     if (req.method === 'POST') {

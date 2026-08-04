@@ -390,13 +390,52 @@ function renderReviewPanel(author, data) {
         '<button type="button" id="send-btn" class="send-btn">Create intake link</button>' +
         '<div id="link-area"></div>' +
       '</div>' +
+      '<div class="send-panel">' +
+        '<div class="send-title">Kelly\'s voice</div>' +
+        '<div class="send-sub">Records the intro and every question in Kelly\'s voice, so the author can listen rather than read. Regenerate after changing questions.</div>' +
+        '<button type="button" class="send-btn" id="voice-btn">Generate voice</button>' +
+        '<span class="review-status" id="voice-status" style="margin-left:12px"></span>' +
+      '</div>' +
     '</div>';
+
+  document.getElementById('voice-btn').addEventListener('click', function() { generateVoice(author); });
 
   document.getElementById('generate-btn').addEventListener('click', function() { generateQuestionsForAuthor(author); });
   document.getElementById('save-btn').addEventListener('click', function() { saveQuestionsForAuthor(author); });
   document.getElementById('send-btn').addEventListener('click', function() { createIntakeLink(author, false); });
 
   showExistingLink(author);
+}
+
+async function generateVoice(author) {
+  var btn = document.getElementById('voice-btn');
+  var statusEl = document.getElementById('voice-status');
+  btn.disabled = true;
+  statusEl.textContent = 'Recording… this takes a minute.';
+  statusEl.className = 'review-status';
+
+  try {
+    var res = await fetch('/api/qna-voice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: author.authorItemId }),
+    });
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      throw new Error(e.error || ('API error ' + res.status));
+    }
+    var data = await res.json();
+    statusEl.textContent = data.failed && data.failed.length
+      ? data.generated + ' of ' + data.total + ' recorded — failed: ' + data.failed.join(', ')
+      : 'All ' + data.generated + ' clips recorded.';
+    statusEl.className = 'review-status ' + (data.failed && data.failed.length ? 'err' : 'ok');
+    btn.textContent = 'Regenerate voice';
+  } catch (err) {
+    statusEl.textContent = 'Failed: ' + err.message;
+    statusEl.className = 'review-status err';
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 /* Surfaces a link that was minted earlier, so it's available on every visit

@@ -47,6 +47,27 @@
     }
     textarea:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(0,0,61,0.06); }
 
+    /* ── Kelly's voice ── */
+    .listen-btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      background: var(--yellow); color: var(--navy); border: none;
+      padding: 11px 20px; border-radius: 999px;
+      font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+    .listen-btn:hover { opacity: 0.85; }
+    .listen-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .listen-intro { margin: 4px 0 8px; }
+    .listen-caption { font-size: 0.78rem; color: var(--grey-500); margin-top: 8px; }
+    .listen-q {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: none; border: none; padding: 4px 0; margin-bottom: 10px;
+      font: inherit; font-size: 0.78rem; font-weight: 600; color: var(--grey-500);
+      cursor: pointer;
+    }
+    .listen-q:hover { color: var(--navy); }
+    .listen-q svg { width: 13px; height: 13px; flex-shrink: 0; }
+
     /* ── Audio ── */
     .or-rule { display: flex; align-items: center; gap: 12px; margin: 14px 0 12px; color: var(--grey-500); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
     .or-rule::before, .or-rule::after { content: ''; flex: 1; height: 1px; background: var(--grey-200); }
@@ -112,6 +133,14 @@ var TOKEN = new URLSearchParams(window.location.search).get('token') || '';
 var state = { questions: [], answers: [], authorName: '', bookTitle: '' };
 var saveTimer = null;
 
+var ICON_SPEAKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5">' +
+  '</polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14">' +
+  '</path></svg>';
+var ICON_PAUSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect>' +
+  '<rect x="14" y="4" width="4" height="16"></rect></svg>';
+
 document.addEventListener('DOMContentLoaded', load);
 
 async function load() {
@@ -165,13 +194,31 @@ function renderForm() {
         '</div>' +
         '<div id="playback-' + i + '"></div>';
     }
+    var qVoice = (state.voice && state.voice.questions && state.voice.questions[i]) || null;
+    var listen = qVoice
+      ? '<button type="button" class="listen-q" data-listen="' + esc(qVoice) + '">' +
+          ICON_SPEAKER + 'Hear Kelly read this' +
+        '</button>'
+      : '';
+
     return '<div class="q-block">' +
       '<div class="q-num">Question ' + (i + 1) + ' of ' + state.questions.length + '</div>' +
       '<div class="q-text">' + esc(q) + '</div>' +
+      listen +
       '<textarea data-i="' + i + '" placeholder="Take as much space as you need…">' + esc(state.answers[i] || '') + '</textarea>' +
       audioBlock +
     '</div>';
   }).join('');
+
+  var introVoice = (state.voice && state.voice.intro) || null;
+  var introPlayer = introVoice
+    ? '<div class="listen-intro">' +
+        '<button type="button" class="listen-btn" data-listen="' + esc(introVoice) + '">' +
+          ICON_SPEAKER + 'Hear this from Kelly' +
+        '</button>' +
+        '<div class="listen-caption">About a minute, in Kelly\'s voice.</div>' +
+      '</div>'
+    : '';
 
   document.getElementById('root').innerHTML =
     '<div class="eyebrow">Expert Author Community · Editorial</div>' +
@@ -189,6 +236,7 @@ function renderForm() {
         : '') +
       'Everything saves as you go, so you can close this page and come back to it.</p>' +
     '</div>' +
+    introPlayer +
     '<div class="rule"></div>' +
     qs +
     '<div class="consent">' +
@@ -226,6 +274,51 @@ function renderForm() {
   document.querySelectorAll('[data-rec]').forEach(function(b) {
     b.addEventListener('click', function() { toggleRecording(Number(b.dataset.rec)); });
   });
+  document.querySelectorAll('[data-listen]').forEach(function(b) {
+    b.addEventListener('click', function() { toggleListen(b); });
+  });
+}
+
+/* ── Kelly's voice ──
+ * One clip at a time: starting a question mid-intro should stop the intro
+ * rather than talk over it. The button reflects play/pause state so it's
+ * obvious what's making the sound.
+ */
+var player = { audio: null, btn: null };
+
+function toggleListen(btn) {
+  if (player.btn === btn && player.audio && !player.audio.paused) return stopListen();
+  stopListen();
+
+  var audio = new Audio(btn.dataset.listen);
+  player = { audio: audio, btn: btn };
+  setListenLabel(btn, true);
+
+  audio.addEventListener('ended', stopListen);
+  audio.addEventListener('error', function() {
+    setListenLabel(btn, false);
+    // Silent failure is fine here — the question is on screen in full, so a
+    // missing clip costs nothing but the nicety.
+    player = { audio: null, btn: null };
+  });
+  audio.play().catch(function() {
+    setListenLabel(btn, false);
+    player = { audio: null, btn: null };
+  });
+}
+
+function stopListen() {
+  if (player.audio) { player.audio.pause(); player.audio.currentTime = 0; }
+  if (player.btn) setListenLabel(player.btn, false);
+  player = { audio: null, btn: null };
+}
+
+function setListenLabel(btn, playing) {
+  var isIntro = btn.classList.contains('listen-btn');
+  var label = playing
+    ? (isIntro ? 'Stop' : 'Stop')
+    : (isIntro ? 'Hear this from Kelly' : 'Hear Kelly read this');
+  btn.innerHTML = (playing ? ICON_PAUSE : ICON_SPEAKER) + label;
 }
 
 /* ── Audio recording ──
