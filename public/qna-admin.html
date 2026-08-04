@@ -107,6 +107,19 @@
     .review-status { font-size: 0.85rem; color: var(--grey-500); }
     .review-status.ok { color: var(--green); }
     .review-status.err { color: var(--red); }
+
+    /* ── Send link ── */
+    .send-panel { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--grey-200); }
+    .send-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+    .send-sub { font-size: 0.82rem; color: var(--grey-500); margin-bottom: 16px; }
+    .send-btn { background: #fff; color: var(--navy); border: 1px solid var(--navy); padding: 9px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+    .send-btn:hover:not(:disabled) { background: var(--grey-100); }
+    .send-btn:disabled { opacity: 0.5; cursor: default; }
+    .link-row { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
+    .link-input { flex: 1; padding: 9px 12px; border: 1px solid var(--grey-200); border-radius: 8px; font-size: 0.8rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--grey-700); background: var(--grey-100); }
+    .copy-btn { background: var(--navy); color: #fff; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
+    .regen-link { font-size: 0.78rem; color: var(--grey-500); text-decoration: underline; background: none; border: none; cursor: pointer; padding: 0; margin-top: 12px; display: inline-block; }
+    .regen-link:hover { color: var(--red); }
   </style>
 </head>
 <body>
@@ -323,10 +336,62 @@ function renderReviewPanel(author, data) {
         '<button type="button" id="save-btn" class="save-btn">Save Question Set</button>' +
         '<span class="review-status" id="review-status"></span>' +
       '</div>' +
+      '<div class="send-panel">' +
+        '<div class="send-title">Send to author</div>' +
+        '<div class="send-sub">Creates a private link with these questions. Nothing is emailed — copy the link and send it yourself.</div>' +
+        '<button type="button" id="send-btn" class="send-btn">Create intake link</button>' +
+        '<div id="link-area"></div>' +
+      '</div>' +
     '</div>';
 
   document.getElementById('generate-btn').addEventListener('click', function() { generateQuestionsForAuthor(author); });
   document.getElementById('save-btn').addEventListener('click', function() { saveQuestionsForAuthor(author); });
+  document.getElementById('send-btn').addEventListener('click', function() { createIntakeLink(author, false); });
+}
+
+async function createIntakeLink(author, regenerate) {
+  if (regenerate && !confirm('Issue a new link for ' + author.authorName + '?\n\nThe existing link will stop working immediately. Only do this if the old link was shared by mistake.')) return;
+
+  var btn = document.getElementById('send-btn');
+  var area = document.getElementById('link-area');
+  btn.disabled = true;
+  area.innerHTML = '<p class="send-sub" style="margin-top:14px">Creating…</p>';
+
+  try {
+    var res = await fetch('/api/qna-send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: author.authorItemId, regenerate: !!regenerate }),
+    });
+    if (!res.ok) {
+      var errData = await res.json().catch(function() { return {}; });
+      throw new Error(errData.error || ('API error ' + res.status));
+    }
+    var data = await res.json();
+    author.status = data.status;
+
+    area.innerHTML =
+      '<div class="link-row">' +
+        '<input class="link-input" id="link-input" readonly value="' + escHtml(data.url) + '">' +
+        '<button type="button" class="copy-btn" id="copy-btn">Copy</button>' +
+      '</div>' +
+      '<button type="button" class="regen-link" id="regen-btn">Issue a new link (invalidates this one)</button>';
+
+    document.getElementById('copy-btn').addEventListener('click', function() {
+      var input = document.getElementById('link-input');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(function() {
+        var b = document.getElementById('copy-btn');
+        b.textContent = 'Copied';
+        setTimeout(function() { b.textContent = 'Copy'; }, 1800);
+      });
+    });
+    document.getElementById('regen-btn').addEventListener('click', function() { createIntakeLink(author, true); });
+  } catch (err) {
+    area.innerHTML = '<p class="send-sub err" style="margin-top:14px;color:var(--red)">' + escHtml(err.message) + '</p>';
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function generateQuestionsForAuthor(author) {

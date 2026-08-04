@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Editorial Q&amp;A — Expert Author Community</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="robots" content="noindex, nofollow">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #00003D;
+      --yellow: #FFE64B;
+      --grey-100: #f3f4f6;
+      --grey-200: #e5e7eb;
+      --grey-500: #6b7280;
+      --grey-700: #374151;
+      --green: #059669;
+      --red: #dc2626;
+    }
+    body {
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #faf9f7; color: var(--navy); line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .masthead { background: var(--navy); padding: 0 24px; height: 56px; display: flex; align-items: center; }
+    .masthead img { height: 26px; }
+    .masthead-text { color: #fff; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-left: 10px; }
+
+    .wrap { max-width: 680px; margin: 0 auto; padding: 56px 24px 96px; }
+
+    .eyebrow { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--grey-500); }
+    h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.2; margin: 10px 0 20px; }
+    .intro p { margin-bottom: 16px; color: var(--grey-700); }
+    .intro strong { color: var(--navy); }
+    .rule { height: 3px; width: 56px; background: var(--yellow); margin: 32px 0; border-radius: 2px; }
+
+    .q-block { margin-bottom: 36px; }
+    .q-num { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; color: var(--grey-500); text-transform: uppercase; }
+    .q-text { font-size: 1.05rem; font-weight: 600; margin: 6px 0 12px; line-height: 1.45; }
+    textarea {
+      width: 100%; min-height: 130px; padding: 14px 16px; font: inherit; font-size: 0.95rem;
+      color: var(--navy); background: #fff; border: 1px solid var(--grey-200);
+      border-radius: 10px; resize: vertical; line-height: 1.6;
+    }
+    textarea:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(0,0,61,0.06); }
+
+    .consent { background: #fff; border: 1px solid var(--grey-200); border-radius: 12px; padding: 22px 24px; margin-top: 40px; }
+    .consent h2 { font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; }
+    .consent ul { list-style: none; font-size: 0.85rem; color: var(--grey-700); margin-bottom: 18px; }
+    .consent li { padding-left: 20px; position: relative; margin-bottom: 7px; }
+    .consent li::before { content: '—'; position: absolute; left: 0; color: var(--grey-500); }
+    .consent-check { display: flex; gap: 11px; align-items: flex-start; }
+    .consent-check input { margin-top: 4px; width: 17px; height: 17px; flex-shrink: 0; accent-color: var(--navy); cursor: pointer; }
+    .consent-check label { font-size: 0.88rem; font-weight: 500; cursor: pointer; }
+
+    .actions { margin-top: 28px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .btn-submit {
+      background: var(--navy); color: #fff; border: none; padding: 15px 30px; border-radius: 999px;
+      font: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: opacity 0.15s ease;
+    }
+    .btn-submit:hover:not(:disabled) { opacity: 0.88; }
+    .btn-submit:disabled { opacity: 0.35; cursor: default; }
+    .save-note { font-size: 0.8rem; color: var(--grey-500); }
+    .save-note.ok { color: var(--green); }
+    .save-note.err { color: var(--red); }
+
+    .state { text-align: center; padding: 80px 24px; }
+    .state h2 { font-size: 1.35rem; font-weight: 800; margin-bottom: 12px; }
+    .state p { color: var(--grey-700); max-width: 460px; margin: 0 auto; }
+    .state-icon { font-size: 2.4rem; margin-bottom: 18px; }
+
+    @media (max-width: 600px) {
+      .wrap { padding: 36px 20px 72px; }
+      h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="masthead">
+  <img src="/eac-logo.png" alt="" onerror="this.style.display='none'">
+  <span class="masthead-text">Expert Author Community</span>
+</header>
+
+<div class="wrap" id="root">
+  <p class="state">Loading…</p>
+</div>
+
+<script>
+var TOKEN = new URLSearchParams(window.location.search).get('token') || '';
+var state = { questions: [], answers: [], authorName: '', bookTitle: '' };
+var saveTimer = null;
+
+document.addEventListener('DOMContentLoaded', load);
+
+async function load() {
+  if (!TOKEN) return renderError('This link is missing its access code. Please use the full link from your email.');
+  try {
+    var res = await fetch('/api/qna-intake?token=' + encodeURIComponent(TOKEN));
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      return renderError(e.error || 'This link is not valid.');
+    }
+    var data = await res.json();
+    if (data.submitted) return renderSubmitted(data.authorName);
+    state = data;
+    renderForm();
+  } catch (err) {
+    renderError('We could not load your questions. Please check your connection and refresh.');
+  }
+}
+
+function renderError(msg) {
+  document.getElementById('root').innerHTML =
+    '<div class="state"><div class="state-icon">🔒</div>' +
+    '<h2>We can\'t open this page</h2><p>' + esc(msg) + '</p></div>';
+}
+
+function renderSubmitted(name) {
+  document.getElementById('root').innerHTML =
+    '<div class="state"><div class="state-icon">✓</div>' +
+    '<h2>Thank you' + (name ? ', ' + esc(firstName(name)) : '') + '</h2>' +
+    '<p>Your answers are in. We\'ll shape them into an edited Q&amp;A and send it to you ' +
+    'for approval before anything is published.</p></div>';
+}
+
+function renderForm() {
+  var qs = state.questions.map(function(q, i) {
+    return '<div class="q-block">' +
+      '<div class="q-num">Question ' + (i + 1) + ' of ' + state.questions.length + '</div>' +
+      '<div class="q-text">' + esc(q) + '</div>' +
+      '<textarea data-i="' + i + '" placeholder="Take as much space as you need…">' + esc(state.answers[i] || '') + '</textarea>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('root').innerHTML =
+    '<div class="eyebrow">Expert Author Community · Editorial</div>' +
+    '<h1>' + esc(firstName(state.authorName)) + ', we\'d like to interview you about <em>' + esc(state.bookTitle) + '</em></h1>' +
+    '<div class="intro">' +
+      '<p>We\'re building a more editorial home for the Expert Author Community — one that shares the ' +
+      'thinking, lessons and lived experience behind meaningful books.</p>' +
+      '<p><strong>This isn\'t a testimonial.</strong> We\'re not asking you to say nice things about EAC. ' +
+      'We\'re interested in what the process of writing, publishing and articulating your ideas actually ' +
+      'taught you — the things you\'d tell another expert who was about to start.</p>' +
+      '<p>Answer in your own voice, at whatever length feels right. Your answers save as you go, so you ' +
+      'can close this page and come back to it.</p>' +
+    '</div>' +
+    '<div class="rule"></div>' +
+    qs +
+    '<div class="consent">' +
+      '<h2>Before you submit</h2>' +
+      '<ul>' +
+        '<li>EAC may use your responses to create an edited editorial feature published on your author page.</li>' +
+        '<li>We may lightly edit for clarity, structure and length, and may quote from your responses.</li>' +
+        '<li>We will send you the final version for approval before anything is published.</li>' +
+        '<li>Your answers are stored securely and are not shared outside EAC.</li>' +
+      '</ul>' +
+      '<div class="consent-check">' +
+        '<input type="checkbox" id="consent">' +
+        '<label for="consent">I understand and I\'m happy for my answers to be used on this basis.</label>' +
+      '</div>' +
+    '</div>' +
+    '<div class="actions">' +
+      '<button type="button" class="btn-submit" id="submit" disabled>Send my answers</button>' +
+      '<span class="save-note" id="note"></span>' +
+    '</div>';
+
+  document.querySelectorAll('textarea').forEach(function(t) {
+    t.addEventListener('input', scheduleSave);
+    t.addEventListener('blur', saveNow);
+  });
+  document.getElementById('consent').addEventListener('change', function() {
+    document.getElementById('submit').disabled = !this.checked;
+  });
+  document.getElementById('submit').addEventListener('click', submit);
+}
+
+function currentAnswers() {
+  var out = [];
+  document.querySelectorAll('textarea').forEach(function(t) { out[Number(t.dataset.i)] = t.value; });
+  return out;
+}
+
+function scheduleSave() {
+  note('');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 1200);
+}
+
+async function saveNow() {
+  clearTimeout(saveTimer);
+  try {
+    var res = await fetch('/api/qna-intake', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: TOKEN, action: 'save', answers: currentAnswers() }),
+    });
+    note(res.ok ? 'Saved' : 'Could not save — your text is still here, we\'ll retry.', res.ok ? 'ok' : 'err');
+  } catch (err) {
+    note('Not saved — check your connection.', 'err');
+  }
+}
+
+async function submit() {
+  var btn = document.getElementById('submit');
+  btn.disabled = true;
+  note('Sending…');
+  try {
+    var res = await fetch('/api/qna-intake', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: TOKEN, action: 'submit',
+        answers: currentAnswers(), consent: true,
+      }),
+    });
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      note(e.error || 'Could not send. Please try again.', 'err');
+      btn.disabled = false;
+      return;
+    }
+    renderSubmitted(state.authorName);
+    window.scrollTo(0, 0);
+  } catch (err) {
+    note('Could not send — check your connection and try again.', 'err');
+    btn.disabled = false;
+  }
+}
+
+function note(msg, cls) {
+  var el = document.getElementById('note');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.className = 'save-note' + (cls ? ' ' + cls : '');
+}
+
+function firstName(name) { return String(name || '').trim().split(/\s+/)[0] || ''; }
+
+function esc(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>
