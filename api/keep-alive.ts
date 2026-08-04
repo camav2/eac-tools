@@ -1,7 +1,18 @@
 /*
  * Keep-alive ping for Supabase free tier.
- * Vercel cron hits this every 5 days — any query counts as activity
- * and prevents the project being auto-paused.
+ *
+ * Supabase pauses a free project after 7 days without activity; any query
+ * resets that clock. Vercel cron hits this daily.
+ *
+ * Daily rather than every-few-days on purpose: the margin is what matters,
+ * not the frequency. The previous "0 0 * /5 * *" schedule looked like every
+ * five days but cron's day-of-month stepping fires on the 1st, 6th, 11th,
+ * 16th, 21st, 26th and then wraps — a 6-day gap against a 7-day deadline,
+ * so a single failed run meant a paused database. Daily leaves six days of
+ * slack for free.
+ *
+ * NOTE: this cannot wake a project that is already paused — restoring that
+ * is a manual step in the Supabase dashboard. This only prevents pausing.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
