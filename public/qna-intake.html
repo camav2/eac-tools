@@ -47,6 +47,24 @@
     }
     textarea:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(0,0,61,0.06); }
 
+    /* ── Audio ── */
+    .or-rule { display: flex; align-items: center; gap: 12px; margin: 14px 0 12px; color: var(--grey-500); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+    .or-rule::before, .or-rule::after { content: ''; flex: 1; height: 1px; background: var(--grey-200); }
+    .audio-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .rec-btn { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: var(--navy); border: 1px solid var(--grey-200); padding: 10px 18px; border-radius: 999px; font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: border-color 0.15s ease; }
+    .rec-btn:hover:not(:disabled) { border-color: var(--navy); }
+    .rec-btn:disabled { opacity: 0.45; cursor: default; }
+    .rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+    .rec-btn.recording { border-color: var(--red); color: var(--red); }
+    .rec-btn.recording .rec-dot { animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+    .rec-timer { font-variant-numeric: tabular-nums; font-size: 0.85rem; font-weight: 600; color: var(--grey-700); }
+    .rec-state { font-size: 0.8rem; color: var(--grey-500); }
+    .rec-state.ok { color: var(--green); font-weight: 600; }
+    .rec-state.err { color: var(--red); }
+    .rec-audio { margin-top: 12px; width: 100%; max-width: 420px; display: block; }
+    .rec-hint { font-size: 0.78rem; color: var(--grey-500); margin-top: 8px; }
+
     .consent { background: #fff; border: 1px solid var(--grey-200); border-radius: 12px; padding: 22px 24px; margin-top: 40px; }
     .consent h2 { font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; }
     .consent ul { list-style: none; font-size: 0.85rem; color: var(--grey-700); margin-bottom: 18px; }
@@ -128,11 +146,30 @@ function renderSubmitted(name) {
 }
 
 function renderForm() {
+  var canRecord = supportsRecording();
+
   var qs = state.questions.map(function(q, i) {
+    var already = state.hasAudio && state.hasAudio[i];
+    var audioBlock = '';
+    if (canRecord) {
+      audioBlock =
+        '<div class="or-rule">or record your answer</div>' +
+        '<div class="audio-row">' +
+          '<button type="button" class="rec-btn" data-rec="' + i + '">' +
+            '<span class="rec-dot"></span><span class="rec-label">Record</span>' +
+          '</button>' +
+          '<span class="rec-timer" id="timer-' + i + '"></span>' +
+          '<span class="rec-state' + (already ? ' ok' : '') + '" id="recstate-' + i + '">' +
+            (already ? 'Recording saved' : '') +
+          '</span>' +
+        '</div>' +
+        '<div id="playback-' + i + '"></div>';
+    }
     return '<div class="q-block">' +
       '<div class="q-num">Question ' + (i + 1) + ' of ' + state.questions.length + '</div>' +
       '<div class="q-text">' + esc(q) + '</div>' +
       '<textarea data-i="' + i + '" placeholder="Take as much space as you need…">' + esc(state.answers[i] || '') + '</textarea>' +
+      audioBlock +
     '</div>';
   }).join('');
 
@@ -145,8 +182,12 @@ function renderForm() {
       '<p><strong>This isn\'t a testimonial.</strong> We\'re not asking you to say nice things about EAC. ' +
       'We\'re interested in what the process of writing, publishing and articulating your ideas actually ' +
       'taught you — the things you\'d tell another expert who was about to start.</p>' +
-      '<p>Answer in your own voice, at whatever length feels right. Your answers save as you go, so you ' +
-      'can close this page and come back to it.</p>' +
+      '<p>Answer in your own voice, at whatever length feels right — ' +
+      (canRecord
+        ? 'type your answers or record them out loud, whichever suits you. Most people find they say ' +
+          'more, and say it better, when they talk. '
+        : '') +
+      'Everything saves as you go, so you can close this page and come back to it.</p>' +
     '</div>' +
     '<div class="rule"></div>' +
     qs +
@@ -155,6 +196,11 @@ function renderForm() {
       '<ul>' +
         '<li>EAC may use your responses to create an edited editorial feature published on your author page.</li>' +
         '<li>We may lightly edit for clarity, structure and length, and may quote from your responses.</li>' +
+        (canRecord
+          ? '<li>Any recordings you make are transcribed for our editing process. <strong>We will only ' +
+            'publish written text</strong> — your audio is never published or shared, and we will ask you ' +
+            'separately if we ever want to use a clip.</li>'
+          : '') +
         '<li>We will send you the final version for approval before anything is published.</li>' +
         '<li>Your answers are stored securely and are not shared outside EAC.</li>' +
       '</ul>' +
@@ -176,6 +222,142 @@ function renderForm() {
     document.getElementById('submit').disabled = !this.checked;
   });
   document.getElementById('submit').addEventListener('click', submit);
+
+  document.querySelectorAll('[data-rec]').forEach(function(b) {
+    b.addEventListener('click', function() { toggleRecording(Number(b.dataset.rec)); });
+  });
+}
+
+/* ── Audio recording ──
+ * Browsers disagree on container format: desktop Chrome/Firefox produce
+ * audio/webm (opus), iOS/macOS Safari produce audio/mp4 (aac). We ask for
+ * whichever the browser reports it can make and send that content-type
+ * through; the server accepts both and ElevenLabs transcribes both.
+ */
+
+var MIME_CANDIDATES = [
+  'audio/webm;codecs=opus',
+  'audio/webm',
+  'audio/mp4',
+  'audio/ogg;codecs=opus',
+];
+var MAX_SECONDS = 600; // 10 min — keeps uploads inside the request-body limit
+var rec = { index: null, recorder: null, chunks: [], stream: null, timer: null, seconds: 0 };
+
+function supportsRecording() {
+  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia &&
+            window.MediaRecorder && pickMime());
+}
+
+function pickMime() {
+  if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return null;
+  for (var i = 0; i < MIME_CANDIDATES.length; i++) {
+    if (MediaRecorder.isTypeSupported(MIME_CANDIDATES[i])) return MIME_CANDIDATES[i];
+  }
+  return null;
+}
+
+function toggleRecording(i) {
+  if (rec.index === i && rec.recorder && rec.recorder.state === 'recording') return stopRecording();
+  if (rec.recorder && rec.recorder.state === 'recording') return; // one at a time
+  startRecording(i);
+}
+
+async function startRecording(i) {
+  recState(i, 'Requesting microphone…');
+  try {
+    var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    var mime = pickMime();
+    // 32 kbps mono is ample for speech and keeps a 10-minute answer near 2.4 MB.
+    var recorder = new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 32000 });
+
+    rec = { index: i, recorder: recorder, chunks: [], stream: stream, timer: null, seconds: 0 };
+
+    recorder.ondataavailable = function(e) { if (e.data && e.data.size) rec.chunks.push(e.data); };
+    recorder.onstop = function() { uploadRecording(i, mime); };
+    recorder.start();
+
+    setRecButton(i, true);
+    recState(i, '');
+    rec.timer = setInterval(function() {
+      rec.seconds++;
+      var el = document.getElementById('timer-' + i);
+      if (el) el.textContent = fmtTime(rec.seconds);
+      if (rec.seconds >= MAX_SECONDS) {
+        stopRecording();
+        recState(i, 'Reached the 10 minute limit — saving what you recorded.');
+      }
+    }, 1000);
+  } catch (err) {
+    var msg = (err && err.name === 'NotAllowedError')
+      ? 'Microphone access was blocked. Allow it in your browser settings, or type your answer instead.'
+      : 'Could not start recording. You can type your answer instead.';
+    recState(i, msg, 'err');
+  }
+}
+
+function stopRecording() {
+  if (!rec.recorder || rec.recorder.state !== 'recording') return;
+  clearInterval(rec.timer);
+  rec.recorder.stop();
+  if (rec.stream) rec.stream.getTracks().forEach(function(t) { t.stop(); });
+  setRecButton(rec.index, false);
+}
+
+async function uploadRecording(i, mime) {
+  var blob = new Blob(rec.chunks, { type: mime });
+  var contentType = mime.split(';')[0];
+
+  // Local playback immediately — don't make them wait on the upload to hear it.
+  var pb = document.getElementById('playback-' + i);
+  if (pb) {
+    pb.innerHTML = '<audio class="rec-audio" controls src="' + URL.createObjectURL(blob) + '"></audio>' +
+      '<div class="rec-hint">Recording again will replace this one.</div>';
+  }
+
+  recState(i, 'Uploading…');
+  try {
+    var res = await fetch('/api/qna-audio?token=' + encodeURIComponent(TOKEN) + '&q=' + i, {
+      method: 'POST',
+      headers: { 'Content-Type': contentType },
+      body: blob,
+    });
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      throw new Error(e.error || 'Upload failed');
+    }
+    recState(i, 'Recording saved', 'ok');
+    if (state.hasAudio) state.hasAudio[i] = true;
+  } catch (err) {
+    recState(i, err.message + ' — you can try recording again.', 'err');
+  }
+}
+
+function setRecButton(i, isRecording) {
+  var btn = document.querySelector('[data-rec="' + i + '"]');
+  if (!btn) return;
+  btn.classList.toggle('recording', isRecording);
+  btn.querySelector('.rec-label').textContent = isRecording ? 'Stop' : 'Record';
+  // Lock the other buttons so two recorders can't run at once.
+  document.querySelectorAll('[data-rec]').forEach(function(b) {
+    if (Number(b.dataset.rec) !== i) b.disabled = isRecording;
+  });
+  if (!isRecording) {
+    var t = document.getElementById('timer-' + i);
+    if (t) t.textContent = '';
+  }
+}
+
+function recState(i, msg, cls) {
+  var el = document.getElementById('recstate-' + i);
+  if (!el) return;
+  el.textContent = msg || '';
+  el.className = 'rec-state' + (cls ? ' ' + cls : '');
+}
+
+function fmtTime(s) {
+  var m = Math.floor(s / 60);
+  return m + ':' + String(s % 60).padStart(2, '0');
 }
 
 function currentAnswers() {

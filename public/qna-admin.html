@@ -120,6 +120,20 @@
     .copy-btn { background: var(--navy); color: #fff; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
     .regen-link { font-size: 0.78rem; color: var(--grey-500); text-decoration: underline; background: none; border: none; cursor: pointer; padding: 0; margin-top: 12px; display: inline-block; }
     .regen-link:hover { color: var(--red); }
+
+    /* ── Responses review ── */
+    .resp-block { padding: 20px 0; border-bottom: 1px solid var(--grey-200); }
+    .resp-block:last-child { border-bottom: none; }
+    .resp-q { font-size: 0.95rem; font-weight: 700; margin-bottom: 10px; line-height: 1.45; }
+    .resp-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-500); margin-bottom: 5px; }
+    .resp-text { font-size: 0.9rem; color: var(--grey-700); white-space: pre-wrap; line-height: 1.65; margin-bottom: 14px; }
+    .resp-empty { font-size: 0.85rem; color: var(--grey-500); font-style: italic; }
+    .resp-audio { width: 100%; max-width: 420px; margin-bottom: 10px; display: block; }
+    .transcribe-btn { background: #fff; color: var(--navy); border: 1px solid var(--navy); padding: 6px 13px; border-radius: 6px; font-weight: 600; font-size: 0.78rem; cursor: pointer; }
+    .transcribe-btn:hover:not(:disabled) { background: var(--grey-100); }
+    .transcribe-btn:disabled { opacity: 0.5; cursor: default; }
+    .transcript-box { background: var(--grey-100); border-left: 3px solid var(--navy); padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 0.88rem; color: var(--grey-700); white-space: pre-wrap; line-height: 1.65; margin-top: 10px; }
+    .resp-meta { font-size: 0.8rem; color: var(--grey-500); margin-bottom: 20px; }
   </style>
 </head>
 <body>
@@ -161,7 +175,11 @@ document.getElementById('authors-content').addEventListener('click', function(e)
   var bucketBtn = e.target.closest('.bucket-btn');
   if (bucketBtn) { assignBucket(bucketBtn.dataset.authorId, bucketBtn.dataset.bucket, bucketBtn); return; }
   var qBtn = e.target.closest('.questions-btn');
-  if (qBtn) { openQuestionReview(qBtn.dataset.authorId); return; }
+  if (qBtn) {
+    if (qBtn.dataset.responsesId) openResponses(qBtn.dataset.responsesId);
+    else openQuestionReview(qBtn.dataset.authorId);
+    return;
+  }
 });
 
 async function loadAuthors() {
@@ -226,8 +244,17 @@ function bucketButtons(a) {
   '</div>';
 }
 
+var RESPONDED_STATUSES = ['Author Responded', 'Draft Ready', 'Approved', 'Published'];
+
 function questionsButton(a) {
   if (!a.bucket) return '<span style="color:var(--grey-500);font-size:0.8rem;">—</span>';
+
+  // Once the author has replied, the useful action is reading what came back.
+  if (RESPONDED_STATUSES.indexOf(a.status) !== -1) {
+    return '<button type="button" class="questions-btn has-set" data-responses-id="' +
+      escHtml(a.authorItemId) + '">Responses</button>';
+  }
+
   var hasSet = a.status && a.status !== 'Not Started';
   var label = hasSet ? 'Review' : 'Questions';
   return '<button type="button" class="questions-btn' + (hasSet ? ' has-set' : '') + '" data-author-id="' +
@@ -450,6 +477,135 @@ async function saveQuestionsForAuthor(author) {
   } finally {
     btn.disabled = false;
   }
+}
+
+/* ── Responses review ── */
+
+async function openResponses(authorItemId) {
+  var author = currentAuthors.find(function(a) { return a.authorItemId === authorItemId; });
+  if (!author) return;
+
+  document.getElementById('authors-content').style.display = 'none';
+  var panel = document.getElementById('question-review');
+  panel.style.display = 'block';
+  panel.innerHTML = '<p class="loading">Loading responses…</p>';
+
+  try {
+    var res = await fetch('/api/qna-responses?authorItemId=' + encodeURIComponent(authorItemId));
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      throw new Error(e.error || ('API error ' + res.status));
+    }
+    renderResponses(authorItemId, await res.json());
+  } catch (err) {
+    panel.innerHTML =
+      '<button type="button" class="back-link" onclick="closeQuestionReview()">&larr; Back to list</button>' +
+      '<p class="error-state">Failed to load: ' + escHtml(err.message) + '</p>';
+  }
+}
+
+function renderResponses(authorItemId, data) {
+  var blocks = (data.responses || []).map(function(r, i) {
+    var body = '';
+
+    if (r.text && r.text.trim()) {
+      body += '<div class="resp-label">Written answer</div><div class="resp-text">' + escHtml(r.text) + '</div>';
+    }
+
+    if (r.hasAudio) {
+      body += '<div class="resp-label">Recorded answer</div>';
+      body += r.audioUrl
+        ? '<audio class="resp-audio" controls src="' + escHtml(r.audioUrl) + '"></audio>'
+        : '<p class="resp-empty">Audio link could not be generated.</p>';
+      body += r.transcript
+        ? '<div class="transcript-box">' + escHtml(r.transcript) + '</div>'
+        : '<button type="button" class="transcribe-btn" data-tq="' + i + '">Transcribe</button>' +
+          '<span class="review-status" id="tstatus-' + i + '" style="margin-left:10px"></span>';
+    }
+
+    if (!body) body = '<p class="resp-empty">No answer given.</p>';
+
+    return '<div class="resp-block">' +
+      '<div class="resp-q">Q' + (i + 1) + '. ' + escHtml(r.question) + '</div>' + body +
+    '</div>';
+  }).join('');
+
+  var untranscribed = (data.responses || []).filter(function(r) { return r.hasAudio && !r.transcript; }).length;
+
+  document.getElementById('question-review').innerHTML =
+    '<button type="button" class="back-link" onclick="closeQuestionReview()">&larr; Back to list</button>' +
+    '<div class="review-panel">' +
+      '<div class="review-header"><span class="review-author-name">' + escHtml(data.authorName) + '</span></div>' +
+      '<div class="review-book-title">' + escHtml(data.bookTitle) + '</div>' +
+      '<div class="resp-meta">' + escHtml(data.status) +
+        (data.submittedAt ? ' · submitted ' + formatDate(data.submittedAt) : '') + '</div>' +
+      (untranscribed
+        ? '<button type="button" class="generate-btn" id="transcribe-all">Transcribe all ' + untranscribed + ' recording' + (untranscribed > 1 ? 's' : '') + '</button>' +
+          '<span class="review-status" id="all-status" style="margin-left:12px"></span>'
+        : '') +
+      '<div style="margin-top:20px">' + blocks + '</div>' +
+    '</div>';
+
+  document.querySelectorAll('[data-tq]').forEach(function(b) {
+    b.addEventListener('click', function() { transcribeOne(authorItemId, Number(b.dataset.tq)); });
+  });
+  var allBtn = document.getElementById('transcribe-all');
+  if (allBtn) allBtn.addEventListener('click', function() { transcribeAll(authorItemId, data); });
+}
+
+async function transcribeOne(authorItemId, i) {
+  var btn = document.querySelector('[data-tq="' + i + '"]');
+  var statusEl = document.getElementById('tstatus-' + i);
+  if (btn) btn.disabled = true;
+  if (statusEl) { statusEl.textContent = 'Transcribing…'; statusEl.className = 'review-status'; }
+
+  try {
+    var res = await fetch('/api/qna-responses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: authorItemId, questionIndex: i }),
+    });
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      throw new Error(e.error || ('API error ' + res.status));
+    }
+    openResponses(authorItemId); // re-render with the transcript in place
+  } catch (err) {
+    if (statusEl) { statusEl.textContent = 'Failed: ' + err.message; statusEl.className = 'review-status err'; }
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function transcribeAll(authorItemId, data) {
+  var pending = [];
+  (data.responses || []).forEach(function(r, i) { if (r.hasAudio && !r.transcript) pending.push(i); });
+
+  var btn = document.getElementById('transcribe-all');
+  var statusEl = document.getElementById('all-status');
+  if (btn) btn.disabled = true;
+
+  // One request per recording — keeps each invocation short and shows progress.
+  for (var n = 0; n < pending.length; n++) {
+    if (statusEl) {
+      statusEl.textContent = 'Transcribing ' + (n + 1) + ' of ' + pending.length + '…';
+      statusEl.className = 'review-status';
+    }
+    var res = await fetch('/api/qna-responses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: authorItemId, questionIndex: pending[n] }),
+    });
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      if (statusEl) {
+        statusEl.textContent = 'Failed on recording ' + (n + 1) + ': ' + (e.error || res.status);
+        statusEl.className = 'review-status err';
+      }
+      if (btn) btn.disabled = false;
+      return;
+    }
+  }
+  openResponses(authorItemId);
 }
 </script>
 </body>

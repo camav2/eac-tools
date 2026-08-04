@@ -81,6 +81,9 @@ function publicView(row: any) {
     bookTitle:  row.fields['Book Title'] ?? '',
     questions,
     answers:    questions.map((_: unknown, i: number) => responses[i]?.text ?? ''),
+    // Whether a recording exists — never the storage path itself, which the
+    // author has no use for and which shouldn't leave the server.
+    hasAudio:   questions.map((_: unknown, i: number) => Boolean(responses[i]?.audioPath)),
     submitted:  Boolean(row.fields['Author Submitted At']),
   }
 }
@@ -116,10 +119,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // Store question alongside answer so the draft step (Phase 6) has the
-      // pair without re-reading the question set.
+      // pair without re-reading the question set. Audio fields are carried
+      // over from the existing row — a text autosave must never wipe a
+      // recording the author already uploaded.
+      const existing = parseJsonField(row.fields['Responses']) ?? []
       const responses = questions.map((q: string, i: number) => ({
-        question: q,
-        text:     typeof answers[i] === 'string' ? answers[i] : '',
+        question:   q,
+        text:       typeof answers[i] === 'string' ? answers[i] : '',
+        audioPath:  existing[i]?.audioPath,
+        audioType:  existing[i]?.audioType,
+        transcript: existing[i]?.transcript,
       }))
 
       if (action === 'save') {
@@ -131,7 +140,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (consent !== true) {
           return res.status(400).json({ error: 'Consent is required to submit.' })
         }
-        if (responses.every(r => !r.text.trim())) {
+        // An audio-only answer is a complete answer — don't require typing.
+        const answered = responses.some(r => r.text.trim() || r.audioPath)
+        if (!answered) {
           return res.status(400).json({ error: 'Please answer at least one question before submitting.' })
         }
 
