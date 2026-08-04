@@ -132,18 +132,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { buffer, contentType } = await downloadAudio(target.audioPath)
       const audioType = target.audioType || contentType
+      const filename = `q${questionIndex}.${extensionFor(audioType)}`
+
+      // Logged BEFORE transcribing, not after: an empty transcript throws, so
+      // an after-the-fact log never runs on exactly the failure we need to
+      // diagnose. The byte count is what distinguishes a silent/broken
+      // recording from a format the API won't decode.
+      console.log(
+        `[qna-responses] transcribing q${questionIndex}: ` +
+        `${buffer.length} bytes, type=${audioType}, filename=${filename}, path=${target.audioPath}`
+      )
 
       // The filename extension matters: Scribe uses it to identify the
       // container format, and an extensionless file transcribes to nothing.
-      const transcript = await transcribeAudio(
-        buffer,
-        audioType,
-        `q${questionIndex}.${extensionFor(audioType)}`
-      )
+      let transcript
+      try {
+        transcript = await transcribeAudio(buffer, audioType, filename)
+      } catch (err) {
+        // Fold the file size into the message so the operator can tell a
+        // 2 KB dud apart from a 400 KB recording the API mishandled.
+        const detail = err instanceof Error ? err.message : String(err)
+        throw new Error(`${detail} (file: ${buffer.length} bytes, ${audioType})`)
+      }
 
       console.log(
-        `[qna-responses] transcribed q${questionIndex}: ` +
-        `${buffer.length} bytes ${audioType} -> ${transcript.text.length} chars`
+        `[qna-responses] transcribed q${questionIndex}: ${transcript.text.length} chars`
       )
 
       responses[questionIndex] = { ...target, transcript: transcript.text }
