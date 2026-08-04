@@ -2,9 +2,12 @@
  * Anthropic API — Author Editorial Q&A question generation
  *
  * Raw fetch against api.anthropic.com/v1/messages (house style — no SDK).
- * Extended thinking is enabled for quality; the API requires tool_choice
- * 'auto' whenever thinking is on (can't force a specific tool), so the
- * system prompt carries the responsibility of guaranteeing the tool call.
+ *
+ * claude-opus-5 uses adaptive thinking with output_config.effort — the older
+ * {type:'enabled', budget_tokens} form is rejected with a 400. Thinking is on
+ * by default on this model; the explicit adaptive block is equivalent and
+ * self-documenting. tool_choice stays 'auto' (a specific tool can't be forced
+ * while thinking is on), so the system prompt guarantees the tool call.
  *
  * Env vars required: ANTHROPIC_API_KEY
  */
@@ -95,7 +98,8 @@ export async function generateQuestions(ctx: QuestionGenContext): Promise<string
     body: JSON.stringify({
       model: MODEL,
       max_tokens: 16000,
-      thinking: { type: 'enabled', budget_tokens: 4000 },
+      thinking: { type: 'adaptive' },
+      output_config: { effort: 'high' },
       system: systemPrompt(ctx.bucket),
       messages: [{ role: 'user', content: userPrompt(ctx) }],
       tools: [RETURN_QUESTIONS_TOOL],
