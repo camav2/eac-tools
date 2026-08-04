@@ -134,6 +134,19 @@
     .transcribe-btn:disabled { opacity: 0.5; cursor: default; }
     .transcript-box { background: var(--grey-100); border-left: 3px solid var(--navy); padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 0.88rem; color: var(--grey-700); white-space: pre-wrap; line-height: 1.65; margin-top: 10px; }
     .resp-meta { font-size: 0.8rem; color: var(--grey-500); margin-bottom: 20px; }
+
+    /* ── Draft editor ── */
+    .draft-standfirst { width: 100%; border: 1px solid var(--grey-200); border-radius: 8px; padding: 12px 14px; font: inherit; font-size: 0.92rem; font-style: italic; color: var(--grey-700); resize: vertical; min-height: 70px; line-height: 1.6; }
+    .draft-item { padding: 18px 0; border-bottom: 1px solid var(--grey-200); }
+    .draft-item:last-child { border-bottom: none; }
+    .draft-q { width: 100%; border: 1px solid var(--grey-200); border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 0.92rem; font-weight: 700; color: var(--navy); resize: vertical; min-height: 48px; line-height: 1.5; margin-bottom: 8px; }
+    .draft-a { width: 100%; border: 1px solid var(--grey-200); border-radius: 8px; padding: 12px 14px; font: inherit; font-size: 0.92rem; color: var(--grey-700); resize: vertical; min-height: 130px; line-height: 1.65; }
+    .draft-q:focus, .draft-a:focus, .draft-standfirst:focus { outline: none; border-color: var(--navy); }
+    .notes-box { background: #fffbeb; border-left: 3px solid var(--amber); padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 0.84rem; color: #78350f; white-space: pre-wrap; line-height: 1.6; margin-top: 18px; }
+    .notes-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+    .draft-warn { background: var(--grey-100); border-left: 3px solid var(--navy); padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 0.84rem; color: var(--grey-700); line-height: 1.6; margin-bottom: 20px; }
+    .approve-btn { background: var(--green); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+    .approve-btn:disabled { opacity: 0.5; cursor: default; }
   </style>
 </head>
 <body>
@@ -176,7 +189,8 @@ document.getElementById('authors-content').addEventListener('click', function(e)
   if (bucketBtn) { assignBucket(bucketBtn.dataset.authorId, bucketBtn.dataset.bucket, bucketBtn); return; }
   var qBtn = e.target.closest('.questions-btn');
   if (qBtn) {
-    if (qBtn.dataset.responsesId) openResponses(qBtn.dataset.responsesId);
+    if (qBtn.dataset.draftId) openDraft(qBtn.dataset.draftId);
+    else if (qBtn.dataset.responsesId) openResponses(qBtn.dataset.responsesId);
     else openQuestionReview(qBtn.dataset.authorId);
     return;
   }
@@ -245,14 +259,21 @@ function bucketButtons(a) {
 }
 
 var RESPONDED_STATUSES = ['Author Responded', 'Draft Ready', 'Approved', 'Published'];
+var DRAFT_STATUSES = ['Draft Ready', 'Approved', 'Published'];
 
 function questionsButton(a) {
   if (!a.bucket) return '<span style="color:var(--grey-500);font-size:0.8rem;">—</span>';
 
-  // Once the author has replied, the useful action is reading what came back.
+  // Once the author has replied, the useful action is reading what came back —
+  // or, once a draft exists, editing it.
   if (RESPONDED_STATUSES.indexOf(a.status) !== -1) {
+    var isDraft = DRAFT_STATUSES.indexOf(a.status) !== -1;
     return '<button type="button" class="questions-btn has-set" data-responses-id="' +
-      escHtml(a.authorItemId) + '">Responses</button>';
+      escHtml(a.authorItemId) + '">Responses</button>' +
+      (isDraft
+        ? ' <button type="button" class="questions-btn has-set" data-draft-id="' +
+          escHtml(a.authorItemId) + '">Draft</button>'
+        : '');
   }
 
   var hasSet = a.status && a.status !== 'Not Started';
@@ -597,6 +618,14 @@ function renderResponses(authorItemId, data) {
         : '') +
       '<div style="margin-top:20px">' + blocks + '</div>' +
       '<div class="send-panel">' +
+        '<div class="send-title">Editorial draft</div>' +
+        '<div class="send-sub">Turns these answers into a magazine Q&amp;A for you to edit. Transcribe any recordings first — untranscribed audio is invisible to this step.</div>' +
+        '<button type="button" class="generate-btn" id="gen-draft-btn">' +
+          (DRAFT_STATUSES.indexOf(data.status) !== -1 ? 'Regenerate draft' : 'Generate draft') +
+        '</button>' +
+        '<span class="review-status" id="gen-draft-status" style="margin-left:12px"></span>' +
+      '</div>' +
+      '<div class="send-panel">' +
         '<div class="send-title">Intake link</div>' +
         '<div class="send-sub">The author\'s link — reopen the submission to edit or resubmit.</div>' +
         '<div id="link-area"></div>' +
@@ -609,8 +638,188 @@ function renderResponses(authorItemId, data) {
   var allBtn = document.getElementById('transcribe-all');
   if (allBtn) allBtn.addEventListener('click', function() { transcribeAll(authorItemId, data); });
 
+  var genBtn = document.getElementById('gen-draft-btn');
+  if (genBtn) genBtn.addEventListener('click', function() { generateDraftFor(authorItemId, untranscribed); });
+
   var author = currentAuthors.find(function(a) { return a.authorItemId === authorItemId; });
   if (author) showExistingLink(author);
+}
+
+/* ── Draft ── */
+
+async function generateDraftFor(authorItemId, untranscribedCount) {
+  if (untranscribedCount && !confirm(
+    untranscribedCount + ' recording' + (untranscribedCount > 1 ? 's have' : ' has') +
+    ' not been transcribed yet.\n\nUntranscribed audio is invisible to the draft step — those ' +
+    'answers will be missing. Generate anyway?'
+  )) return;
+
+  var btn = document.getElementById('gen-draft-btn');
+  var statusEl = document.getElementById('gen-draft-status');
+  if (btn) btn.disabled = true;
+  if (statusEl) { statusEl.textContent = 'Drafting… this takes a minute.'; statusEl.className = 'review-status'; }
+
+  try {
+    var res = await fetch('/api/qna-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: authorItemId, action: 'generate' }),
+    });
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      throw new Error(e.error || ('API error ' + res.status));
+    }
+    var author = currentAuthors.find(function(a) { return a.authorItemId === authorItemId; });
+    if (author) author.status = 'Draft Ready';
+    openDraft(authorItemId);
+  } catch (err) {
+    if (statusEl) { statusEl.textContent = 'Failed: ' + err.message; statusEl.className = 'review-status err'; }
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function openDraft(authorItemId) {
+  document.getElementById('authors-content').style.display = 'none';
+  var panel = document.getElementById('question-review');
+  panel.style.display = 'block';
+  panel.innerHTML = '<p class="loading">Loading draft…</p>';
+
+  try {
+    var res = await fetch('/api/qna-draft?authorItemId=' + encodeURIComponent(authorItemId));
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      throw new Error(e.error || ('API error ' + res.status));
+    }
+    renderDraft(authorItemId, await res.json());
+  } catch (err) {
+    panel.innerHTML =
+      '<button type="button" class="back-link" onclick="closeQuestionReview()">&larr; Back to list</button>' +
+      '<p class="error-state">Failed to load: ' + escHtml(err.message) + '</p>';
+  }
+}
+
+function renderDraft(authorItemId, data) {
+  var d = data.draft;
+  if (!d) {
+    document.getElementById('question-review').innerHTML =
+      '<button type="button" class="back-link" onclick="closeQuestionReview()">&larr; Back to list</button>' +
+      '<p class="empty-state">No draft yet. Generate one from the Responses screen.</p>';
+    return;
+  }
+
+  var items = (d.items || []).map(function(it, i) {
+    return '<div class="draft-item">' +
+      '<div class="question-label">Q' + (i + 1) + '</div>' +
+      '<textarea class="draft-q" data-dq="' + i + '" rows="2">' + escHtml(it.question) + '</textarea>' +
+      '<textarea class="draft-a" data-da="' + i + '" rows="7">' + escHtml(it.answer) + '</textarea>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('question-review').innerHTML =
+    '<button type="button" class="back-link" onclick="closeQuestionReview()">&larr; Back to list</button>' +
+    '<div class="review-panel">' +
+      '<div class="review-header"><span class="review-author-name">' + escHtml(data.authorName) + '</span></div>' +
+      '<div class="review-book-title">' + escHtml(data.bookTitle) + '</div>' +
+      '<div class="resp-meta">' + escHtml(data.status) +
+        (data.generatedAt ? ' · drafted ' + formatDate(data.generatedAt) : '') +
+        (data.approvedAt ? ' · approved ' + formatDate(data.approvedAt) : '') + '</div>' +
+
+      '<div class="draft-warn">This is a first pass, not a finished piece. Read it against the ' +
+      'raw answers before you send it to the author &mdash; the bar is that it reads like a curated ' +
+      'interview, not a rewrite, and that nothing in it sounds like a testimonial.</div>' +
+
+      '<div class="question-label">Standfirst</div>' +
+      '<textarea class="draft-standfirst" id="draft-standfirst" rows="3">' + escHtml(d.standfirst || '') + '</textarea>' +
+
+      '<div style="margin-top:20px">' + items + '</div>' +
+
+      (d.editorNotes
+        ? '<div class="notes-box"><div class="notes-label">Editor notes (not published)</div>' +
+          escHtml(d.editorNotes) + '</div>'
+        : '') +
+
+      '<div class="review-actions">' +
+        '<button type="button" id="draft-save" class="save-btn">Save draft</button>' +
+        '<button type="button" id="draft-approve" class="approve-btn"' +
+          (data.approvedAt ? ' disabled' : '') + '>' +
+          (data.approvedAt ? 'Approved' : 'Mark author-approved') + '</button>' +
+        '<span class="review-status" id="draft-status"></span>' +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('draft-save').addEventListener('click', function() { saveDraft(authorItemId, d); });
+  var appBtn = document.getElementById('draft-approve');
+  if (appBtn && !data.approvedAt) {
+    appBtn.addEventListener('click', function() { approveDraft(authorItemId); });
+  }
+}
+
+function collectDraft(original) {
+  var items = [];
+  document.querySelectorAll('[data-dq]').forEach(function(qEl) {
+    var i = Number(qEl.dataset.dq);
+    var aEl = document.querySelector('[data-da="' + i + '"]');
+    items[i] = { question: qEl.value, answer: aEl ? aEl.value : '' };
+  });
+  return {
+    standfirst:  document.getElementById('draft-standfirst').value,
+    items:       items,
+    // Notes are the model's, not Cam's — carry them through untouched rather
+    // than losing them on every save.
+    editorNotes: (original && original.editorNotes) || '',
+  };
+}
+
+async function saveDraft(authorItemId, original) {
+  var btn = document.getElementById('draft-save');
+  var statusEl = document.getElementById('draft-status');
+  btn.disabled = true;
+  statusEl.textContent = 'Saving…';
+  statusEl.className = 'review-status';
+
+  try {
+    var res = await fetch('/api/qna-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: authorItemId, action: 'save', draft: collectDraft(original) }),
+    });
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      throw new Error(e.error || ('API error ' + res.status));
+    }
+    statusEl.textContent = 'Saved.';
+    statusEl.className = 'review-status ok';
+  } catch (err) {
+    statusEl.textContent = 'Failed: ' + err.message;
+    statusEl.className = 'review-status err';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function approveDraft(authorItemId) {
+  if (!confirm('Mark this as author-approved?\n\nOnly do this once the author has actually seen the draft and confirmed it.')) return;
+
+  var statusEl = document.getElementById('draft-status');
+  statusEl.textContent = 'Saving…';
+  statusEl.className = 'review-status';
+  try {
+    var res = await fetch('/api/qna-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: authorItemId, action: 'approve' }),
+    });
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      throw new Error(e.error || ('API error ' + res.status));
+    }
+    var author = currentAuthors.find(function(a) { return a.authorItemId === authorItemId; });
+    if (author) author.status = 'Approved';
+    openDraft(authorItemId);
+  } catch (err) {
+    statusEl.textContent = 'Failed: ' + err.message;
+    statusEl.className = 'review-status err';
+  }
 }
 
 async function transcribeOne(authorItemId, i) {
