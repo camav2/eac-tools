@@ -77,9 +77,36 @@
     .status-Questions-Generated{ background: #fef9c3; color: #854d0e; }
     .status-Skipped            { background: #fee2e2; color: #991b1b; }
 
+    .questions-btn { font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--grey-200); background: #fff; color: var(--grey-700); cursor: pointer; white-space: nowrap; }
+    .questions-btn:hover { border-color: var(--grey-500); }
+    .questions-btn.has-set { background: var(--grey-100); }
+    .questions-btn:disabled { opacity: 0.5; cursor: default; }
+
     /* ── Loading / empty / error ── */
     .loading, .empty-state { color: var(--grey-500); font-size: 0.9rem; padding: 40px 16px; text-align: center; }
     .error-state { color: var(--red); font-size: 0.9rem; padding: 40px 16px; text-align: center; }
+
+    /* ── Question review panel ── */
+    .back-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.85rem; font-weight: 600; color: var(--grey-500); text-decoration: none; cursor: pointer; border: none; background: none; padding: 0; margin-bottom: 20px; }
+    .back-link:hover { color: var(--navy); }
+    .review-panel { margin-top: 8px; background: #fff; border: 1px solid var(--grey-200); border-radius: var(--radius); padding: 28px 32px; }
+    .review-header { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+    .review-author-name { font-size: 1.2rem; font-weight: 800; }
+    .review-book-title { color: var(--grey-500); font-size: 0.9rem; margin-bottom: 24px; }
+    .generate-btn { background: var(--navy); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+    .generate-btn:hover:not(:disabled) { background: var(--navy-light); }
+    .generate-btn:disabled { opacity: 0.5; cursor: default; }
+    .question-field { margin-bottom: 16px; }
+    .question-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--grey-500); margin-bottom: 6px; display: block; }
+    .question-textarea { width: 100%; border: 1px solid var(--grey-200); border-radius: 8px; padding: 10px 12px; font-size: 0.9rem; font-family: inherit; color: var(--navy); resize: vertical; min-height: 52px; }
+    .question-textarea:focus { outline: none; border-color: var(--navy); }
+    .review-actions { display: flex; align-items: center; gap: 12px; margin-top: 24px; }
+    .save-btn { background: var(--green); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+    .save-btn:hover:not(:disabled) { opacity: 0.9; }
+    .save-btn:disabled { opacity: 0.5; cursor: default; }
+    .review-status { font-size: 0.85rem; color: var(--grey-500); }
+    .review-status.ok { color: var(--green); }
+    .review-status.err { color: var(--red); }
   </style>
 </head>
 <body>
@@ -100,6 +127,8 @@
   <div id="authors-content">
     <p class="loading">Loading authors…</p>
   </div>
+
+  <div id="question-review" style="display:none"></div>
 </div>
 
 <script src="/eac.js"></script>
@@ -116,9 +145,10 @@ eacAuthReady.then(function() {
 });
 
 document.getElementById('authors-content').addEventListener('click', function(e) {
-  var btn = e.target.closest('.bucket-btn');
-  if (!btn) return;
-  assignBucket(btn.dataset.authorId, btn.dataset.bucket, btn);
+  var bucketBtn = e.target.closest('.bucket-btn');
+  if (bucketBtn) { assignBucket(bucketBtn.dataset.authorId, bucketBtn.dataset.bucket, bucketBtn); return; }
+  var qBtn = e.target.closest('.questions-btn');
+  if (qBtn) { openQuestionReview(qBtn.dataset.authorId); return; }
 });
 
 async function loadAuthors() {
@@ -183,6 +213,14 @@ function bucketButtons(a) {
   '</div>';
 }
 
+function questionsButton(a) {
+  if (!a.bucket) return '<span style="color:var(--grey-500);font-size:0.8rem;">—</span>';
+  var hasSet = a.status && a.status !== 'Not Started';
+  var label = hasSet ? 'Review' : 'Questions';
+  return '<button type="button" class="questions-btn' + (hasSet ? ' has-set' : '') + '" data-author-id="' +
+    escHtml(a.authorItemId) + '">' + label + '</button>';
+}
+
 function statusPill(status) {
   var cls = 'status-' + String(status).replace(/\s+/g, '-');
   return '<span class="status-pill ' + cls + '">' + escHtml(status) + '</span>';
@@ -205,6 +243,7 @@ function renderAuthors(authors) {
       '<td><div class="book-title">' + escHtml(a.bookTitle) + '</div></td>' +
       '<td><span class="book-date">' + formatDate(a.publishedDate) + '</span></td>' +
       '<td>' + bucketButtons(a) + '</td>' +
+      '<td>' + questionsButton(a) + '</td>' +
       '<td>' + statusPill(a.status) + '</td>' +
     '</tr>';
   }).join('');
@@ -212,7 +251,7 @@ function renderAuthors(authors) {
   container.innerHTML =
     '<div class="authors-table-wrap">' +
       '<table class="authors-table">' +
-        '<thead><tr><th>Author</th><th>Book</th><th>Published</th><th>Bucket</th><th>Status</th></tr></thead>' +
+        '<thead><tr><th>Author</th><th>Book</th><th>Published</th><th>Bucket</th><th>Questions</th><th>Status</th></tr></thead>' +
         '<tbody>' + rows + '</tbody>' +
       '</table>' +
     '</div>';
@@ -226,6 +265,126 @@ function initials(name) {
 
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Question review panel ── */
+
+async function openQuestionReview(authorItemId) {
+  var author = currentAuthors.find(function(a) { return a.authorItemId === authorItemId; });
+  if (!author) return;
+
+  document.getElementById('authors-content').style.display = 'none';
+  var panel = document.getElementById('question-review');
+  panel.style.display = 'block';
+  panel.innerHTML = '<p class="loading">Loading…</p>';
+
+  try {
+    var res = await fetch('/api/qna-questions?authorItemId=' + encodeURIComponent(authorItemId));
+    if (!res.ok) {
+      var errData = await res.json().catch(function() { return {}; });
+      throw new Error(errData.error || ('API error ' + res.status));
+    }
+    var data = await res.json();
+    renderReviewPanel(author, data);
+  } catch (err) {
+    panel.innerHTML =
+      '<button type="button" class="back-link" onclick="closeQuestionReview()">&larr; Back to list</button>' +
+      '<p class="error-state">Failed to load: ' + escHtml(err.message) + '</p>';
+  }
+}
+
+function closeQuestionReview() {
+  document.getElementById('question-review').style.display = 'none';
+  document.getElementById('authors-content').style.display = 'block';
+  loadAuthors();
+}
+
+function renderReviewPanel(author, data) {
+  var panel = document.getElementById('question-review');
+  var questions = data.questions || ['', '', '', '', '', ''];
+
+  var fields = questions.map(function(q, i) {
+    return '<div class="question-field">' +
+      '<label class="question-label">Q' + (i + 1) + '</label>' +
+      '<textarea class="question-textarea" rows="2">' + escHtml(q) + '</textarea>' +
+    '</div>';
+  }).join('');
+
+  panel.innerHTML =
+    '<button type="button" class="back-link" onclick="closeQuestionReview()">&larr; Back to list</button>' +
+    '<div class="review-panel">' +
+      '<div class="review-header"><span class="review-author-name">' + escHtml(author.authorName) + '</span></div>' +
+      '<div class="review-book-title">' + escHtml(author.bookTitle) + ' · ' + escHtml(author.bucket) + '</div>' +
+      '<button type="button" id="generate-btn" class="generate-btn">' +
+        (data.questions ? 'Regenerate with AI' : 'Generate Questions with AI') +
+      '</button>' +
+      '<div style="margin-top:24px">' + fields + '</div>' +
+      '<div class="review-actions">' +
+        '<button type="button" id="save-btn" class="save-btn">Save Question Set</button>' +
+        '<span class="review-status" id="review-status"></span>' +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('generate-btn').addEventListener('click', function() { generateQuestionsForAuthor(author); });
+  document.getElementById('save-btn').addEventListener('click', function() { saveQuestionsForAuthor(author); });
+}
+
+async function generateQuestionsForAuthor(author) {
+  var btn = document.getElementById('generate-btn');
+  var statusEl = document.getElementById('review-status');
+  btn.disabled = true;
+  statusEl.textContent = 'Generating… (this can take a moment)';
+  statusEl.className = 'review-status';
+
+  try {
+    var res = await fetch('/api/qna-questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: author.authorItemId, action: 'generate' }),
+    });
+    if (!res.ok) {
+      var errData = await res.json().catch(function() { return {}; });
+      throw new Error(errData.error || ('API error ' + res.status));
+    }
+    var data = await res.json();
+    renderReviewPanel(author, data);
+    document.getElementById('review-status').textContent = 'Generated — review and edit before saving.';
+    document.getElementById('review-status').className = 'review-status ok';
+  } catch (err) {
+    statusEl.textContent = 'Failed: ' + err.message;
+    statusEl.className = 'review-status err';
+    btn.disabled = false;
+  }
+}
+
+async function saveQuestionsForAuthor(author) {
+  var textareas = document.querySelectorAll('.question-textarea');
+  var questions = Array.prototype.map.call(textareas, function(t) { return t.value.trim(); });
+
+  var btn = document.getElementById('save-btn');
+  var statusEl = document.getElementById('review-status');
+  btn.disabled = true;
+  statusEl.textContent = 'Saving…';
+  statusEl.className = 'review-status';
+
+  try {
+    var res = await fetch('/api/qna-questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: author.authorItemId, action: 'save', questions: questions }),
+    });
+    if (!res.ok) {
+      var errData = await res.json().catch(function() { return {}; });
+      throw new Error(errData.error || ('API error ' + res.status));
+    }
+    statusEl.textContent = 'Saved.';
+    statusEl.className = 'review-status ok';
+  } catch (err) {
+    statusEl.textContent = 'Failed: ' + err.message;
+    statusEl.className = 'review-status err';
+  } finally {
+    btn.disabled = false;
+  }
 }
 </script>
 </body>
