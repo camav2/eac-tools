@@ -395,16 +395,43 @@ function renderReviewPanel(author, data) {
         '<div class="send-sub">Records the intro and every question in Kelly\'s voice, so the author can listen rather than read. Regenerate after changing questions.</div>' +
         '<button type="button" class="send-btn" id="voice-btn">Generate voice</button>' +
         '<span class="review-status" id="voice-status" style="margin-left:12px"></span>' +
+        '<div class="send-sub" id="voice-which" style="margin-top:10px;margin-bottom:0"></div>' +
       '</div>' +
     '</div>';
 
   document.getElementById('voice-btn').addEventListener('click', function() { generateVoice(author); });
+  showResolvedVoice();
 
   document.getElementById('generate-btn').addEventListener('click', function() { generateQuestionsForAuthor(author); });
   document.getElementById('save-btn').addEventListener('click', function() { saveQuestionsForAuthor(author); });
   document.getElementById('send-btn').addEventListener('click', function() { createIntakeLink(author, false); });
 
   showExistingLink(author);
+}
+
+/* Names the voice that will actually be used, so a wrong match is visible
+ * before generating seven clips rather than after listening to them. */
+async function showResolvedVoice() {
+  var el = document.getElementById('voice-which');
+  if (!el) return;
+  try {
+    var res = await fetch('/api/qna-voice');
+    if (!res.ok) {
+      var e = await res.json().catch(function() { return {}; });
+      el.innerHTML = '<span style="color:var(--red)">' + escHtml(e.error || 'Could not reach ElevenLabs') + '</span>';
+      return;
+    }
+    var data = await res.json();
+    if (!data.resolvedName) {
+      el.innerHTML = '<span style="color:var(--red)">No voice matching “Kelly” found. Available: ' +
+        escHtml((data.voices || []).map(function(v) { return v.name; }).join(', ') || 'none') + '</span>';
+      return;
+    }
+    el.innerHTML = 'Using voice: <strong>' + escHtml(data.resolvedName) + '</strong>' +
+      (data.overridden ? ' (set explicitly via ELEVENLABS_VOICE_ID)' : ' (matched by name)');
+  } catch (err) {
+    el.textContent = '';
+  }
 }
 
 async function generateVoice(author) {

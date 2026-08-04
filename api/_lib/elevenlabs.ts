@@ -98,19 +98,45 @@ export async function listVoices(): Promise<VoiceOption[]> {
   }))
 }
 
+// Resolved once per warm invocation — the voice list doesn't change mid-run,
+// and re-fetching it before each of seven clips is wasted latency.
+let cachedVoiceId: string | null = null
+
 /**
- * Renders text to MP3 in the configured voice. Returns raw audio bytes — the
- * caller decides where to store them.
+ * Finds Kelly's voice in the account by name, so there's no ID to look up or
+ * env var to keep in sync. ELEVENLABS_VOICE_ID overrides it when a specific
+ * voice is wanted (e.g. two voices with similar names).
+ */
+export async function resolveVoiceId(): Promise<string> {
+  if (process.env.ELEVENLABS_VOICE_ID) return process.env.ELEVENLABS_VOICE_ID
+  if (cachedVoiceId) return cachedVoiceId
+
+  const voices = await listVoices()
+  const match =
+    voices.find(v => /kelly\s*irving/i.test(v.name)) ??
+    voices.find(v => /kelly/i.test(v.name))
+
+  if (!match) {
+    const names = voices.map(v => v.name).join(', ') || '(none)'
+    throw new Error(
+      `No voice matching "Kelly" found in the ElevenLabs account. Available: ${names}. ` +
+      `Set ELEVENLABS_VOICE_ID to pick one explicitly.`
+    )
+  }
+  cachedVoiceId = match.voiceId
+  return match.voiceId
+}
+
+/**
+ * Renders text to MP3 in Kelly's voice. Returns raw audio bytes — the caller
+ * decides where to store them.
  *
  * Deliberately pre-generated and cached rather than synthesised per page load:
  * TTS on every visit would be slow for the author, and would bill a fresh
  * generation every time someone refreshed the page.
  */
 export async function textToSpeech(text: string, voiceId?: string): Promise<Buffer> {
-  const voice = voiceId || process.env.ELEVENLABS_VOICE_ID
-  if (!voice) {
-    throw new Error('No voice configured — set ELEVENLABS_VOICE_ID to Kelly\'s voice.')
-  }
+  const voice = voiceId || await resolveVoiceId()
   if (!text.trim()) throw new Error('Nothing to speak')
 
   const res = await fetch(`${TTS_ENDPOINT}/${encodeURIComponent(voice)}`, {

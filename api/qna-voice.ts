@@ -19,7 +19,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getSession } from './_lib/auth'
-import { textToSpeech, listVoices } from './_lib/elevenlabs'
+import { textToSpeech, listVoices, resolveVoiceId } from './_lib/elevenlabs'
 import { uploadAudio } from './_lib/qna-storage'
 
 // Seven clips through a high-quality TTS model is not a 15-second job.
@@ -89,19 +89,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method === 'GET') {
       const voices = await listVoices()
+      const resolved = await resolveVoiceId().catch(() => null)
       return res.status(200).json({
         voices,
-        configured: process.env.ELEVENLABS_VOICE_ID ?? null,
+        resolved,
+        resolvedName: voices.find(v => v.voiceId === resolved)?.name ?? null,
+        overridden:   Boolean(process.env.ELEVENLABS_VOICE_ID),
       })
     }
 
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-    if (!process.env.ELEVENLABS_VOICE_ID) {
-      return res.status(400).json({
-        error: 'No voice configured. Set ELEVENLABS_VOICE_ID in Vercel to Kelly\'s voice ID.',
-      })
-    }
+    // Resolve up front so a missing voice fails immediately with a useful
+    // message, rather than after the first clip has already been billed.
+    const voiceId = await resolveVoiceId()
 
     const { authorItemId } = req.body ?? {}
     if (!authorItemId || typeof authorItemId !== 'string') {
@@ -136,7 +137,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Best-effort per clip: one failed question shouldn't cost the whole set.
     for (const clip of clips) {
       try {
-        const audio = await textToSpeech(clip.text)
+        const audio = await textToSpeech(clip.text, voiceId)
         const path = `voice/${row.id}/${stamp}-${clip.key}.mp3`
         await uploadAudio(path, audio, 'audio/mpeg')
         voiceMap[clip.key] = path
