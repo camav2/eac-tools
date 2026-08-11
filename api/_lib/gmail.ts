@@ -175,6 +175,17 @@ function rfc2822Addr(name: string | undefined, email: string): string {
   return `"${safe}" <${email}>`
 }
 
+interface GmailTokenRow { refresh_token: string; gmail_email: string; display_name: string | null }
+
+async function getTokenRow(filter: string): Promise<GmailTokenRow | null> {
+  const res = await fetch(
+    sbUrl(`gmail_tokens?${filter}&select=refresh_token,gmail_email,display_name`),
+    { headers: sbHeaders() },
+  )
+  const rows = res.ok ? await res.json() as GmailTokenRow[] : []
+  return rows[0] ?? null
+}
+
 export async function sendViaGmail(
   adminEmail: string,
   to: string,
@@ -183,16 +194,40 @@ export async function sendViaGmail(
   replyTo?: string,
   toName?: string,
 ): Promise<void> {
-  const tokenRes = await fetch(
-    sbUrl(`gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}&select=refresh_token,gmail_email,display_name`),
-    { headers: sbHeaders() },
-  )
-  const rows = tokenRes.ok ? await tokenRes.json() as { refresh_token: string; gmail_email: string; display_name: string | null }[] : []
-  const row = rows[0]
-  const refreshToken = row?.refresh_token  ?? null
-  const fromEmail    = row?.gmail_email    ?? null
-  const fromName     = row?.display_name   ?? undefined
-  if (!refreshToken || !fromEmail) throw new Error('No Gmail connected for ' + adminEmail)
+  const row = await getTokenRow(`admin_email=eq.${encodeURIComponent(adminEmail)}`)
+  if (!row) throw new Error('No Gmail connected for ' + adminEmail)
+  return sendWithRow(row, to, subject, body, replyTo, toName)
+}
+
+/**
+ * Send from a specific connected Gmail address, regardless of which admin
+ * connected it. Used by automated sends (e.g. book-canvas follow-up) where
+ * the sender identity is fixed rather than tied to the calling admin.
+ */
+export async function sendViaGmailAddress(
+  fromGmail: string,
+  to: string,
+  subject: string,
+  body: string,
+  replyTo?: string,
+  toName?: string,
+): Promise<void> {
+  const row = await getTokenRow(`gmail_email=eq.${encodeURIComponent(fromGmail)}`)
+  if (!row) throw new Error('No Gmail connected for address ' + fromGmail)
+  return sendWithRow(row, to, subject, body, replyTo, toName)
+}
+
+async function sendWithRow(
+  row: GmailTokenRow,
+  to: string,
+  subject: string,
+  body: string,
+  replyTo?: string,
+  toName?: string,
+): Promise<void> {
+  const refreshToken = row.refresh_token
+  const fromEmail    = row.gmail_email
+  const fromName     = row.display_name ?? undefined
 
   const accessToken = await getAccessToken(refreshToken)
 

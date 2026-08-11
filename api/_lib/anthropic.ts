@@ -286,3 +286,87 @@ export async function generateDraft(ctx: DraftContext): Promise<Draft> {
     editorNotes: String(input.editorNotes ?? ''),
   }
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Book Canvas follow-up — personalised research email content
+ * ──────────────────────────────────────────────────────────────────────────*/
+
+const RETURN_FOLLOWUP_TOOL = {
+  name: 'return_followup',
+  description: 'Return the personalised observation and question for the follow-up email.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      observation: {
+        type: 'string',
+        description:
+          'One short sentence (max ~25 words) showing Cameron actually read their canvas. ' +
+          'References their specific idea or where they got stuck, in plain words. ' +
+          'A statement — must not contain a question mark.',
+      },
+      question: {
+        type: 'string',
+        description:
+          'Exactly one open question (max ~30 words) that digs at the real challenge behind ' +
+          'their answers — the thing the canvas could not tell them. Ends with a question mark.',
+      },
+    },
+    required: ['observation', 'question'],
+  },
+}
+
+export interface CanvasFollowUpContext {
+  firstName: string
+  isMember:  boolean
+  /** Pillar label -> what they wrote ('' if left blank) */
+  pillars:   Record<string, string>
+}
+
+const FOLLOWUP_SYSTEM = `You are drafting two sentences for a personal follow-up email from Cameron McGrane, who runs the tools behind the Expert Author Community's Book Screening Canvas. The recipient completed the canvas - nine short prompts mapping a nonfiction book idea (purpose, positioning, audience, problem, market fit, unique value, platform, objective, strategy).
+
+The email's only goal is research: start a real reply conversation that surfaces what this person is actually wrestling with - the unspoken problem behind their answers. It is never a pitch.
+
+You return two things:
+
+1. observation - one sentence proving a human read their canvas. Reference their specific idea or pattern in their answers (e.g. a sharp problem statement but an empty audience pillar, or the gap between their objective and their platform). Plain words, no praise, no analysis-speak. A statement, never a question.
+
+2. question - ONE open question that goes underneath their answers. The best questions probe the gap between what they wrote and what they are avoiding: the pillar they skipped, the tension between two answers, or what they were hoping the canvas would settle for them. It should feel like a sharp, kind editor asking the thing nobody else has asked them. Answerable in a reply email of a few sentences.
+
+Rules - all hard:
+- Use hyphens, never em dashes.
+- No exclamation marks.
+- No praise-fishing, no flattery ("love your idea"), no marketing language.
+- Never pitch or mention any programme, product, community, or call.
+- Never quote their canvas back at length - reference, don't recite.
+- One question total. The observation must contain zero questions.
+- If most pillars are blank, do not shame them - the observation notes where they stopped, and the question probes what they were hoping to figure out or what stopped them.
+- Write for a busy expert: plain, warm, direct. No jargon, no "unpack", no "journey".
+
+Call return_followup and nothing else.`
+
+function followUpUserPrompt(ctx: CanvasFollowUpContext): string {
+  const lines = [
+    `First name: ${ctx.firstName || '(unknown)'}`,
+    `EAC member: ${ctx.isMember ? 'yes' : 'no'}`,
+    '',
+    'Their canvas (blank pillars shown as [not answered]):',
+    '',
+  ]
+  for (const [label, answer] of Object.entries(ctx.pillars)) {
+    lines.push(`${label}: ${answer.trim() || '[not answered]'}`)
+  }
+  return lines.join('\n')
+}
+
+export interface CanvasFollowUp {
+  observation: string
+  question:    string
+}
+
+export async function generateCanvasFollowUp(ctx: CanvasFollowUpContext): Promise<CanvasFollowUp> {
+  const input = await callWithTool(FOLLOWUP_SYSTEM, followUpUserPrompt(ctx), RETURN_FOLLOWUP_TOOL)
+  const observation = String(input?.observation ?? '').trim()
+  const question    = String(input?.question ?? '').trim()
+  if (!observation || !question) throw new Error('Model returned empty follow-up content')
+  return { observation, question }
+}
