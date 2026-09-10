@@ -25,6 +25,12 @@ export interface CustomerMatch {
   firstName: string
 }
 
+export type MatchSource = 'circle' | 'customers'
+
+export interface AuthorEmailMatch extends CustomerMatch {
+  source: MatchSource
+}
+
 /**
  * Comparable form of a name.
  *
@@ -120,4 +126,64 @@ export async function findCustomerByName(authorName: string): Promise<CustomerMa
     name:      String(f.Name ?? '').trim(),
     firstName: String(f.Firstname ?? '').trim(),
   }
+}
+
+/**
+ * Picks the one exact match from a list of candidates, or nothing.
+ *
+ * Shared by both sources so they cannot drift into disagreeing about what
+ * counts as a match. Two candidates is treated as none, deliberately: this
+ * cannot know which of two people called the same thing is the author, and
+ * guessing sends their unpublished words to the wrong one.
+ */
+function soleMatch<T>(
+  candidates: T[],
+  wanted: string,
+  nameOf: (c: T) => string,
+  emailOf: (c: T) => string
+): T | null {
+  const hits = candidates.filter(
+    c => normaliseName(nameOf(c)) === wanted && emailOf(c).trim()
+  )
+  return hits.length === 1 ? hits[0] : null
+}
+
+/**
+ * A member's email, from Circle first and the customers base second.
+ *
+ * Circle is tried first because it needs no setup beyond what mail merge
+ * already uses, and it holds current members. It does not hold everyone:
+ * alumni from older intakes may have left the community, while the customers
+ * base remembers anyone who ever paid. So the two are complementary rather
+ * than alternatives, and the fuller-history one is the fallback.
+ *
+ * Either can be absent. With neither configured, or neither holding a single
+ * clear match, this returns null and the address is typed in by hand — which
+ * is a working path, not a failure.
+ */
+export async function findAuthorEmail(authorName: string): Promise<AuthorEmailMatch | null> {
+  const wanted = normaliseName(authorName)
+  if (!wanted) return null
+
+  try {
+    const { listAllCommunityMembers } = await import('./circle')
+    const hit = soleMatch(await listAllCommunityMembers(), wanted, m => m.name, m => m.email)
+    if (hit) {
+      return {
+        email: hit.email.trim(),
+        name: hit.name,
+        firstName: hit.first_name || hit.name.split(/\s+/)[0] || '',
+        source: 'circle',
+      }
+    }
+  } catch (err) {
+    console.error('[customers] Circle lookup failed:', err)
+  }
+
+  const fromCustomers = await findCustomerByName(authorName).catch(err => {
+    console.error('[customers] customers base lookup failed:', err)
+    return null
+  })
+
+  return fromCustomers ? { ...fromCustomers, source: 'customers' } : null
 }

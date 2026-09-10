@@ -145,6 +145,52 @@ export async function getMembersInSpaceGroup(spaceGroupId: number): Promise<Circ
 }
 
 /**
+ * Everyone in the community, for looking a member up by name.
+ *
+ * Circle's API searches members by email, never by name, so finding an email
+ * from a name means fetching the lot and matching locally. That is only
+ * reasonable because the community is small — 333 members, four pages — and
+ * it would be the wrong approach against a list ten times the size.
+ *
+ * Includes members who were invited but never finished setting up a profile:
+ * an author who has not logged in still has a working email address, which is
+ * the only thing being asked for here.
+ */
+export async function listAllCommunityMembers(): Promise<CircleMember[]> {
+  const members: CircleMember[] = []
+  let page = 1
+
+  while (page <= 20) { // a ceiling, so a paging bug cannot loop forever
+    const params = new URLSearchParams({
+      community_id: process.env.CIRCLE_COMMUNITY_ID!,
+      per_page:     '100',
+      page:         String(page),
+      status:       'all',
+    })
+    const data = await circleFetch(`community_members?${params}`)
+    if (!data) break
+
+    const records: any[] = data.records ?? (Array.isArray(data) ? data : [])
+    for (const m of records) {
+      if (!m?.email) continue
+      const firstName = (m.first_name ?? '') as string
+      const lastName  = (m.last_name  ?? '') as string
+      members.push({
+        email:      m.email as string,
+        name:       (m.name as string) || `${firstName} ${lastName}`.trim() || m.email,
+        first_name: firstName,
+        last_name:  lastName,
+      })
+    }
+
+    if (!data.has_next_page) break
+    page++
+  }
+
+  return members
+}
+
+/**
  * Returns true if the given email belongs to the admin access group.
  * Group name is configured via CIRCLE_ADMIN_GROUP (default: "Administrator").
  */

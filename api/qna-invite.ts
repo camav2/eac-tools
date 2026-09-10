@@ -17,7 +17,8 @@
  * Env vars required:
  *   JWT_SECRET,
  *   AIRTABLE_API_KEY, AIRTABLE_BASE_ID, AIRTABLE_QNA_TABLE_ID,
- *   AIRTABLE_CUSTOMERS_BASE_ID, AIRTABLE_CUSTOMERS_TABLE_ID,
+ *   CIRCLE_API_TOKEN, CIRCLE_COMMUNITY_ID  (primary email lookup)
+ *   AIRTABLE_CUSTOMERS_BASE_ID, AIRTABLE_CUSTOMERS_TABLE_ID  (optional fallback)
  *   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
  *   SUPABASE_URL, SUPABASE_SERVICE_KEY
  */
@@ -25,7 +26,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getSession } from './_lib/auth'
 import { sendViaGmailAddress } from './_lib/gmail'
-import { findCustomerByName } from './_lib/customers'
+import { findAuthorEmail } from './_lib/customers'
 import { baseQuestions } from './_lib/qna-rows'
 import { calendarUrl, dueDateFrom, formatDue, DEADLINE_DAYS } from './_lib/qna-deadline'
 
@@ -174,7 +175,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // A stored address wins over a fresh lookup: if Cam corrected it last
       // time, that correction is the better answer.
       const stored = row.fields['Author Email']
-      const found  = stored ? null : await findCustomerByName(authorName).catch(err => {
+      const found  = stored ? null : await findAuthorEmail(authorName).catch(err => {
         console.error('[qna-invite] customer lookup failed:', err)
         return null
       })
@@ -186,7 +187,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         authorName,
         bookTitle,
         to:        stored ?? found?.email ?? '',
-        toSource:  stored ? 'saved' : (found ? 'customers' : 'none'),
+        toSource:  stored ? 'saved' : (found ? found.source : 'none'),
         from:      FROM_ADDRESS,
         cc:        CC_ADDRESS,
         subject:   draft.subject,

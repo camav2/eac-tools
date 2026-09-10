@@ -604,9 +604,11 @@ function renderInvite(author, d) {
   // trust from the person about to hit send.
   var source = d.toSource === 'saved'
     ? 'Saved from the last send.'
-    : d.toSource === 'customers'
-      ? 'Matched by name in the Customers base. Check it.'
-      : 'No match found in the Customers base. Type it in.';
+    : d.toSource === 'circle'
+      ? 'Matched by name in Circle. Check it.'
+      : d.toSource === 'customers'
+        ? 'Matched by name in the Customers base. Check it.'
+        : 'No match in Circle or the Customers base. Type it in.';
 
   area.innerHTML =
     '<div class="mail-draft">' +
