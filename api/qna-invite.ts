@@ -126,6 +126,11 @@ function draftEmail(authorName: string, bookTitle: string, link: string, dueDate
     '',
     `This isn't a testimonial. I'm not after kind words about us. What I'm interested in is what the writing and the publishing actually taught you. The things you'd tell another expert who was about to start.`,
     '',
+    // What the author gets, placed before the ask rather than after it. It is
+    // also the honest answer to "why would I spend an hour on this", and it
+    // matches the consent list on the intake page word for word on channels.
+    `The finished piece goes on your author page and our blog, out in our newsletter, and on the Expert Author Community LinkedIn page. So your book, and your thinking, reach people already looking for exactly that.`,
+    '',
     `There are six questions. Type your answers or record them out loud, whichever suits you. It saves as you go, so you can stop and come back.`,
     '',
     `Here they are:`,
