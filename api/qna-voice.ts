@@ -67,11 +67,34 @@ function firstName(full: string): string {
  * words, no bullet-point cadence — and to carry the same "this isn't a
  * testimonial" framing as the written intro, in her voice rather than ours.
  */
+/**
+ * The title without its subtitle.
+ *
+ * Nobody says a subtitle out loud. "I wanted to ask you about Seen Again,
+ * colon, Light on Matrescence" is not a sentence a person speaks, and the
+ * whole point of the clip is that it sounds like Kelly rather than a machine
+ * reading a database field.
+ *
+ * Written text keeps the full title. This is only for the spoken version.
+ *
+ * Splits on a colon, or on a spaced dash. The dash has to be spaced: an
+ * unspaced hyphen is inside a word, and "Mostly Ups: How I Survived a
+ * Flesh-eating Bacteria" must not become "Mostly Ups: How I Survived a Flesh".
+ * A separator with nothing before it leaves the title alone rather than
+ * returning an empty string.
+ */
+export function mainTitle(bookTitle: string): string {
+  const full = String(bookTitle ?? '').trim()
+  const cut = full.search(/\s*:|\s+[-–—]\s+/)
+  if (cut <= 0) return full
+  return full.slice(0, cut).trim() || full
+}
+
 function introScript(authorName: string, bookTitle: string): string {
   return [
     `Hi ${firstName(authorName)}, it's Kelly.`,
     `Thank you for doing this.`,
-    `We're building an editorial home for the Expert Author Community, and I wanted to ask you about ${bookTitle}.`,
+    `We're building an editorial home for the Expert Author Community, and I wanted to ask you about ${mainTitle(bookTitle)}.`,
     `This isn't a testimonial. I'm not after kind words about us.`,
     `What I'm actually interested in is what the writing and the publishing taught you. The things you'd tell another expert who was about to start.`,
     `There are six questions. Take them at your own pace. Type your answers or record them, whichever feels easier.`,
