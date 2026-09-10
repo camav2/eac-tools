@@ -109,11 +109,14 @@
     .own-intro { margin-top: 8px; }
     .own-intro p { font-size: 0.9rem; color: var(--grey-700); margin-bottom: 16px; }
 
-    .ask { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 20px; }
+    /* Centred rather than top-aligned: the bubble holds one line on a wide
+     * screen and wraps to two or three on a narrow one, and centring is the
+     * only alignment that looks deliberate at every width. */
+    .ask { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
     /* The file is already a square crop on his face at 232px — 4x the
      * display size, so it stays sharp on a retina screen. */
     .ask-photo {
-      width: 58px; height: 58px; flex-shrink: 0; margin-top: 10px;
+      width: 58px; height: 58px; flex-shrink: 0;
       border-radius: 50%; object-fit: cover;
       border: 2px solid #fff; box-shadow: 0 2px 10px rgba(0,0,61,0.16);
     }
@@ -129,9 +132,7 @@
     }
     .ask-bubble::before { width: 13px; height: 13px; left: -9px; bottom: 16px; }
     .ask-bubble::after  { width: 7px;  height: 7px;  left: -18px; bottom: 6px; }
-    .ask-q { font-size: 1.05rem; font-weight: 600; line-height: 1.45; margin-bottom: 6px; }
-    .ask-by { font-size: 0.75rem; color: var(--grey-500); font-weight: 600; }
-    .ask-by em { font-style: italic; }
+    .ask-q { font-size: 1.05rem; font-weight: 600; line-height: 1.45; }
     .own-block { border-left: 3px solid var(--yellow); padding-left: 18px; margin-bottom: 32px; }
     .own-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; color: var(--grey-500); text-transform: uppercase; margin-bottom: 6px; }
     .own-input {
@@ -359,7 +360,6 @@ function renderForm() {
           'onerror="this.remove()">' +
         '<div class="ask-bubble">' +
           '<p class="ask-q">Is there a question we didn\'t ask, but should have?</p>' +
-          '<p class="ask-by">Oscar Trimboli, <em>Deep Listening</em></p>' +
         '</div>' +
       '</div>' +
       '<p>If there is, write it here and answer it yourself. Entirely optional — ' +
