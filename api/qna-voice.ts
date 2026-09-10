@@ -71,7 +71,7 @@ function introScript(authorName: string, bookTitle: string): string {
   return [
     `Hi ${firstName(authorName)}, it's Kelly.`,
     `Thank you for doing this.`,
-    `We're building a more editorial home for the Expert Author Community, and I wanted to ask you about ${bookTitle}.`,
+    `We're building an editorial home for the Expert Author Community, and I wanted to ask you about ${bookTitle}.`,
     `This isn't a testimonial. I'm not after kind words about us.`,
     `What I'm actually interested in is what the writing and the publishing taught you. The things you'd tell another expert who was about to start.`,
     `There are six questions. Take them at your own pace. Type your answers or record them, whichever feels easier.`,

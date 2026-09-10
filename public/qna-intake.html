@@ -330,7 +330,7 @@ function renderForm() {
   var introPlayer = introVoice
     ? '<div class="listen-intro">' +
         '<button type="button" class="listen-btn" data-listen="' + esc(introVoice) + '">' +
-          ICON_SPEAKER + 'Hear this from Kelly' +
+          ICON_SPEAKER + 'Hear from Kelly' +
         '</button>' +
         '<div class="listen-caption">About a minute, in Kelly\'s voice.</div>' +
       '</div>'
@@ -339,7 +339,7 @@ function renderForm() {
   document.getElementById('root').innerHTML =
     heroHtml() +
     '<div class="intro">' +
-      '<p>We\'re building a more editorial home for the Expert Author Community — one that shares the ' +
+      '<p>We\'re building an editorial home for the Expert Author Community — one that shares the ' +
       'thinking, lessons and lived experience behind meaningful books.</p>' +
       '<p><strong>This isn\'t a testimonial.</strong> We\'re not asking you to say nice things about EAC. ' +
       'We\'re interested in what the process of writing, publishing and articulating your ideas actually ' +
@@ -590,7 +590,7 @@ function setListenLabel(btn, playing) {
   var isIntro = btn.classList.contains('listen-btn');
   var label = playing
     ? (isIntro ? 'Stop' : 'Stop')
-    : (isIntro ? 'Hear this from Kelly' : 'Hear Kelly read this');
+    : (isIntro ? 'Hear from Kelly' : 'Hear Kelly read this');
   btn.innerHTML = (playing ? ICON_PAUSE : ICON_SPEAKER) + label;
 }
 
