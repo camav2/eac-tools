@@ -19,6 +19,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getSession } from './_lib/auth'
 import { signedUrlFor, downloadAudio, extensionFor } from './_lib/qna-storage'
 import { transcribeAudio } from './_lib/elevenlabs'
+import { parseMedia, signedUrlFor as signedMediaUrl } from './_lib/qna-media'
 
 // A single long recording can take a while through Scribe; the default 15s
 // is not enough headroom.
@@ -106,12 +107,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }))
       )
 
+      // What the author sent alongside their answers. Best-effort: a signing
+      // hiccup should cost a thumbnail, not the whole review screen.
+      const uploads = await Promise.all(
+        parseMedia(row.fields['Author Media']).map(async f => ({
+          name: f.name,
+          type: f.type,
+          size: f.size,
+          url:  await signedMediaUrl(f.path, 3600).catch(err => {
+            console.error('[qna-responses] media sign failed:', err)
+            return null
+          }),
+        }))
+      ).catch(err => {
+        console.error('[qna-responses] uploads failed:', err)
+        return [] as Array<Record<string, unknown>>
+      })
+
       return res.status(200).json({
         authorName:  row.fields['Author Name'] ?? '',
         bookTitle:   row.fields['Book Title'] ?? '',
         status:      row.fields['Status'] ?? '',
         submittedAt: row.fields['Author Submitted At'] ?? null,
         responses:   withUrls,
+        uploads,
       })
     }
 

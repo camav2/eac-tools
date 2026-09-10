@@ -179,6 +179,35 @@
     .own-state.err { color: var(--red); }
     .btn-add { margin-top: 4px; }
 
+    /* ── Media the author sends with their answers ── */
+    .media-intro h2 { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 8px; }
+    .media-intro p { font-size: 0.9rem; color: var(--grey-700); margin-bottom: 6px; }
+    .media-drop {
+      border: 2px dashed var(--grey-200); border-radius: 12px;
+      padding: 26px 22px; text-align: center; background: #fff;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      margin-top: 14px;
+    }
+    .media-drop.over { border-color: var(--navy); background: #fdfdfb; }
+    .media-drop-hint { font-size: 0.8rem; color: var(--grey-500); margin-top: 10px; }
+    .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 12px; margin-top: 16px; }
+    .media-item { position: relative; border: 1px solid var(--grey-200); border-radius: 10px; overflow: hidden; background: #fff; }
+    .media-thumb { width: 100%; height: 96px; object-fit: cover; display: block; background: var(--grey-100); }
+    /* Anything without a picture still needs a shape, so a PDF and a video
+     * read as files rather than as broken images. */
+    .media-icon { width: 100%; height: 96px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; background: var(--grey-100); }
+    .media-name { font-size: 0.7rem; padding: 7px 8px; color: var(--grey-700); word-break: break-word; line-height: 1.3; }
+    .media-remove {
+      position: absolute; top: 6px; right: 6px;
+      width: 24px; height: 24px; border-radius: 50%; border: none;
+      background: rgba(0,0,61,0.72); color: #fff; cursor: pointer;
+      font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center;
+    }
+    .media-remove:hover { background: var(--navy); }
+    .media-item.busy { opacity: 0.5; }
+    .media-state { font-size: 0.8rem; color: var(--grey-500); margin-top: 10px; }
+    .media-state.err { color: var(--red); }
+
     .consent { background: #fff; border: 1px solid var(--grey-200); border-radius: 12px; padding: 22px 24px; margin-top: 40px; }
     .consent h2 { font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; }
     .consent ul { list-style: none; font-size: 0.85rem; color: var(--grey-700); margin-bottom: 18px; }
@@ -327,6 +356,7 @@ async function load() {
     state.hasAudio = state.hasAudio || [];
     state.audio = state.audio || [];
     state.media = state.media || {};
+    state.uploads = state.uploads || [];
     renderForm();
   } catch (err) {
     renderError('We could not load your questions. Please check your connection and refresh.');
@@ -506,6 +536,22 @@ function renderForm() {
       '<button type="button" class="btn-ghost btn-add" id="own-add">Add your own question</button>' +
       '<span class="own-state" id="own-state"></span>' +
     '</div>' +
+    '<div class="rule"></div>' +
+    '<div class="media-intro">' +
+      '<h2>Anything we should see?</h2>' +
+      '<p>Photos of you, your book, the launch, your desk at 5am. Anything that helps ' +
+      'us tell the story properly.</p>' +
+      '<p>The more you send, the more we have to work with. Nothing gets used without ' +
+      'your approval.</p>' +
+    '</div>' +
+    '<div class="media-drop" id="media-drop">' +
+      '<button type="button" class="btn-ghost" id="media-pick">Choose files</button>' +
+      '<div class="media-drop-hint">or drag them here. Images, PDFs and video.</div>' +
+      '<input type="file" id="media-input" multiple style="display:none" ' +
+        'accept="image/*,video/*,application/pdf">' +
+    '</div>' +
+    '<div class="media-grid" id="media-grid"></div>' +
+    '<div class="media-state" id="media-state"></div>' +
     '<div class="consent">' +
       '<h2>Before you submit</h2>' +
       '<ul>' +
@@ -543,8 +589,154 @@ function renderForm() {
     b.addEventListener('click', function() { toggleListen(b); });
   });
 
+  bindMedia();
+  renderMedia();
+
   renderOwn();
   updateSubmitState();
+}
+
+/* ── Media the author sends with their answers ──
+ * Files go straight from the browser to Supabase using a signed URL, because
+ * Vercel rejects a request body over 4.5 MB and a phone photo is routinely
+ * past that. The server decides whether a file may be uploaded and records it
+ * afterwards; the bytes never touch it.
+ */
+function bindMedia() {
+  var drop  = document.getElementById('media-drop');
+  var input = document.getElementById('media-input');
+  var pick  = document.getElementById('media-pick');
+  if (!drop || !input || !pick) return;
+
+  pick.addEventListener('click', function() { input.click(); });
+  input.addEventListener('change', function() {
+    uploadFiles(Array.prototype.slice.call(input.files));
+    input.value = '';   // so the same file can be picked again after a removal
+  });
+
+  ['dragenter', 'dragover'].forEach(function(e) {
+    drop.addEventListener(e, function(ev) { ev.preventDefault(); drop.classList.add('over'); });
+  });
+  ['dragleave', 'drop'].forEach(function(e) {
+    drop.addEventListener(e, function(ev) { ev.preventDefault(); drop.classList.remove('over'); });
+  });
+  drop.addEventListener('drop', function(ev) {
+    if (ev.dataTransfer && ev.dataTransfer.files) {
+      uploadFiles(Array.prototype.slice.call(ev.dataTransfer.files));
+    }
+  });
+}
+
+function renderMedia() {
+  var grid = document.getElementById('media-grid');
+  if (!grid) return;
+  var files = state.uploads || [];
+
+  grid.innerHTML = files.map(function(f) {
+    var isImage = (f.type || '').indexOf('image/') === 0 && f.url;
+    var thumb = isImage
+      ? '<img class="media-thumb" src="' + esc(f.url) + '" alt="' + esc(f.name) + '">'
+      : '<div class="media-icon">' + ((f.type || '').indexOf('video/') === 0 ? '🎬' : '📄') + '</div>';
+    return '<div class="media-item" data-id="' + esc(f.id) + '">' +
+      thumb +
+      '<button type="button" class="media-remove" data-remove="' + esc(f.id) + '" ' +
+        'title="Remove ' + esc(f.name) + '">×</button>' +
+      '<div class="media-name">' + esc(f.name) + '</div>' +
+    '</div>';
+  }).join('');
+
+  grid.querySelectorAll('[data-remove]').forEach(function(b) {
+    b.addEventListener('click', function() { removeMedia(b.dataset.remove); });
+  });
+
+  var pick = document.getElementById('media-pick');
+  var full = files.length >= (state.maxUploads || 12);
+  if (pick) {
+    pick.disabled = full;
+    pick.textContent = files.length ? 'Add more' : 'Choose files';
+  }
+  if (full) mediaState('That\'s the limit of ' + (state.maxUploads || 12) + ' files.');
+}
+
+function mediaState(msg, cls) {
+  var el = document.getElementById('media-state');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.className = 'media-state' + (cls ? ' ' + cls : '');
+}
+
+async function uploadFiles(files) {
+  if (!files.length) return;
+  for (var i = 0; i < files.length; i++) {
+    await uploadOne(files[i], i + 1, files.length);
+  }
+}
+
+async function uploadOne(file, n, total) {
+  var label = total > 1 ? ' (' + n + ' of ' + total + ')' : '';
+  mediaState('Uploading ' + file.name + label + '…');
+
+  try {
+    // 1. Ask whether this file is allowed, and where to put it.
+    var signRes = await fetch('/api/qna-media', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: TOKEN, action: 'sign',
+        name: file.name, type: file.type, size: file.size,
+      }),
+    });
+    var signed = await signRes.json().catch(function() { return {}; });
+    if (!signRes.ok) throw new Error(signed.error || 'Could not start the upload.');
+
+    // 2. Send the bytes straight to storage, around Vercel's body limit.
+    var put = await fetch(signed.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      body: file,
+    });
+    if (!put.ok) throw new Error('The upload did not finish. Please try again.');
+
+    // 3. Only now does it count. A browser closed before this leaves a file
+    //    nobody points at, which costs storage and nothing else.
+    var confRes = await fetch('/api/qna-media', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: TOKEN, action: 'confirm',
+        path: signed.path, name: file.name, type: file.type, size: file.size,
+      }),
+    });
+    var conf = await confRes.json().catch(function() { return {}; });
+    if (!confRes.ok) throw new Error(conf.error || 'Could not save that file.');
+
+    state.uploads = conf.media || [];
+    mediaState('');
+    renderMedia();
+  } catch (err) {
+    mediaState(file.name + ': ' + err.message, 'err');
+  }
+}
+
+async function removeMedia(id) {
+  var item = document.querySelector('.media-item[data-id="' + id.replace(/"/g, '\\"') + '"]');
+  if (item) item.classList.add('busy');
+  mediaState('Removing…');
+  try {
+    var res = await fetch('/api/qna-media', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: TOKEN, action: 'remove', path: id }),
+    });
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) throw new Error(data.error || 'Could not remove that file.');
+    state.uploads = data.media || [];
+    mediaState('');
+    renderMedia();
+  } catch (err) {
+    if (item) item.classList.remove('busy');
+    mediaState(err.message, 'err');
+  }
 }
 
 /* Answer boxes and record buttons inside `root`. Called for the whole page on
