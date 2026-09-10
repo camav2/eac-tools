@@ -33,7 +33,9 @@ import { calendarUrl, dueDateFrom, formatDue, DEADLINE_DAYS } from './_lib/qna-d
 const QNA_TABLE = process.env.AIRTABLE_QNA_TABLE_ID!
 
 const FROM_ADDRESS = 'cameron@expertauthor.community'
-const CC_ADDRESS   = 'kelly@expertauthor.community'
+// The shared inbox rather than Kelly personally, so a reply reaches whoever
+// is picking things up that week instead of one person's unread pile.
+const CC_ADDRESS   = 'hello@expertauthor.community'
 const INTAKE_BASE_URL = 'https://hub.expertauthor.community/qna-intake'
 
 // A lookup across a few hundred customer rows plus a Gmail send is not a

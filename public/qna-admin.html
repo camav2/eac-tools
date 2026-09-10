@@ -645,8 +645,13 @@ function renderInvite(author, d) {
         '<input class="link-input" id="mail-subject" value="' + escHtml(d.subject) + '">' +
       '</div>' +
       '<label class="mail-label">Message — click to edit</label>' +
+      // Sender and copy ride along as data rather than being written into the
+      // confirm text, which had drifted once already: the handler decides who
+      // gets copied, and this should only ever report it.
       '<div class="mail-body" id="mail-body" contenteditable="true" ' +
-        'data-due="' + escHtml(d.dueDate || '') + '">' + d.body + '</div>' +
+        'data-due="' + escHtml(d.dueDate || '') + '" ' +
+        'data-from="' + escHtml(d.from || '') + '" ' +
+        'data-cc="' + escHtml(d.cc || '') + '">' + d.body + '</div>' +
       '<p class="send-sub">Reply-by date in the email: <strong>' + escHtml(d.dueLabel || '') +
         '</strong>. Sending records it against the author.</p>' +
       (d.sentAt
@@ -677,7 +682,11 @@ async function sendInvite(author) {
 
   // An email cannot be unsent, and the address is the part most likely to be
   // wrong, so it is the part the confirmation shows.
-  if (!confirm('Send this to ' + to + '?\n\nIt goes from cameron@expertauthor.community, copying kelly@expertauthor.community.')) return;
+  var from = bodyEl.dataset.from || '';
+  var cc   = bodyEl.dataset.cc || '';
+  if (!confirm('Send this to ' + to + '?\n\n' +
+    (from ? 'It goes from ' + from : 'It sends') +
+    (cc ? ', copying ' + cc : '') + '.')) return;
 
   btn.disabled = true;
   status.textContent = 'Sending…';
