@@ -94,31 +94,52 @@ function esc(s: string): string {
  * Cam edits this on screen, so it is a starting point rather than a template
  * to be defended.
  */
+/**
+ * Lines and blank lines, in the shape Gmail itself produces when a person
+ * types an email: a <div> per line, and a <div><br></div> for the gap.
+ *
+ * No styling of any kind, and that is the point. This has to read as one
+ * person writing to another, and every button, brand colour and styled
+ * paragraph is a tell that it came out of a system. The Gmail helper rewrites
+ * <p> but leaves <div> alone, so what is written here is what arrives.
+ */
+function lines(...parts: string[]): string {
+  return parts
+    .map(t => (t === '' ? '<div><br></div>' : `<div>${t}</div>`))
+    .join('\n')
+}
+
 function draftEmail(authorName: string, bookTitle: string, link: string, dueDate: string) {
   const subject = `A few questions about ${bookTitle}`
   const due = formatDue(dueDate)
   const cal = calendarUrl(dueDate, bookTitle, link)
 
-  const body = [
-    `<p>Hi ${esc(firstName(authorName))},</p>`,
-    `<p>I'd like to interview you about <em>${esc(bookTitle)}</em>.</p>`,
-    `<p>We're building an editorial home for the Expert Author Community. Somewhere that shares the thinking and lived experience behind meaningful books, not just the covers.</p>`,
-    `<p><strong>This isn't a testimonial.</strong> I'm not after kind words about us.</p>`,
-    `<p>What I'm interested in is what the writing and the publishing actually taught you. The things you'd tell another expert who was about to start.</p>`,
-    `<p>There are six questions. Type your answers or record them out loud, whichever suits you. Everything saves as you go, so you can stop and come back.</p>`,
-    // The date sits directly above the button. A deadline further down the
-    // page than the thing it applies to is a deadline people miss.
-    `<p>Could you get them back to me by <strong>${esc(due)}</strong>?</p>`,
-    `<p><a href="${esc(link)}" style="display:inline-block;background:#00003D;color:#ffffff;` +
-      `text-decoration:none;padding:13px 26px;border-radius:999px;font-weight:700;">` +
-      `Answer the questions</a></p>`,
-    // Offered right after the deadline, because the moment somebody reads a
-    // date is the only moment they will act on putting it somewhere.
-    `<p style="font-size:14px;"><a href="${esc(cal)}">Add ${esc(due)} to my calendar</a></p>`,
-    `<p>We'll shape what you say into an edited Q&amp;A and send it to you for approval before anything is published.</p>`,
-    `<p>Thanks for considering it.</p>`,
-    `<p>Cameron</p>`,
-  ].join('\n')
+  // The questions link is the bare URL, the way somebody pastes a link into a
+  // message. An anchor over tidier words would be neater and would look more
+  // like something that was built.
+  const body = lines(
+    `Hi ${esc(firstName(authorName))},`,
+    '',
+    `I'd like to interview you about ${esc(bookTitle)}.`,
+    '',
+    `We're building an editorial home for the Expert Author Community - somewhere that shares the thinking and lived experience behind meaningful books, not just the covers.`,
+    '',
+    `This isn't a testimonial. I'm not after kind words about us. What I'm interested in is what the writing and the publishing actually taught you. The things you'd tell another expert who was about to start.`,
+    '',
+    `There are six questions. Type your answers or record them out loud, whichever suits you. It saves as you go, so you can stop and come back.`,
+    '',
+    `Here they are:`,
+    `<a href="${esc(link)}">${esc(link)}</a>`,
+    '',
+    `Could you get them back to me by ${esc(due)}? You can ` +
+      `<a href="${esc(cal)}">add it to your calendar</a>.`,
+    '',
+    `We'll shape what you say into an edited Q&amp;A and send it to you for approval before anything is published.`,
+    '',
+    `Thanks for considering it.`,
+    '',
+    `Cameron`,
+  )
 
   return { subject, body }
 }
