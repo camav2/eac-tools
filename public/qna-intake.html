@@ -205,10 +205,17 @@
 <script>
 var TOKEN = new URLSearchParams(window.location.search).get('token') || '';
 var state = {
-  questions: [], authorQuestions: [], answers: [], hasAudio: [],
+  questions: [], authorQuestions: [], answers: [], hasAudio: [], audio: [],
   authorName: '', bookTitle: '', media: {},
 };
 var saveTimer = null;
+
+/* An upload and a text save are both read-modify-write against the same
+ * Responses blob, so a save whose read lands before the upload's write and
+ * whose own write lands after it would erase the recording. Autosaves hold
+ * off while an upload is in flight, and one runs as soon as it lands. */
+var uploading = 0;
+var savePending = false;
 
 // Author-added questions are appended after Cam's set, so their page index is
 // offset by however many questions he asked.
@@ -242,6 +249,7 @@ async function load() {
     state.authorQuestions = state.authorQuestions || [];
     state.answers = state.answers || [];
     state.hasAudio = state.hasAudio || [];
+    state.audio = state.audio || [];
     state.media = state.media || {};
     renderForm();
   } catch (err) {
@@ -269,7 +277,9 @@ function answerHtml(i) {
   var box = '<textarea data-i="' + i + '" placeholder="Take as much space as you need…">' +
     esc(state.answers[i] || '') + '</textarea>';
 
-  if (!supportsRecording()) return box;
+  // A recorder is only offered where the browser can actually make one, but a
+  // recording made earlier on another device must still be playable here.
+  if (!supportsRecording()) return box + playbackHtml(i);
 
   return box +
     '<div class="or-rule">or record your answer</div>' +
@@ -282,7 +292,17 @@ function answerHtml(i) {
         (already ? 'Recording saved' : '') +
       '</span>' +
     '</div>' +
-    '<div id="playback-' + i + '"></div>';
+    '<div id="playback-' + i + '">' + playbackHtml(i) + '</div>';
+}
+
+/* Playback for a recording made in an earlier visit.
+ * Coming back to "Recording saved" and no way to hear it is indistinguishable
+ * from having lost it — which is exactly how it was reported. */
+function playbackHtml(i) {
+  var url = state.audio && state.audio[i];
+  if (!url) return '';
+  return '<audio class="rec-audio" controls preload="none" src="' + esc(url) + '"></audio>' +
+    '<div class="rec-hint">Recording again will replace this one.</div>';
 }
 
 function heroHtml() {
@@ -682,6 +702,7 @@ async function uploadRecording(i, mime) {
   }
 
   recState(i, 'Uploading…');
+  uploading++;
   try {
     var res = await fetch('/api/qna-audio?token=' + encodeURIComponent(TOKEN) + '&q=' + i, {
       method: 'POST',
@@ -695,11 +716,17 @@ async function uploadRecording(i, mime) {
     recState(i, 'Recording saved', 'ok');
     if (!state.hasAudio) state.hasAudio = [];
     state.hasAudio[i] = true;
+    // The signed URL from page load now points at a replaced take. The local
+    // blob player above is what should be heard until the next reload.
+    if (state.audio) state.audio[i] = null;
     // Re-gates the submit button and retires this slot's "different question"
     // option now that it holds an answer.
     updateSubmitState();
   } catch (err) {
     recState(i, err.message + ' — you can try recording again.', 'err');
+  } finally {
+    uploading--;
+    if (uploading === 0 && savePending) { savePending = false; saveNow(); }
   }
 }
 
@@ -748,6 +775,8 @@ function scheduleSave() {
 
 async function saveNow() {
   clearTimeout(saveTimer);
+  // Never write over an upload that is mid-flight. See `uploading` above.
+  if (uploading > 0) { savePending = true; return; }
   try {
     var res = await fetch('/api/qna-intake', {
       method: 'POST',
@@ -765,6 +794,10 @@ async function saveNow() {
 
 async function submit() {
   var btn = document.getElementById('submit');
+  // Submitting mid-upload would write the row from a read taken before the
+  // recording landed, losing it — and would also lock the page against fixing
+  // it. A couple of seconds of waiting is the whole cost.
+  if (uploading > 0) return note('Just finishing saving your recording…');
   btn.disabled = true;
   note('Sending…');
   try {
