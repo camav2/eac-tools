@@ -10,6 +10,10 @@
     :root {
       --navy: #00003D;
       --navy-light: #1a1a5e;
+      /* Brand yellow, same value as the intake page. The author badge asked
+         for it before anything defined it, so it was rendering with no
+         background at all. */
+      --yellow: #FFE64B;
       --grey-100: #f3f4f6;
       --grey-200: #e5e7eb;
       --grey-500: #6b7280;
@@ -402,18 +406,26 @@ function renderReviewPanel(author, data) {
         '<button type="button" id="save-btn" class="save-btn">Save Question Set</button>' +
         '<span class="review-status" id="review-status"></span>' +
       '</div>' +
-      '<div class="send-panel">' +
-        '<div class="send-title">Send to author</div>' +
-        '<div class="send-sub">Creates a private link with these questions. Nothing is emailed — copy the link and send it yourself.</div>' +
-        '<button type="button" id="send-btn" class="send-btn">Create intake link</button>' +
-        '<div id="link-area"></div>' +
-      '</div>' +
+      // Voice before send, because that is the order the work happens in.
+      // The author's page offers "Hear from Kelly" on every question, so a
+      // link sent before the clips exist is a link to a broken promise.
       '<div class="send-panel">' +
         '<div class="send-title">Kelly\'s voice</div>' +
         '<div class="send-sub">Records the intro and every question in Kelly\'s voice, so the author can listen rather than read. Regenerate after changing questions.</div>' +
-        '<button type="button" class="send-btn" id="voice-btn">Generate voice</button>' +
-        '<span class="review-status" id="voice-status" style="margin-left:12px"></span>' +
+        '<button type="button" class="send-btn" id="voice-btn">' +
+          (data.hasVoice ? 'Regenerate voice' : 'Generate voice') +
+        '</button>' +
+        '<span class="review-status' + (data.hasVoice ? ' ok' : '') + '" id="voice-status" style="margin-left:12px">' +
+          (data.hasVoice ? 'Ready' : '') +
+        '</span>' +
         '<div class="send-sub" id="voice-which" style="margin-top:10px;margin-bottom:0"></div>' +
+      '</div>' +
+      '<div class="send-panel">' +
+        '<div class="send-title">Send to author</div>' +
+        '<div class="send-sub">Creates a private link with these questions, then drafts the invitation email for you to check and send.</div>' +
+        '<button type="button" id="send-btn" class="send-btn">Create intake link</button>' +
+        '<span class="review-status" id="send-gate" style="margin-left:12px"></span>' +
+        '<div id="link-area"></div>' +
       '</div>' +
     '</div>';
 
@@ -424,7 +436,32 @@ function renderReviewPanel(author, data) {
   document.getElementById('save-btn').addEventListener('click', function() { saveQuestionsForAuthor(author); });
   document.getElementById('send-btn').addEventListener('click', function() { createIntakeLink(author, false); });
 
+  // Track what the row actually has, so the gate can lift the moment the
+  // missing piece arrives rather than waiting for a reload.
+  reviewState = { questionsSaved: !!data.questions, hasVoice: !!data.hasVoice };
+  applySendGate();
+
   showExistingLink(author);
+}
+
+/* What the open author is missing, if anything. */
+var reviewState = { questionsSaved: false, hasVoice: false };
+
+/* Sending is the irreversible step: once a link is out, an author may open it
+ * at any moment. So it stays shut until the page they would land on is
+ * finished — questions saved, and Kelly's clips recorded against them. */
+function applySendGate() {
+  var btn  = document.getElementById('send-btn');
+  var note = document.getElementById('send-gate');
+  if (!btn || !note) return;
+
+  var missing = [];
+  if (!reviewState.questionsSaved) missing.push('save the question set');
+  if (!reviewState.hasVoice)       missing.push('generate Kelly\'s voice');
+
+  btn.disabled = missing.length > 0;
+  note.textContent = missing.length ? 'First ' + missing.join(', then ') + '.' : '';
+  note.className = 'review-status';
 }
 
 /* Names the voice that will actually be used, so a wrong match is visible
@@ -475,6 +512,10 @@ async function generateVoice(author) {
       : 'All ' + data.generated + ' clips recorded.';
     statusEl.className = 'review-status ' + (data.failed && data.failed.length ? 'err' : 'ok');
     btn.textContent = 'Regenerate voice';
+    // A partial set still counts: the intake page hides the button for any
+    // question whose clip is missing, so what exists is playable.
+    reviewState.hasVoice = data.generated > 0;
+    applySendGate();
   } catch (err) {
     statusEl.textContent = 'Failed: ' + err.message;
     statusEl.className = 'review-status err';
@@ -586,7 +627,10 @@ function renderInvite(author, d) {
         '<input class="link-input" id="mail-subject" value="' + escHtml(d.subject) + '">' +
       '</div>' +
       '<label class="mail-label">Message — click to edit</label>' +
-      '<div class="mail-body" id="mail-body" contenteditable="true">' + d.body + '</div>' +
+      '<div class="mail-body" id="mail-body" contenteditable="true" ' +
+        'data-due="' + escHtml(d.dueDate || '') + '">' + d.body + '</div>' +
+      '<p class="send-sub">Reply-by date in the email: <strong>' + escHtml(d.dueLabel || '') +
+        '</strong>. Sending records it against the author.</p>' +
       (d.sentAt
         ? '<p class="send-sub" style="color:var(--red)">Already sent ' +
           escHtml(formatDate(d.sentAt)) + '. Sending again will email them a second time.</p>'
@@ -603,7 +647,11 @@ function renderInvite(author, d) {
 async function sendInvite(author) {
   var to      = document.getElementById('mail-to').value.trim();
   var subject = document.getElementById('mail-subject').value.trim();
-  var body    = document.getElementById('mail-body').innerHTML;
+  var bodyEl  = document.getElementById('mail-body');
+  var body    = bodyEl.innerHTML;
+  // The date the drafted email actually quotes, so what lands on the row is
+  // what the author was told, even if the draft was left open overnight.
+  var dueDate = bodyEl.dataset.due || '';
   var btn     = document.getElementById('mail-send');
   var status  = document.getElementById('mail-status');
 
@@ -621,7 +669,7 @@ async function sendInvite(author) {
     var res = await fetch('/api/qna-invite', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authorItemId: author.authorItemId, to: to, subject: subject, body: body }),
+      body: JSON.stringify({ authorItemId: author.authorItemId, to: to, subject: subject, body: body, dueDate: dueDate }),
     });
     var data = await res.json().catch(function() { return {}; });
     if (!res.ok) throw new Error(data.error || ('API error ' + res.status));
@@ -737,6 +785,8 @@ async function saveQuestionsForAuthor(author) {
     }
     statusEl.textContent = 'Saved.';
     statusEl.className = 'review-status ok';
+    reviewState.questionsSaved = true;
+    applySendGate();
   } catch (err) {
     statusEl.textContent = 'Failed: ' + err.message;
     statusEl.className = 'review-status err';

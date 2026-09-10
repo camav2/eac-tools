@@ -105,6 +105,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         publishedDate: pipelineRow.fields['Book Published Date'] ?? null,
         context,
         questions: parseQuestions(pipelineRow.fields['Question Set']),
+        // The send step is gated on this: an author should not receive a link
+        // to a page where the "Hear from Kelly" buttons are missing.
+        hasVoice: Boolean(pipelineRow.fields['Voice Audio']),
       })
     } catch (err) {
       console.error('[qna-questions] GET failed:', err)

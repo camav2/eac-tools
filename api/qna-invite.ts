@@ -27,6 +27,7 @@ import { getSession } from './_lib/auth'
 import { sendViaGmailAddress } from './_lib/gmail'
 import { findCustomerByName } from './_lib/customers'
 import { baseQuestions } from './_lib/qna-rows'
+import { calendarUrl, dueDateFrom, formatDue, DEADLINE_DAYS } from './_lib/qna-deadline'
 
 const QNA_TABLE = process.env.AIRTABLE_QNA_TABLE_ID!
 
@@ -92,8 +93,10 @@ function esc(s: string): string {
  * Cam edits this on screen, so it is a starting point rather than a template
  * to be defended.
  */
-function draftEmail(authorName: string, bookTitle: string, link: string) {
+function draftEmail(authorName: string, bookTitle: string, link: string, dueDate: string) {
   const subject = `A few questions about ${bookTitle}`
+  const due = formatDue(dueDate)
+  const cal = calendarUrl(dueDate, bookTitle, link)
 
   const body = [
     `<p>Hi ${esc(firstName(authorName))},</p>`,
@@ -102,15 +105,38 @@ function draftEmail(authorName: string, bookTitle: string, link: string) {
     `<p><strong>This isn't a testimonial.</strong> I'm not after kind words about us.</p>`,
     `<p>What I'm interested in is what the writing and the publishing actually taught you. The things you'd tell another expert who was about to start.</p>`,
     `<p>There are six questions. Type your answers or record them out loud, whichever suits you. Everything saves as you go, so you can stop and come back.</p>`,
+    // The date sits directly above the button. A deadline further down the
+    // page than the thing it applies to is a deadline people miss.
+    `<p>Could you get them back to me by <strong>${esc(due)}</strong>?</p>`,
     `<p><a href="${esc(link)}" style="display:inline-block;background:#00003D;color:#ffffff;` +
       `text-decoration:none;padding:13px 26px;border-radius:999px;font-weight:700;">` +
       `Answer the questions</a></p>`,
+    // Offered right after the deadline, because the moment somebody reads a
+    // date is the only moment they will act on putting it somewhere.
+    `<p style="font-size:14px;"><a href="${esc(cal)}">Add ${esc(due)} to my calendar</a></p>`,
     `<p>We'll shape what you say into an edited Q&amp;A and send it to you for approval before anything is published.</p>`,
     `<p>Thanks for considering it.</p>`,
     `<p>Cameron</p>`,
   ].join('\n')
 
   return { subject, body }
+}
+
+/**
+ * The due date to use for this send.
+ *
+ * Prefers the one the drafted email was written with, so the date the author
+ * reads and the date on the row are the same even if Cam drafted the email
+ * yesterday and sent it this morning. Anything unparseable or implausible
+ * falls back to a fresh calculation rather than being trusted.
+ */
+function resolveDueDate(supplied: unknown): string {
+  const fresh = dueDateFrom()
+  if (typeof supplied !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(supplied)) return fresh
+
+  const today = dueDateFrom(new Date(), 0)
+  const ceiling = dueDateFrom(new Date(), DEADLINE_DAYS + 14)
+  return supplied >= today && supplied <= ceiling ? supplied : fresh
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -153,7 +179,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return null
       })
 
-      const draft = draftEmail(authorName, bookTitle, link)
+      const dueDate = dueDateFrom()
+      const draft = draftEmail(authorName, bookTitle, link, dueDate)
 
       return res.status(200).json({
         authorName,
@@ -165,14 +192,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         subject:   draft.subject,
         body:      draft.body,
         link,
+        dueDate,
+        dueLabel:  formatDue(dueDate),
         sentAt:    row.fields['Invite Sent At'] ?? null,
       })
     }
 
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-    const { to, subject, body } = req.body ?? {}
+    const { to, subject, body, dueDate } = req.body ?? {}
     const recipient = String(to ?? '').trim()
+    const due = resolveDueDate(dueDate)
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
       return res.status(400).json({ error: 'A valid email address is required.' })
@@ -196,6 +226,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const fields: Record<string, unknown> = {
       'Author Email':   recipient,
       'Invite Sent At': now,
+      'Response Due':   due,
     }
     // Don't drag a further-along author backwards just because the invite was
     // sent again.
