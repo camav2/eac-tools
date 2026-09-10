@@ -46,6 +46,15 @@
 
     /* ── Page ── */
     .page-wrap { max-width: 1080px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    /* ── Site footer ──
+     * Same markup and colours as index.html, access-denied.html and the
+     * intake page, so every tool page closes the same way.
+     */
+    .site-footer { background: var(--navy); border-top: 1px solid rgba(255,255,255,0.08); padding: 20px 24px; text-align: center; }
+    .site-footer p { font-size: 12px; color: rgba(255,255,255,0.3); }
+    .site-footer a { color: rgba(255,255,255,0.45); text-decoration: none; }
+    .site-footer a:hover { color: var(--yellow); }
     .page-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-500); margin-bottom: 8px; }
     .page-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; display: flex; align-items: center; gap: 12px; }
     .admin-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
@@ -192,6 +201,13 @@
 
   <div id="question-review" style="display:none"></div>
 </div>
+
+<footer class="site-footer">
+  <p>
+    <a href="https://www.expertauthor.community">expertauthor.community</a>
+    &nbsp;·&nbsp; &copy; Expert Author Community
+  </p>
+</footer>
 
 <script src="/eac.js"></script>
 <script>requireAuth();</script>

@@ -232,6 +232,16 @@
     .cta-btn:hover { opacity: 0.88; }
     .cta-note { font-size: 0.78rem; color: var(--grey-500); margin-top: 12px; }
 
+    /* ── Site footer ──
+     * Same markup and colours as index.html and access-denied.html, so the
+     * tool pages close the same way. Navy picks the masthead back up and
+     * gives the page an end rather than letting it just stop.
+     */
+    .site-footer { background: var(--navy); border-top: 1px solid rgba(255,255,255,0.08); padding: 20px 24px; text-align: center; }
+    .site-footer p { font-size: 12px; color: rgba(255,255,255,0.3); }
+    .site-footer a { color: rgba(255,255,255,0.45); text-decoration: none; }
+    .site-footer a:hover { color: var(--yellow); }
+
     @media (max-width: 600px) {
       .wrap { padding: 36px 20px 72px; }
       h1 { font-size: 1.6rem; }
@@ -251,6 +261,13 @@
 <div class="wrap" id="root">
   <p class="state">Loading…</p>
 </div>
+
+<footer class="site-footer">
+  <p>
+    <a href="https://www.expertauthor.community">expertauthor.community</a>
+    &nbsp;·&nbsp; &copy; Expert Author Community
+  </p>
+</footer>
 
 <script>
 var TOKEN = new URLSearchParams(window.location.search).get('token') || '';

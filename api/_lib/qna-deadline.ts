@@ -1,7 +1,7 @@
 /*
  * The response deadline.
  *
- * Seven days from the day the invitation goes out. Lives here rather than in
+ * A fortnight from the day the invitation goes out. Lives here rather than in
  * the two places that need it, because the date in the email and the date on
  * the page have to be the same date — an author told "by Tuesday" who then
  * sees "by Wednesday" stops trusting both.
@@ -13,7 +13,7 @@
  * No env vars required.
  */
 
-export const DEADLINE_DAYS = 7
+export const DEADLINE_DAYS = 14
 
 /**
  * Melbourne, regardless of where the function happens to run.
