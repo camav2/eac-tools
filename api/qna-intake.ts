@@ -27,6 +27,11 @@ import { tokensMatch } from './_lib/qna-tokens'
 import { signedUrlFor } from './_lib/qna-storage'
 import { getQnaMedia } from './_lib/webflow'
 import {
+  MAX_FILES,
+  parseMedia,
+  signedUrlFor as signedMediaUrl,
+} from './_lib/qna-media'
+import {
   authorEntries,
   baseQuestions,
   buildResponses,
@@ -200,7 +205,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Both are presentation only, and both are allowed to fail quietly —
       // an author must never be blocked from answering because Webflow or
       // Supabase had a bad moment. Fetched together so the page waits once.
-      const [voice, media, audio] = await Promise.all([
+      // Named `uploads` rather than `media`, which the hero already uses for
+      // the headshot and cover. Two different things called media on one
+      // payload is a bug waiting for whoever reads this next.
+      const uploadsPromise = Promise.all(
+        parseMedia(row.fields['Author Media']).map(async f => ({
+          id:   f.path,
+          name: f.name,
+          type: f.type,
+          size: f.size,
+          url:  await signedMediaUrl(f.path).catch(err => {
+            console.error('[qna-intake] media sign failed:', err)
+            return null
+          }),
+        }))
+      ).catch(err => {
+        console.error('[qna-intake] uploads failed:', err)
+        return [] as Array<Record<string, unknown>>
+      })
+
+      const [voice, media, audio, uploads] = await Promise.all([
         signVoiceClips(row, view.questions.length).catch(err => {
           console.error('[qna-intake] voice signing failed:', err)
           return { intro: null, questions: [] as (string | null)[] }
@@ -216,9 +240,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.error('[qna-intake] answer audio signing failed:', err)
           return [] as (string | null)[]
         }),
+        uploadsPromise,
       ])
 
-      return res.status(200).json({ ...view, voice, media, audio })
+      return res.status(200).json({ ...view, voice, media, audio, uploads, maxUploads: MAX_FILES })
     }
 
     if (req.method === 'POST') {

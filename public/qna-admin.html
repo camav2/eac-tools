@@ -60,6 +60,14 @@
     .admin-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
     .author-badge { font-size: 0.62rem; font-weight: 700; background: var(--yellow); color: var(--navy); padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; margin-left: 8px; }
 
+    /* ── Media the author sent ── */
+    .admin-media { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 12px; margin-top: 10px; }
+    .admin-media-item { display: block; border: 1px solid var(--grey-200); border-radius: 8px; overflow: hidden; background: #fff; text-decoration: none; color: var(--grey-700); }
+    .admin-media-item:hover { border-color: var(--navy); }
+    .admin-media-thumb { width: 100%; height: 104px; object-fit: cover; display: block; background: var(--grey-100); }
+    .admin-media-icon { width: 100%; height: 104px; display: flex; align-items: center; justify-content: center; font-size: 1.7rem; background: var(--grey-100); }
+    .admin-media-name { font-size: 0.7rem; padding: 7px 8px; word-break: break-word; line-height: 1.3; }
+
     /* ── The invitation email draft ── */
     .mail-draft { margin-top: 16px; padding: 18px; background: #fafafa; border: 1px solid var(--grey-200); border-radius: 10px; }
     .mail-head { margin-bottom: 14px; }
@@ -877,6 +885,32 @@ function renderResponses(authorItemId, data) {
     '</div>';
   }).join('');
 
+  // What the author sent with their answers. Shown after the responses
+  // because that is the order they were given, and a photo means more once
+  // you have read what it belongs to.
+  var uploads = data.uploads || [];
+  var mediaBlock = uploads.length
+    ? '<div class="resp-block">' +
+        '<div class="resp-q">Media from the author (' + uploads.length + ')</div>' +
+        '<div class="admin-media">' +
+          uploads.map(function(f) {
+            var isImage = (f.type || '').indexOf('image/') === 0 && f.url;
+            var inner = isImage
+              ? '<img class="admin-media-thumb" src="' + escHtml(f.url) + '" alt="' + escHtml(f.name) + '">'
+              : '<div class="admin-media-icon">' + ((f.type || '').indexOf('video/') === 0 ? '🎬' : '📄') + '</div>';
+            // Opens in a tab rather than downloading: the signed URL expires,
+            // so a saved copy would rot while a fresh look never does.
+            return f.url
+              ? '<a class="admin-media-item" href="' + escHtml(f.url) + '" target="_blank" rel="noopener" ' +
+                  'title="' + escHtml(f.name) + '">' + inner +
+                  '<div class="admin-media-name">' + escHtml(f.name) + '</div></a>'
+              : '<div class="admin-media-item">' + inner +
+                  '<div class="admin-media-name">' + escHtml(f.name) + '</div></div>';
+          }).join('') +
+        '</div>' +
+      '</div>'
+    : '';
+
   var untranscribed = (data.responses || []).filter(function(r) { return r.hasAudio && !r.transcript; }).length;
 
   document.getElementById('question-review').innerHTML =
@@ -890,7 +924,7 @@ function renderResponses(authorItemId, data) {
         ? '<button type="button" class="generate-btn" id="transcribe-all">Transcribe all ' + untranscribed + ' recording' + (untranscribed > 1 ? 's' : '') + '</button>' +
           '<span class="review-status" id="all-status" style="margin-left:12px"></span>'
         : '') +
-      '<div style="margin-top:20px">' + blocks + '</div>' +
+      '<div style="margin-top:20px">' + blocks + mediaBlock + '</div>' +
       '<div class="send-panel">' +
         '<div class="send-title">Editorial draft</div>' +
         '<div class="send-sub">Turns these answers into a magazine Q&amp;A for you to edit. Transcribe any recordings first — untranscribed audio is invisible to this step.</div>' +
