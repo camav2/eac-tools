@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsc --outDir .test-build && node --test \".test-build/tests/*.test.js\""
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

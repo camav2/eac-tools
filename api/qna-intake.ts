@@ -32,6 +32,7 @@ import {
   buildResponses,
   dropEmptyAuthorQuestions,
   isAnswered,
+  orphanedAnswers,
   parseJsonArray,
   sanitiseAuthorQuestions,
 } from './_lib/qna-rows'
@@ -244,7 +245,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           })
         }
 
-        // A question the author opened and left blank is not a question.
+        // Refuse rather than discard: an answer typed under a blank question
+        // is still the author's words, and dropping it to tidy the row would
+        // be a silent loss.
+        const orphans = orphanedAnswers(responses, base.length)
+        if (orphans.length) {
+          return res.status(400).json({
+            error: 'One of your own questions is blank. Please write the question, or clear the answer under it.',
+            orphans,
+          })
+        }
+
+        // What's left to drop carries no words of theirs: a slot opened and
+        // thought better of, or a question they never answered.
         const final = dropEmptyAuthorQuestions(responses, base.length)
 
         const now = new Date().toISOString()

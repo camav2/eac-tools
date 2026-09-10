@@ -1,11 +1,11 @@
 /*
  * Shared shape of an Author Editorial Q&A pipeline row.
  *
- * Three handlers (qna-intake, qna-audio, qna-suggest) all need the same
- * answer: "what is the full list of questions for this author, and where do
- * this row's answers sit against it?" That list is no longer just the Question
- * Set — an author may append up to two questions of their own — and a handler
- * that computes it differently from its neighbours silently misfiles an
+ * Both author-facing handlers (qna-intake, qna-audio) need the same answer:
+ * "what is the full list of questions for this author, and where do this row's
+ * answers sit against it?" That list is no longer just the Question Set — an
+ * author may append up to two questions of their own, written by them — and a
+ * handler that computes it differently from its neighbour silently misfiles an
  * answer or an audio path. So it lives here once.
  *
  * WHY AUTHOR QUESTIONS ARE NOT THEIR OWN AIRTABLE FIELD
@@ -56,20 +56,28 @@ export function baseQuestions(row: any): string[] {
 /**
  * The author's own entries, compacted.
  *
- * Anything past the Question Set that is flagged and actually has question
- * text. Compaction matters: an author can create a slot and leave it blank,
- * and on the next page load that empty slot should disappear without
- * stranding the answer or recording that belongs to the slot after it — which
- * is why whole entries are carried here, never just the question strings.
+ * Anything past the Question Set that is flagged and holds something — a
+ * question, an answer, or a recording. Kept deliberately loose: an author who
+ * writes their answer before their question, and reloads in between, must not
+ * lose the answer. Requiring both is the submit step's job, where it can be
+ * said out loud rather than deleted quietly.
+ *
+ * Compaction matters: an author can open a slot and leave it entirely blank,
+ * and on the next load that slot should disappear without stranding the answer
+ * belonging to the slot after it — which is why whole entries are carried
+ * here, never just the question strings.
  */
 export function authorEntries(row: any): QnaResponse[] {
   const base = baseQuestions(row).length
   return parseJsonArray(row.fields['Responses'])
     .slice(base)
-    .filter((r: any) => r?.authorAdded && String(r?.question ?? '').trim())
+    .filter((r: any) =>
+      r?.authorAdded &&
+      (String(r?.question ?? '').trim() || String(r?.text ?? '').trim() || r?.audioPath)
+    )
     .slice(0, MAX_AUTHOR_QUESTIONS)
     .map((r: any) => ({
-      question:   String(r.question).trim(),
+      question:   String(r.question ?? '').trim(),
       text:       typeof r.text === 'string' ? r.text : '',
       audioPath:  r.audioPath,
       audioType:  r.audioType,
@@ -135,12 +143,31 @@ export function isAnswered(r: QnaResponse): boolean {
 }
 
 /**
- * Submit-time cleanup: an author-added question with no answer behind it is
- * a slot they opened and thought better of. Cam should never see it.
+ * Author slots holding an answer but no question.
+ *
+ * Never dropped silently — the author wrote those words, and deleting them
+ * because a box above was left empty is the kind of quiet loss nobody
+ * forgives. Submit refuses instead, naming the slot.
+ */
+export function orphanedAnswers(responses: QnaResponse[], baseCount: number): number[] {
+  return responses
+    .map((r, i) => i)
+    .filter(i => i >= baseCount && !responses[i].question.trim() && isAnswered(responses[i]))
+}
+
+/**
+ * Submit-time cleanup: an author slot is only real when it has both a question
+ * and an answer. A question with nothing behind it, or a slot opened and
+ * thought better of, is not something Cam should ever see.
+ *
+ * Safe to drop these because neither carries the author's own words — anything
+ * that does is caught by orphanedAnswers() before this runs.
  */
 export function dropEmptyAuthorQuestions(
   responses: QnaResponse[],
   baseCount: number
 ): QnaResponse[] {
-  return responses.filter((r, i) => i < baseCount || isAnswered(r))
+  return responses.filter(
+    (r, i) => i < baseCount || (r.question.trim() && isAnswered(r))
+  )
 }
