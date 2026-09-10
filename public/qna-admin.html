@@ -46,6 +46,23 @@
     .page-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; display: flex; align-items: center; gap: 12px; }
     .admin-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
     .author-badge { font-size: 0.62rem; font-weight: 700; background: var(--yellow); color: var(--navy); padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; margin-left: 8px; }
+
+    /* ── The invitation email draft ── */
+    .mail-draft { margin-top: 16px; padding: 18px; background: #fafafa; border: 1px solid var(--grey-200); border-radius: 10px; }
+    .mail-head { margin-bottom: 14px; }
+    .mail-label { display: block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-500); margin-bottom: 5px; }
+    .mail-fixed { font-size: 0.9rem; font-weight: 600; color: var(--grey-700); }
+    /* Rendered like the email it will become, so the preview is the thing
+     * being approved rather than a description of it. */
+    .mail-body {
+      background: #fff; border: 1px solid var(--grey-200); border-radius: 8px;
+      padding: 18px 20px; font-size: 0.92rem; line-height: 1.6; color: var(--navy);
+      max-height: 460px; overflow-y: auto;
+    }
+    .mail-body:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(0,0,61,0.06); }
+    .mail-body p { margin: 0 0 12px; }
+    .mail-body p:last-child { margin-bottom: 0; }
+    .mail-actions { display: flex; align-items: center; gap: 14px; margin-top: 14px; flex-wrap: wrap; }
     .page-sub { color: var(--grey-500); font-size: 0.95rem; margin-top: 8px; max-width: 640px; }
 
     /* ── Author table ── */
@@ -495,6 +512,8 @@ function renderLinkArea(author, url, submittedAt) {
         ' — the link now shows a thank-you page. Reopen it to edit or resubmit.</p>' +
         '<button type="button" class="send-btn" id="reopen-btn" style="margin-top:4px">Reopen for editing</button>'
       : '') +
+    '<button type="button" class="send-btn" id="invite-btn" style="margin-top:14px">Draft the invitation email</button>' +
+    '<div id="invite-area"></div>' +
     '<button type="button" class="regen-link" id="regen-btn">Issue a new link (invalidates this one)</button>';
 
   document.getElementById('copy-btn').addEventListener('click', function() {
@@ -507,8 +526,115 @@ function renderLinkArea(author, url, submittedAt) {
     });
   });
   document.getElementById('regen-btn').addEventListener('click', function() { createIntakeLink(author, true); });
+  document.getElementById('invite-btn').addEventListener('click', function() { draftInvite(author); });
   var reopenBtn = document.getElementById('reopen-btn');
   if (reopenBtn) reopenBtn.addEventListener('click', function() { reopenSubmission(author); });
+}
+
+/* ── The invitation email ──
+ * Draft, edit, then send. The body is edited in place as rendered HTML rather
+ * than in a markup box: "I want to see a preview before I send" is the whole
+ * requirement, and a preview you can't correct is only half of it.
+ */
+async function draftInvite(author) {
+  var btn  = document.getElementById('invite-btn');
+  var area = document.getElementById('invite-area');
+  btn.disabled = true;
+  area.innerHTML = '<p class="send-sub" style="margin-top:14px">Drafting…</p>';
+
+  try {
+    var res = await fetch('/api/qna-invite?authorItemId=' + encodeURIComponent(author.authorItemId));
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) throw new Error(data.error || ('API error ' + res.status));
+    renderInvite(author, data);
+  } catch (err) {
+    area.innerHTML = '<p class="send-sub" style="margin-top:14px;color:var(--red)">' +
+      escHtml(err.message) + '</p>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderInvite(author, d) {
+  var area = document.getElementById('invite-area');
+
+  // Where the address came from is shown, because "we guessed this from a
+  // name match" and "you typed this last time" deserve different levels of
+  // trust from the person about to hit send.
+  var source = d.toSource === 'saved'
+    ? 'Saved from the last send.'
+    : d.toSource === 'customers'
+      ? 'Matched by name in the Customers base. Check it.'
+      : 'No match found in the Customers base. Type it in.';
+
+  area.innerHTML =
+    '<div class="mail-draft">' +
+      '<div class="mail-head">' +
+        '<label class="mail-label">To</label>' +
+        '<input class="link-input" id="mail-to" value="' + escHtml(d.to || '') + '" ' +
+          'placeholder="name@example.com">' +
+        '<p class="send-sub">' + escHtml(source) + '</p>' +
+      '</div>' +
+      '<div class="mail-head">' +
+        '<label class="mail-label">From</label>' +
+        '<div class="mail-fixed">' + escHtml(d.from) + '</div>' +
+        '<label class="mail-label" style="margin-top:10px">Cc</label>' +
+        '<div class="mail-fixed">' + escHtml(d.cc) + '</div>' +
+      '</div>' +
+      '<div class="mail-head">' +
+        '<label class="mail-label">Subject</label>' +
+        '<input class="link-input" id="mail-subject" value="' + escHtml(d.subject) + '">' +
+      '</div>' +
+      '<label class="mail-label">Message — click to edit</label>' +
+      '<div class="mail-body" id="mail-body" contenteditable="true">' + d.body + '</div>' +
+      (d.sentAt
+        ? '<p class="send-sub" style="color:var(--red)">Already sent ' +
+          escHtml(formatDate(d.sentAt)) + '. Sending again will email them a second time.</p>'
+        : '') +
+      '<div class="mail-actions">' +
+        '<button type="button" class="send-btn" id="mail-send">Send it</button>' +
+        '<span class="review-status" id="mail-status"></span>' +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('mail-send').addEventListener('click', function() { sendInvite(author); });
+}
+
+async function sendInvite(author) {
+  var to      = document.getElementById('mail-to').value.trim();
+  var subject = document.getElementById('mail-subject').value.trim();
+  var body    = document.getElementById('mail-body').innerHTML;
+  var btn     = document.getElementById('mail-send');
+  var status  = document.getElementById('mail-status');
+
+  if (!to) { status.textContent = 'Add an address first.'; status.className = 'review-status err'; return; }
+
+  // An email cannot be unsent, and the address is the part most likely to be
+  // wrong, so it is the part the confirmation shows.
+  if (!confirm('Send this to ' + to + '?\n\nIt goes from cameron@expertauthor.community, copying kelly@expertauthor.community.')) return;
+
+  btn.disabled = true;
+  status.textContent = 'Sending…';
+  status.className = 'review-status';
+
+  try {
+    var res = await fetch('/api/qna-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: author.authorItemId, to: to, subject: subject, body: body }),
+    });
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) throw new Error(data.error || ('API error ' + res.status));
+
+    status.textContent = 'Sent to ' + data.to;
+    status.className = 'review-status ok';
+    btn.textContent = 'Send again';
+  } catch (err) {
+    status.textContent = err.message;
+    status.className = 'review-status err';
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function reopenSubmission(author) {
