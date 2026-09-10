@@ -94,6 +94,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           text:       r.text ?? '',
           transcript: r.transcript ?? '',
           hasAudio:   Boolean(r.audioPath),
+          // Flagged for the review screen: a question the author wrote is
+          // worth reading differently from one we asked.
+          authorAdded: Boolean(r.authorAdded),
           audioUrl:   r.audioPath
             ? await signedUrlFor(r.audioPath).catch(err => {
                 console.error('[qna-responses] sign failed:', err)

@@ -18,6 +18,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { tokensMatch } from './_lib/qna-tokens'
 import { uploadAudio, extensionFor } from './_lib/qna-storage'
+import {
+  authorEntries,
+  baseQuestions,
+  buildResponses,
+  fullQuestions,
+  parseJsonArray,
+} from './_lib/qna-rows'
 
 export const config = { api: { bodyParser: false } }
 
@@ -53,16 +60,6 @@ async function atPatch(recordId: string, fields: Record<string, unknown>) {
     throw new Error(`Airtable PATCH failed: ${res.status} ${body.slice(0, 300)}`)
   }
   return res.json()
-}
-
-function parseJsonField(raw: unknown): any[] | null {
-  if (typeof raw !== 'string' || !raw) return null
-  try {
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : null
-  } catch {
-    return null
-  }
 }
 
 async function readBody(req: VercelRequest): Promise<Buffer> {
@@ -104,7 +101,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(409).json({ error: 'This response has already been submitted.' })
     }
 
-    const questions = parseJsonField(row.fields['Question Set']) ?? []
+    // Bounded by the full list, not just Cam's set — an author can record an
+    // answer to a question they added themselves.
+    const questions = fullQuestions(row)
     if (qIndex >= questions.length) {
       return res.status(400).json({ error: 'Invalid question index' })
     }
@@ -127,14 +126,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Merge into the existing responses array — never rebuild it, or a saved
     // text answer for another question would be lost.
-    const existing = parseJsonField(row.fields['Responses']) ?? []
-    const responses = questions.map((q: string, i: number) => ({
-      question:    q,
-      text:        existing[i]?.text ?? '',
-      audioPath:   existing[i]?.audioPath,
-      audioType:   existing[i]?.audioType,
-      transcript:  existing[i]?.transcript,
-    }))
+    const base = baseQuestions(row)
+    const existing = [
+      ...parseJsonArray(row.fields['Responses']).slice(0, base.length),
+      ...authorEntries(row),
+    ]
+    const responses = buildResponses(
+      questions,
+      base.length,
+      existing,
+      existing.map((e: any) => e?.text ?? '')
+    )
     responses[qIndex].audioPath = path
     responses[qIndex].audioType = contentType
     // A fresh recording invalidates any transcript of the previous take.

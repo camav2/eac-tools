@@ -37,6 +37,21 @@
     .intro strong { color: var(--navy); }
     .rule { height: 3px; width: 56px; background: var(--yellow); margin: 32px 0; border-radius: 2px; }
 
+    /* ── Hero: their face, their book ── */
+    .hero { display: flex; gap: 22px; align-items: flex-start; }
+    .hero-cover {
+      width: 108px; flex-shrink: 0; height: auto; display: block;
+      border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,61,0.18);
+    }
+    .hero-copy { flex: 1; min-width: 0; }
+    .hero-who { display: flex; align-items: center; gap: 11px; }
+    .hero-photo {
+      width: 46px; height: 46px; flex-shrink: 0;
+      border-radius: 50%; object-fit: cover; object-position: center top;
+      border: 2px solid #fff; box-shadow: 0 2px 10px rgba(0,0,61,0.16);
+    }
+    .hero h1 { margin-top: 14px; }
+
     .q-block { margin-bottom: 36px; }
     .q-num { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; color: var(--grey-500); text-transform: uppercase; }
     .q-text { font-size: 1.05rem; font-weight: 600; margin: 6px 0 12px; line-height: 1.45; }
@@ -86,6 +101,26 @@
     .rec-audio { margin-top: 12px; width: 100%; max-width: 420px; display: block; }
     .rec-hint { font-size: 0.78rem; color: var(--grey-500); margin-top: 8px; }
 
+    /* ── The author's own question ── */
+    .own-intro { margin-top: 8px; }
+    .own-intro h2 { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 8px; }
+    .own-intro p { font-size: 0.9rem; color: var(--grey-700); margin-bottom: 16px; }
+    .own-block { border-left: 3px solid var(--yellow); padding-left: 18px; margin-bottom: 32px; }
+    .own-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; color: var(--grey-500); text-transform: uppercase; margin-bottom: 6px; }
+    .own-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 10px 0 12px; }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; color: var(--navy); border: 1px solid var(--grey-200);
+      padding: 9px 16px; border-radius: 999px;
+      font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      transition: border-color 0.15s ease;
+    }
+    .btn-ghost:hover:not(:disabled) { border-color: var(--navy); }
+    .btn-ghost:disabled { opacity: 0.45; cursor: default; }
+    .own-state { font-size: 0.8rem; color: var(--grey-500); }
+    .own-state.err { color: var(--red); }
+    .btn-add { margin-top: 4px; }
+
     .consent { background: #fff; border: 1px solid var(--grey-200); border-radius: 12px; padding: 22px 24px; margin-top: 40px; }
     .consent h2 { font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; }
     .consent ul { list-style: none; font-size: 0.85rem; color: var(--grey-700); margin-bottom: 18px; }
@@ -114,6 +149,9 @@
     @media (max-width: 600px) {
       .wrap { padding: 36px 20px 72px; }
       h1 { font-size: 1.6rem; }
+      .hero { flex-direction: column; gap: 16px; }
+      .hero-cover { width: 88px; }
+      .hero h1 { margin-top: 10px; }
     }
   </style>
 </head>
@@ -130,8 +168,16 @@
 
 <script>
 var TOKEN = new URLSearchParams(window.location.search).get('token') || '';
-var state = { questions: [], answers: [], authorName: '', bookTitle: '' };
+var state = {
+  questions: [], authorQuestions: [], answers: [], hasAudio: [],
+  authorName: '', bookTitle: '', media: {},
+};
 var saveTimer = null;
+
+// Author-added questions are appended after Cam's set, so their page index is
+// offset by however many questions he asked.
+var MAX_OWN = 2;
+function ownIndex(n) { return state.questions.length + n; }
 
 var ICON_SPEAKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
   'stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5">' +
@@ -154,6 +200,13 @@ async function load() {
     var data = await res.json();
     if (data.submitted) return renderSubmitted(data.authorName);
     state = data;
+    // Everything the render path indexes into must exist, whatever the API
+    // did or didn't send.
+    state.questions = state.questions || [];
+    state.authorQuestions = state.authorQuestions || [];
+    state.answers = state.answers || [];
+    state.hasAudio = state.hasAudio || [];
+    state.media = state.media || {};
     renderForm();
   } catch (err) {
     renderError('We could not load your questions. Please check your connection and refresh.');
@@ -174,26 +227,54 @@ function renderSubmitted(name) {
     'for approval before anything is published.</p></div>';
 }
 
+/* Answer box + recorder, shared by Cam's questions and suggested ones. */
+function answerHtml(i) {
+  var already = state.hasAudio && state.hasAudio[i];
+  var box = '<textarea data-i="' + i + '" placeholder="Take as much space as you need…">' +
+    esc(state.answers[i] || '') + '</textarea>';
+
+  if (!supportsRecording()) return box;
+
+  return box +
+    '<div class="or-rule">or record your answer</div>' +
+    '<div class="audio-row">' +
+      '<button type="button" class="rec-btn" data-rec="' + i + '">' +
+        '<span class="rec-dot"></span><span class="rec-label">Record</span>' +
+      '</button>' +
+      '<span class="rec-timer" id="timer-' + i + '"></span>' +
+      '<span class="rec-state' + (already ? ' ok' : '') + '" id="recstate-' + i + '">' +
+        (already ? 'Recording saved' : '') +
+      '</span>' +
+    '</div>' +
+    '<div id="playback-' + i + '"></div>';
+}
+
+function heroHtml() {
+  var m = state.media || {};
+  var cover = m.bookCoverUrl
+    ? '<img class="hero-cover" src="' + esc(m.bookCoverUrl) + '" alt="' + esc(m.bookCoverAlt || state.bookTitle) + '" ' +
+      'onerror="this.remove()">'
+    : '';
+  var photo = m.authorPhotoUrl
+    ? '<img class="hero-photo" src="' + esc(m.authorPhotoUrl) + '" alt="' + esc(m.authorPhotoAlt || state.authorName) + '" ' +
+      'onerror="this.remove()">'
+    : '';
+
+  return '<div class="hero">' + cover +
+    '<div class="hero-copy">' +
+      '<div class="hero-who">' + photo +
+        '<div class="eyebrow">Expert Author Community · Editorial</div>' +
+      '</div>' +
+      '<h1>' + esc(firstName(state.authorName)) + ', we\'d like to interview you about <em>' +
+        esc(state.bookTitle) + '</em></h1>' +
+    '</div>' +
+  '</div>';
+}
+
 function renderForm() {
   var canRecord = supportsRecording();
 
   var qs = state.questions.map(function(q, i) {
-    var already = state.hasAudio && state.hasAudio[i];
-    var audioBlock = '';
-    if (canRecord) {
-      audioBlock =
-        '<div class="or-rule">or record your answer</div>' +
-        '<div class="audio-row">' +
-          '<button type="button" class="rec-btn" data-rec="' + i + '">' +
-            '<span class="rec-dot"></span><span class="rec-label">Record</span>' +
-          '</button>' +
-          '<span class="rec-timer" id="timer-' + i + '"></span>' +
-          '<span class="rec-state' + (already ? ' ok' : '') + '" id="recstate-' + i + '">' +
-            (already ? 'Recording saved' : '') +
-          '</span>' +
-        '</div>' +
-        '<div id="playback-' + i + '"></div>';
-    }
     var qVoice = (state.voice && state.voice.questions && state.voice.questions[i]) || null;
     var listen = qVoice
       ? '<button type="button" class="listen-q" data-listen="' + esc(qVoice) + '">' +
@@ -205,8 +286,7 @@ function renderForm() {
       '<div class="q-num">Question ' + (i + 1) + ' of ' + state.questions.length + '</div>' +
       '<div class="q-text">' + esc(q) + '</div>' +
       listen +
-      '<textarea data-i="' + i + '" placeholder="Take as much space as you need…">' + esc(state.answers[i] || '') + '</textarea>' +
-      audioBlock +
+      answerHtml(i) +
     '</div>';
   }).join('');
 
@@ -221,8 +301,7 @@ function renderForm() {
     : '';
 
   document.getElementById('root').innerHTML =
-    '<div class="eyebrow">Expert Author Community · Editorial</div>' +
-    '<h1>' + esc(firstName(state.authorName)) + ', we\'d like to interview you about <em>' + esc(state.bookTitle) + '</em></h1>' +
+    heroHtml() +
     '<div class="intro">' +
       '<p>We\'re building a more editorial home for the Expert Author Community — one that shares the ' +
       'thinking, lessons and lived experience behind meaningful books.</p>' +
@@ -239,6 +318,16 @@ function renderForm() {
     introPlayer +
     '<div class="rule"></div>' +
     qs +
+    '<div class="own-intro">' +
+      '<h2>Something we didn\'t ask?</h2>' +
+      '<p>If there\'s more you want to say, we can suggest one more question — drawn from your ' +
+      'book and from what you\'ve already written. Entirely optional.</p>' +
+    '</div>' +
+    '<div id="own-list"></div>' +
+    '<div class="own-tools">' +
+      '<button type="button" class="btn-ghost btn-add" id="suggest-add">Suggest a question for me</button>' +
+      '<span class="own-state" id="suggest-state"></span>' +
+    '</div>' +
     '<div class="consent">' +
       '<h2>Before you submit</h2>' +
       '<ul>' +
@@ -260,23 +349,176 @@ function renderForm() {
     '<div class="actions">' +
       '<button type="button" class="btn-submit" id="submit" disabled>Send my answers</button>' +
       '<span class="save-note" id="note"></span>' +
-    '</div>';
+    '</div>' +
+    '<p class="save-note" id="progress" style="margin-top:10px"></p>';
 
-  document.querySelectorAll('textarea').forEach(function(t) {
-    t.addEventListener('input', scheduleSave);
-    t.addEventListener('blur', saveNow);
-  });
-  document.getElementById('consent').addEventListener('change', function() {
-    document.getElementById('submit').disabled = !this.checked;
-  });
+  bindAnswers(document);
+  document.getElementById('consent').addEventListener('change', updateSubmitState);
   document.getElementById('submit').addEventListener('click', submit);
+  document.getElementById('suggest-add').addEventListener('click', function() { suggest(null); });
 
-  document.querySelectorAll('[data-rec]').forEach(function(b) {
-    b.addEventListener('click', function() { toggleRecording(Number(b.dataset.rec)); });
-  });
   document.querySelectorAll('[data-listen]').forEach(function(b) {
     b.addEventListener('click', function() { toggleListen(b); });
   });
+
+  renderOwn();
+  updateSubmitState();
+}
+
+/* Answer boxes and record buttons inside `root`. Called for the whole page on
+ * first render, and again for just the suggested-question list when it grows. */
+function bindAnswers(root) {
+  root.querySelectorAll('textarea').forEach(function(t) {
+    t.addEventListener('input', function() { scheduleSave(); updateSubmitState(); });
+    t.addEventListener('blur', saveNow);
+  });
+  root.querySelectorAll('[data-rec]').forEach(function(b) {
+    b.addEventListener('click', function() { toggleRecording(Number(b.dataset.rec)); });
+  });
+}
+
+/* ── The suggested question ──
+ * Read-only on the page: the author asked us for a question, so letting them
+ * retype it would just be a text box with extra steps. If they don't like it
+ * they can ask for another — but only while the slot is still empty, because
+ * swapping the question under an answer that's already been given would
+ * silently re-label their words.
+ */
+function renderOwn() {
+  var list = document.getElementById('own-list');
+  if (!list) return;
+
+  list.innerHTML = state.authorQuestions.map(function(q, n) {
+    var i = ownIndex(n);
+    var untouched = !(state.answers[i] || '').trim() && !(state.hasAudio && state.hasAudio[i]);
+    var reroll = untouched
+      ? '<div class="own-tools">' +
+          '<button type="button" class="btn-ghost" data-reroll="' + n + '">Ask for a different question</button>' +
+        '</div>'
+      : '';
+
+    return '<div class="own-block">' +
+      '<div class="own-label">Suggested for you</div>' +
+      '<div class="q-text">' + esc(q) + '</div>' +
+      answerHtml(i) +
+      reroll +
+    '</div>';
+  }).join('');
+
+  bindAnswers(list);
+  list.querySelectorAll('[data-reroll]').forEach(function(b) {
+    b.addEventListener('click', function() { suggest(Number(b.dataset.reroll)); });
+  });
+
+  var add = document.getElementById('suggest-add');
+  if (add) {
+    var full = state.authorQuestions.length >= MAX_OWN;
+    add.style.display = full ? 'none' : '';
+    add.textContent = state.authorQuestions.length
+      ? 'Suggest another question'
+      : 'Suggest a question for me';
+  }
+}
+
+/* n === null appends a new suggestion; a number replaces that slot. */
+async function suggest(n) {
+  // Re-rendering the list mid-recording would tear out the live recorder.
+  if (rec.recorder && rec.recorder.state === 'recording') {
+    return suggestState('Finish your recording first.', 'err');
+  }
+  // The cap is a rule, not just a hidden button — a hidden button still fires
+  // its click listener. The server refuses a third as well; this keeps the
+  // page from asking for one it knows it can't have.
+  if (n === null && state.authorQuestions.length >= MAX_OWN) return;
+
+  var add = document.getElementById('suggest-add');
+  if (add) add.disabled = true;
+  document.querySelectorAll('[data-reroll]').forEach(function(b) { b.disabled = true; });
+  suggestState('Thinking of a good one…');
+
+  try {
+    var res = await fetch('/api/qna-suggest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: TOKEN }),
+    });
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) throw new Error(data.error || 'Could not suggest a question.');
+
+    syncToState();
+    if (n === null) state.authorQuestions.push(data.question);
+    else state.authorQuestions[n] = data.question;
+
+    suggestState('');
+    renderOwn();
+    updateSubmitState();
+    saveNow();
+  } catch (err) {
+    suggestState(err.message, 'err');
+  } finally {
+    if (add) add.disabled = false;
+    document.querySelectorAll('[data-reroll]').forEach(function(b) { b.disabled = false; });
+  }
+}
+
+function suggestState(msg, cls) {
+  var el = document.getElementById('suggest-state');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.className = 'own-state' + (cls ? ' ' + cls : '');
+}
+
+/* Textareas are the source of truth while the page is open; pull them back
+ * into state before any re-render, or the boxes reset to their loaded values. */
+function syncToState() {
+  document.querySelectorAll('textarea[data-i]').forEach(function(t) {
+    state.answers[Number(t.dataset.i)] = t.value;
+  });
+}
+
+function answeredAt(answers, i) {
+  return Boolean((answers[i] || '').trim() || (state.hasAudio && state.hasAudio[i]));
+}
+
+/* Runs on every keystroke, every recording and every consent tick. Two jobs:
+ * gate the submit button on all of Cam's questions being answered (the server
+ * enforces the same rule — this is here so nobody writes six answers and only
+ * then finds out), and retire the "different question" button on any suggested
+ * slot that now holds an answer. */
+function updateSubmitState() {
+  var btn = document.getElementById('submit');
+  var consent = document.getElementById('consent');
+  var prog = document.getElementById('progress');
+  if (!btn || !consent) return;
+
+  var answers = currentAnswers();
+
+  var missing = [];
+  for (var i = 0; i < state.questions.length; i++) {
+    if (!answeredAt(answers, i)) missing.push(i + 1);
+  }
+
+  // Swapping the question above an answer already given would silently
+  // re-label it. Hidden rather than removed, so clearing the box brings the
+  // option back.
+  state.authorQuestions.forEach(function(_, n) {
+    var b = document.querySelector('[data-reroll="' + n + '"]');
+    if (!b || !b.parentNode) return;
+    b.parentNode.style.display = answeredAt(answers, ownIndex(n)) ? 'none' : '';
+  });
+
+  btn.disabled = !consent.checked || missing.length > 0;
+
+  if (!prog) return;
+  if (!missing.length) {
+    prog.textContent = 'All ' + state.questions.length + ' questions answered.';
+    prog.className = 'save-note ok';
+  } else {
+    var done = state.questions.length - missing.length;
+    prog.textContent = done + ' of ' + state.questions.length + ' answered — still to go: ' +
+      missing.join(', ') + '.';
+    prog.className = 'save-note';
+  }
 }
 
 /* ── Kelly's voice ──
@@ -420,7 +662,11 @@ async function uploadRecording(i, mime) {
       throw new Error(e.error || 'Upload failed');
     }
     recState(i, 'Recording saved', 'ok');
-    if (state.hasAudio) state.hasAudio[i] = true;
+    if (!state.hasAudio) state.hasAudio = [];
+    state.hasAudio[i] = true;
+    // Re-gates the submit button and retires this slot's "different question"
+    // option now that it holds an answer.
+    updateSubmitState();
   } catch (err) {
     recState(i, err.message + ' — you can try recording again.', 'err');
   }
@@ -454,8 +700,12 @@ function fmtTime(s) {
 }
 
 function currentAnswers() {
+  var total = state.questions.length + state.authorQuestions.length;
   var out = [];
-  document.querySelectorAll('textarea').forEach(function(t) { out[Number(t.dataset.i)] = t.value; });
+  for (var i = 0; i < total; i++) out[i] = '';
+  document.querySelectorAll('textarea[data-i]').forEach(function(t) {
+    out[Number(t.dataset.i)] = t.value;
+  });
   return out;
 }
 
@@ -471,7 +721,10 @@ async function saveNow() {
     var res = await fetch('/api/qna-intake', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: TOKEN, action: 'save', answers: currentAnswers() }),
+      body: JSON.stringify({
+        token: TOKEN, action: 'save',
+        answers: currentAnswers(), authorQuestions: state.authorQuestions,
+      }),
     });
     note(res.ok ? 'Saved' : 'Could not save — your text is still here, we\'ll retry.', res.ok ? 'ok' : 'err');
   } catch (err) {
@@ -489,20 +742,22 @@ async function submit() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         token: TOKEN, action: 'submit',
-        answers: currentAnswers(), consent: true,
+        answers: currentAnswers(), authorQuestions: state.authorQuestions, consent: true,
       }),
     });
     if (!res.ok) {
       var e = await res.json().catch(function() { return {}; });
       note(e.error || 'Could not send. Please try again.', 'err');
-      btn.disabled = false;
+      // Re-derive rather than blindly re-enabling: if the server refused
+      // because an answer is missing, the button should stay off.
+      updateSubmitState();
       return;
     }
     renderSubmitted(state.authorName);
     window.scrollTo(0, 0);
   } catch (err) {
     note('Could not send — check your connection and try again.', 'err');
-    btn.disabled = false;
+    updateSubmitState();
   }
 }
 

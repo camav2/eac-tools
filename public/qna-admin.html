@@ -45,6 +45,7 @@
     .page-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-500); margin-bottom: 8px; }
     .page-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; display: flex; align-items: center; gap: 12px; }
     .admin-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
+    .author-badge { font-size: 0.62rem; font-weight: 700; background: var(--yellow); color: var(--navy); padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; margin-left: 8px; }
     .page-sub { color: var(--grey-500); font-size: 0.95rem; margin-top: 8px; max-width: 640px; }
 
     /* ── Author table ── */
@@ -664,8 +665,12 @@ function renderResponses(authorItemId, data) {
 
     if (!body) body = '<p class="resp-empty">No answer given.</p>';
 
+    var badge = r.authorAdded
+      ? '<span class="author-badge">Their question</span>'
+      : '';
+
     return '<div class="resp-block">' +
-      '<div class="resp-q">Q' + (i + 1) + '. ' + escHtml(r.question) + '</div>' + body +
+      '<div class="resp-q">Q' + (i + 1) + '. ' + escHtml(r.question) + badge + '</div>' + body +
     '</div>';
   }).join('');
 
