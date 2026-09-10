@@ -373,7 +373,10 @@ function renderForm() {
     '<div class="consent">' +
       '<h2>Before you submit</h2>' +
       '<ul>' +
-        '<li>EAC may use your responses to create an edited editorial feature published on your author page.</li>' +
+        '<li>EAC may use your responses to create an edited editorial feature.</li>' +
+        '<li>We publish it on your author page and our blog, send it to our newsletter, and post ' +
+          'it on the Expert Author Community LinkedIn page. Sometimes we pay to promote that post ' +
+          'so it reaches more people.</li>' +
         '<li>We may lightly edit for clarity, structure and length, and may quote from your responses.</li>' +
         (canRecord
           ? '<li>Any recordings you make are transcribed for our editing process. <strong>We will only ' +
@@ -381,7 +384,8 @@ function renderForm() {
             'separately if we ever want to use a clip.</li>'
           : '') +
         '<li>We will send you the final version for approval before anything is published.</li>' +
-        '<li>Your answers are stored securely and are not shared outside EAC.</li>' +
+        '<li>Your raw answers are stored securely and stay inside EAC. Only the edited feature ' +
+          'you have approved is published.</li>' +
       '</ul>' +
       '<div class="consent-check">' +
         '<input type="checkbox" id="consent">' +
