@@ -245,8 +245,12 @@ var TOKEN = new URLSearchParams(window.location.search).get('token') || '';
 
 /* Cameron's booking link, shown on the thank-you page once an author has
  * finished. Empty means the invitation is not rendered at all — better no
- * block than a button that goes nowhere. */
-var BOOKING_URL = '';
+ * block than a button that goes nowhere.
+ *
+ * The short calendar.app.google form redirects to the long appointment-schedule
+ * URL. Kept short here because that is the link Cam holds and can reissue; the
+ * expanded one is an implementation detail of Google's. */
+var BOOKING_URL = 'https://calendar.app.google/s4DKVcDhsgfZgGBM9';
 var state = {
   questions: [], authorQuestions: [], answers: [], hasAudio: [], audio: [],
   authorName: '', bookTitle: '', media: {},
