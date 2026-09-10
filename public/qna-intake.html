@@ -82,6 +82,17 @@
     }
     .listen-q:hover { color: var(--navy); }
     .listen-q svg { width: 13px; height: 13px; flex-shrink: 0; }
+    /* Kelly's face beside the button, not inside it: the button's label is
+     * rewritten on play and pause, and anything inside would be wiped. */
+    .listen-row { display: flex; align-items: center; gap: 10px; }
+    .listen-photo {
+      width: 36px; height: 36px; flex-shrink: 0;
+      border-radius: 50%; object-fit: cover;
+      border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,61,0.16);
+    }
+    .listen-photo.sm { width: 24px; height: 24px; border-width: 1px; }
+    .listen-row .listen-q { margin-bottom: 0; }
+    .listen-row-q { margin-bottom: 10px; }
 
     /* ── Audio ── */
     .or-rule { display: flex; align-items: center; gap: 12px; margin: 14px 0 12px; color: var(--grey-500); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -182,6 +193,33 @@
     .state p { color: var(--grey-700); max-width: 460px; margin: 0 auto; }
     .state-icon { font-size: 2.4rem; margin-bottom: 18px; }
 
+    /* ── Cameron's interview invitation, on the thank-you page ──
+     * Deliberately after the thank-you rather than beside the questions: the
+     * author has finished what we asked of them, so this is a request being
+     * made, not a condition attached to the one they already answered.
+     */
+    .cta {
+      max-width: 470px; margin: 48px auto 0; padding: 28px 26px;
+      background: #fff; border: 1px solid var(--grey-200); border-radius: 14px;
+      text-align: center;
+    }
+    .cta-photo {
+      width: 76px; height: 76px; border-radius: 50%; object-fit: cover;
+      margin: 0 auto 16px; display: block;
+      border: 3px solid #fff; box-shadow: 0 3px 14px rgba(0,0,61,0.18);
+    }
+    .cta h3 { font-size: 1.05rem; font-weight: 800; margin-bottom: 10px; }
+    .cta p { font-size: 0.9rem; color: var(--grey-700); margin-bottom: 8px; }
+    .cta-btn {
+      display: inline-block; margin-top: 14px;
+      background: var(--navy); color: #fff; text-decoration: none;
+      padding: 13px 26px; border-radius: 999px;
+      font-size: 0.88rem; font-weight: 700;
+      transition: opacity 0.15s ease;
+    }
+    .cta-btn:hover { opacity: 0.88; }
+    .cta-note { font-size: 0.78rem; color: var(--grey-500); margin-top: 12px; }
+
     @media (max-width: 600px) {
       .wrap { padding: 36px 20px 72px; }
       h1 { font-size: 1.6rem; }
@@ -204,6 +242,11 @@
 
 <script>
 var TOKEN = new URLSearchParams(window.location.search).get('token') || '';
+
+/* Cameron's booking link, shown on the thank-you page once an author has
+ * finished. Empty means the invitation is not rendered at all — better no
+ * block than a button that goes nowhere. */
+var BOOKING_URL = '';
 var state = {
   questions: [], authorQuestions: [], answers: [], hasAudio: [], audio: [],
   authorName: '', bookTitle: '', media: {},
@@ -268,7 +311,27 @@ function renderSubmitted(name) {
     '<div class="state"><div class="state-icon">✓</div>' +
     '<h2>Thank you' + (name ? ', ' + esc(firstName(name)) : '') + '</h2>' +
     '<p>Your answers are in. We\'ll shape them into an edited Q&amp;A and send it to you ' +
-    'for approval before anything is published.</p></div>';
+    'for approval before anything is published.</p>' +
+    ctaHtml() +
+    '</div>';
+}
+
+/* Cameron's interview invitation.
+ * Renders only when BOOKING_URL is set, so an unset link shows nothing rather
+ * than a button that goes nowhere. */
+function ctaHtml() {
+  if (!BOOKING_URL) return '';
+  return '<div class="cta">' +
+    '<img class="cta-photo" src="/cameron-mcgrane.webp" alt="Cameron McGrane" ' +
+      'onerror="this.remove()">' +
+    '<h3>Before you go, can I ask you some questions?</h3>' +
+    '<p>I\'m Cameron. I build the tools behind the Expert Author Community.</p>' +
+    '<p>I\'m talking to members about what we should build next, and whether the ideas ' +
+    'I have are any good. Nothing to sell you. Just questions, like these ones.</p>' +
+    '<a class="cta-btn" href="' + esc(BOOKING_URL) + '" target="_blank" rel="noopener">' +
+      'Book a time with me</a>' +
+    '<div class="cta-note">We\'ll meet on Google Meet.</div>' +
+  '</div>';
 }
 
 /* Answer box + recorder, shared by Cam's questions and the author's own. */
@@ -305,6 +368,13 @@ function playbackHtml(i) {
     '<div class="rec-hint">Recording again will replace this one.</div>';
 }
 
+/* Shown only beside a clip that exists, so it never claims a voice that
+ * failed to generate. */
+function kellyPhoto(size) {
+  return '<img class="listen-photo' + (size ? ' ' + size : '') + '" ' +
+    'src="/kelly-irving.webp" alt="Kelly Irving" onerror="this.remove()">';
+}
+
 function heroHtml() {
   var m = state.media || {};
   var cover = m.bookCoverUrl
@@ -333,9 +403,11 @@ function renderForm() {
   var qs = state.questions.map(function(q, i) {
     var qVoice = (state.voice && state.voice.questions && state.voice.questions[i]) || null;
     var listen = qVoice
-      ? '<button type="button" class="listen-q" data-listen="' + esc(qVoice) + '">' +
-          ICON_SPEAKER + 'Hear Kelly read this' +
-        '</button>'
+      ? '<div class="listen-row listen-row-q">' + kellyPhoto('sm') +
+          '<button type="button" class="listen-q" data-listen="' + esc(qVoice) + '">' +
+            ICON_SPEAKER + 'Hear Kelly read this' +
+          '</button>' +
+        '</div>'
       : '';
 
     return '<div class="q-block">' +
@@ -349,9 +421,11 @@ function renderForm() {
   var introVoice = (state.voice && state.voice.intro) || null;
   var introPlayer = introVoice
     ? '<div class="listen-intro">' +
-        '<button type="button" class="listen-btn" data-listen="' + esc(introVoice) + '">' +
-          ICON_SPEAKER + 'Hear from Kelly' +
-        '</button>' +
+        '<div class="listen-row">' + kellyPhoto('') +
+          '<button type="button" class="listen-btn" data-listen="' + esc(introVoice) + '">' +
+            ICON_SPEAKER + 'Hear from Kelly' +
+          '</button>' +
+        '</div>' +
         '<div class="listen-caption">About a minute, in Kelly\'s voice.</div>' +
       '</div>'
     : '';
