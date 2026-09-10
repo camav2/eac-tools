@@ -9,6 +9,11 @@
  * Admin-gated throughout — no public access. A bucket must already be
  * assigned (Phase 2) before questions can be generated for an author.
  *
+ * Generation also reads the author's own website (the `author-website` link on
+ * the Webflow record) so the questions can reference their actual practice
+ * rather than only the CMS blurb. Best-effort — a site that is down, slow or
+ * bot-walled is skipped and generation proceeds on the summaries alone.
+ *
  * Env vars required:
  *   JWT_SECRET, WEBFLOW_API_TOKEN, ANTHROPIC_API_KEY,
  *   AIRTABLE_API_KEY, AIRTABLE_BASE_ID, AIRTABLE_QNA_TABLE_ID
@@ -18,6 +23,11 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getSession } from './_lib/auth'
 import { getAuthorContext } from './_lib/webflow'
 import { generateQuestions } from './_lib/anthropic'
+import { fetchAuthorWebsiteText } from './_lib/webpage'
+
+// Two site fetches plus a high-effort Opus call is nowhere near the 15s
+// default — same reasoning as qna-draft.
+export const maxDuration = 300
 
 const QNA_TABLE = process.env.AIRTABLE_QNA_TABLE_ID!
 
@@ -125,6 +135,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return {}
         })
 
+        // fetchAuthorWebsiteText swallows its own failures and returns '',
+        // so a broken author site can never cost us the question set.
+        const websiteUrl = (context as any).websiteUrl as string | undefined
+        const websiteText = await fetchAuthorWebsiteText(websiteUrl)
+        console.log(
+          `[qna-questions] ${pipelineRow.fields['Author Name']}: website ` +
+          (websiteUrl
+            ? (websiteText ? `read (${websiteText.length} chars)` : 'unreadable — skipped')
+            : 'not set')
+        )
+
         const questions = await generateQuestions({
           authorName:    pipelineRow.fields['Author Name'] ?? '',
           bookTitle:     pipelineRow.fields['Book Title'] ?? '',
@@ -132,6 +153,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           publishedDate: pipelineRow.fields['Book Published Date'] ?? null,
           shortSummary:  (context as any).shortSummary,
           longSummary:   (context as any).longSummary,
+          websiteUrl,
+          websiteText,
         })
 
         await atPatch(pipelineRow.id, {
