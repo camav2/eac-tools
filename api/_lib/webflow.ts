@@ -120,6 +120,56 @@ export async function getAuthorContext(authorItemId: string): Promise<AuthorCont
   }
 }
 
+export interface QnaMedia {
+  authorPhotoUrl?: string
+  authorPhotoAlt?: string
+  bookCoverUrl?: string
+  bookCoverAlt?: string
+}
+
+/**
+ * Headshot and book cover for the author-facing intake page.
+ *
+ * Both halves are independent and best-effort: an author with no headshot, or
+ * a book with no cover, still gets a working page. Seeing their own face and
+ * their own book at the top is what makes the request feel addressed to them
+ * rather than mail-merged — it is decoration with a job, but it is still
+ * decoration, and nothing here may block someone from answering.
+ *
+ * Read live rather than denormalised onto the Airtable row: the page loads
+ * once per author, a replaced headshot should just appear, and this avoids two
+ * more columns to keep in step.
+ */
+export async function getQnaMedia(
+  authorItemId?: string,
+  bookItemId?: string
+): Promise<QnaMedia> {
+  const [author, book] = await Promise.all([
+    authorItemId
+      ? wfFetch(`/collections/${AUTHORS_COLLECTION_ID}/items/${authorItemId}`).catch(err => {
+          console.error('[webflow] author media fetch failed:', err)
+          return null
+        })
+      : null,
+    bookItemId
+      ? wfFetch(`/collections/${BOOKS_COLLECTION_ID}/items/${bookItemId}`).catch(err => {
+          console.error('[webflow] book media fetch failed:', err)
+          return null
+        })
+      : null,
+  ])
+
+  const headshot = author?.fieldData?.['author-headshot']
+  const cover    = book?.fieldData?.['book-thumbnail']
+
+  return {
+    authorPhotoUrl: linkUrl(headshot),
+    authorPhotoAlt: author?.fieldData?.['alt-text-for-image'] || author?.fieldData?.name,
+    bookCoverUrl:   linkUrl(cover),
+    bookCoverAlt:   book?.fieldData?.['alt-text-for-image'] || book?.fieldData?.name,
+  }
+}
+
 /**
  * Writes the Editorial Q&A field to the item's staged (working) copy.
  * Webflow keeps a working copy separate from the live site — this PATCH does
