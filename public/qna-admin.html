@@ -10,6 +10,10 @@
     :root {
       --navy: #00003D;
       --navy-light: #1a1a5e;
+      /* Brand yellow, same value as the intake page. The author badge asked
+         for it before anything defined it, so it was rendering with no
+         background at all. */
+      --yellow: #FFE64B;
       --grey-100: #f3f4f6;
       --grey-200: #e5e7eb;
       --grey-500: #6b7280;
@@ -46,6 +50,23 @@
     .page-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; display: flex; align-items: center; gap: 12px; }
     .admin-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
     .author-badge { font-size: 0.62rem; font-weight: 700; background: var(--yellow); color: var(--navy); padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; margin-left: 8px; }
+
+    /* ── The invitation email draft ── */
+    .mail-draft { margin-top: 16px; padding: 18px; background: #fafafa; border: 1px solid var(--grey-200); border-radius: 10px; }
+    .mail-head { margin-bottom: 14px; }
+    .mail-label { display: block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-500); margin-bottom: 5px; }
+    .mail-fixed { font-size: 0.9rem; font-weight: 600; color: var(--grey-700); }
+    /* Rendered like the email it will become, so the preview is the thing
+     * being approved rather than a description of it. */
+    .mail-body {
+      background: #fff; border: 1px solid var(--grey-200); border-radius: 8px;
+      padding: 18px 20px; font-size: 0.92rem; line-height: 1.6; color: var(--navy);
+      max-height: 460px; overflow-y: auto;
+    }
+    .mail-body:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(0,0,61,0.06); }
+    .mail-body p { margin: 0 0 12px; }
+    .mail-body p:last-child { margin-bottom: 0; }
+    .mail-actions { display: flex; align-items: center; gap: 14px; margin-top: 14px; flex-wrap: wrap; }
     .page-sub { color: var(--grey-500); font-size: 0.95rem; margin-top: 8px; max-width: 640px; }
 
     /* ── Author table ── */
@@ -385,18 +406,26 @@ function renderReviewPanel(author, data) {
         '<button type="button" id="save-btn" class="save-btn">Save Question Set</button>' +
         '<span class="review-status" id="review-status"></span>' +
       '</div>' +
-      '<div class="send-panel">' +
-        '<div class="send-title">Send to author</div>' +
-        '<div class="send-sub">Creates a private link with these questions. Nothing is emailed — copy the link and send it yourself.</div>' +
-        '<button type="button" id="send-btn" class="send-btn">Create intake link</button>' +
-        '<div id="link-area"></div>' +
-      '</div>' +
+      // Voice before send, because that is the order the work happens in.
+      // The author's page offers "Hear from Kelly" on every question, so a
+      // link sent before the clips exist is a link to a broken promise.
       '<div class="send-panel">' +
         '<div class="send-title">Kelly\'s voice</div>' +
         '<div class="send-sub">Records the intro and every question in Kelly\'s voice, so the author can listen rather than read. Regenerate after changing questions.</div>' +
-        '<button type="button" class="send-btn" id="voice-btn">Generate voice</button>' +
-        '<span class="review-status" id="voice-status" style="margin-left:12px"></span>' +
+        '<button type="button" class="send-btn" id="voice-btn">' +
+          (data.hasVoice ? 'Regenerate voice' : 'Generate voice') +
+        '</button>' +
+        '<span class="review-status' + (data.hasVoice ? ' ok' : '') + '" id="voice-status" style="margin-left:12px">' +
+          (data.hasVoice ? 'Ready' : '') +
+        '</span>' +
         '<div class="send-sub" id="voice-which" style="margin-top:10px;margin-bottom:0"></div>' +
+      '</div>' +
+      '<div class="send-panel">' +
+        '<div class="send-title">Send to author</div>' +
+        '<div class="send-sub">Creates a private link with these questions, then drafts the invitation email for you to check and send.</div>' +
+        '<button type="button" id="send-btn" class="send-btn">Create intake link</button>' +
+        '<span class="review-status" id="send-gate" style="margin-left:12px"></span>' +
+        '<div id="link-area"></div>' +
       '</div>' +
     '</div>';
 
@@ -407,7 +436,32 @@ function renderReviewPanel(author, data) {
   document.getElementById('save-btn').addEventListener('click', function() { saveQuestionsForAuthor(author); });
   document.getElementById('send-btn').addEventListener('click', function() { createIntakeLink(author, false); });
 
+  // Track what the row actually has, so the gate can lift the moment the
+  // missing piece arrives rather than waiting for a reload.
+  reviewState = { questionsSaved: !!data.questions, hasVoice: !!data.hasVoice };
+  applySendGate();
+
   showExistingLink(author);
+}
+
+/* What the open author is missing, if anything. */
+var reviewState = { questionsSaved: false, hasVoice: false };
+
+/* Sending is the irreversible step: once a link is out, an author may open it
+ * at any moment. So it stays shut until the page they would land on is
+ * finished — questions saved, and Kelly's clips recorded against them. */
+function applySendGate() {
+  var btn  = document.getElementById('send-btn');
+  var note = document.getElementById('send-gate');
+  if (!btn || !note) return;
+
+  var missing = [];
+  if (!reviewState.questionsSaved) missing.push('save the question set');
+  if (!reviewState.hasVoice)       missing.push('generate Kelly\'s voice');
+
+  btn.disabled = missing.length > 0;
+  note.textContent = missing.length ? 'First ' + missing.join(', then ') + '.' : '';
+  note.className = 'review-status';
 }
 
 /* Names the voice that will actually be used, so a wrong match is visible
@@ -458,6 +512,10 @@ async function generateVoice(author) {
       : 'All ' + data.generated + ' clips recorded.';
     statusEl.className = 'review-status ' + (data.failed && data.failed.length ? 'err' : 'ok');
     btn.textContent = 'Regenerate voice';
+    // A partial set still counts: the intake page hides the button for any
+    // question whose clip is missing, so what exists is playable.
+    reviewState.hasVoice = data.generated > 0;
+    applySendGate();
   } catch (err) {
     statusEl.textContent = 'Failed: ' + err.message;
     statusEl.className = 'review-status err';
@@ -495,6 +553,8 @@ function renderLinkArea(author, url, submittedAt) {
         ' — the link now shows a thank-you page. Reopen it to edit or resubmit.</p>' +
         '<button type="button" class="send-btn" id="reopen-btn" style="margin-top:4px">Reopen for editing</button>'
       : '') +
+    '<button type="button" class="send-btn" id="invite-btn" style="margin-top:14px">Draft the invitation email</button>' +
+    '<div id="invite-area"></div>' +
     '<button type="button" class="regen-link" id="regen-btn">Issue a new link (invalidates this one)</button>';
 
   document.getElementById('copy-btn').addEventListener('click', function() {
@@ -507,8 +567,124 @@ function renderLinkArea(author, url, submittedAt) {
     });
   });
   document.getElementById('regen-btn').addEventListener('click', function() { createIntakeLink(author, true); });
+  document.getElementById('invite-btn').addEventListener('click', function() { draftInvite(author); });
   var reopenBtn = document.getElementById('reopen-btn');
   if (reopenBtn) reopenBtn.addEventListener('click', function() { reopenSubmission(author); });
+}
+
+/* ── The invitation email ──
+ * Draft, edit, then send. The body is edited in place as rendered HTML rather
+ * than in a markup box: "I want to see a preview before I send" is the whole
+ * requirement, and a preview you can't correct is only half of it.
+ */
+async function draftInvite(author) {
+  var btn  = document.getElementById('invite-btn');
+  var area = document.getElementById('invite-area');
+  btn.disabled = true;
+  area.innerHTML = '<p class="send-sub" style="margin-top:14px">Drafting…</p>';
+
+  try {
+    var res = await fetch('/api/qna-invite?authorItemId=' + encodeURIComponent(author.authorItemId));
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) throw new Error(data.error || ('API error ' + res.status));
+    renderInvite(author, data);
+  } catch (err) {
+    area.innerHTML = '<p class="send-sub" style="margin-top:14px;color:var(--red)">' +
+      escHtml(err.message) + '</p>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderInvite(author, d) {
+  var area = document.getElementById('invite-area');
+
+  // Where the address came from is shown, because "we guessed this from a
+  // name match" and "you typed this last time" deserve different levels of
+  // trust from the person about to hit send.
+  var source = d.toSource === 'saved'
+    ? 'Saved from the last send.'
+    : d.toSource === 'circle'
+      ? 'Matched by name in Circle. Check it.'
+      : d.toSource === 'customers'
+        ? 'Matched by name in the Customers base. Check it.'
+        : 'No match in Circle or the Customers base. Type it in.';
+
+  area.innerHTML =
+    '<div class="mail-draft">' +
+      '<div class="mail-head">' +
+        '<label class="mail-label">To</label>' +
+        '<input class="link-input" id="mail-to" value="' + escHtml(d.to || '') + '" ' +
+          'placeholder="name@example.com">' +
+        '<p class="send-sub">' + escHtml(source) + '</p>' +
+      '</div>' +
+      '<div class="mail-head">' +
+        '<label class="mail-label">From</label>' +
+        '<div class="mail-fixed">' + escHtml(d.from) + '</div>' +
+        '<label class="mail-label" style="margin-top:10px">Cc</label>' +
+        '<div class="mail-fixed">' + escHtml(d.cc) + '</div>' +
+      '</div>' +
+      '<div class="mail-head">' +
+        '<label class="mail-label">Subject</label>' +
+        '<input class="link-input" id="mail-subject" value="' + escHtml(d.subject) + '">' +
+      '</div>' +
+      '<label class="mail-label">Message — click to edit</label>' +
+      '<div class="mail-body" id="mail-body" contenteditable="true" ' +
+        'data-due="' + escHtml(d.dueDate || '') + '">' + d.body + '</div>' +
+      '<p class="send-sub">Reply-by date in the email: <strong>' + escHtml(d.dueLabel || '') +
+        '</strong>. Sending records it against the author.</p>' +
+      (d.sentAt
+        ? '<p class="send-sub" style="color:var(--red)">Already sent ' +
+          escHtml(formatDate(d.sentAt)) + '. Sending again will email them a second time.</p>'
+        : '') +
+      '<div class="mail-actions">' +
+        '<button type="button" class="send-btn" id="mail-send">Send it</button>' +
+        '<span class="review-status" id="mail-status"></span>' +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('mail-send').addEventListener('click', function() { sendInvite(author); });
+}
+
+async function sendInvite(author) {
+  var to      = document.getElementById('mail-to').value.trim();
+  var subject = document.getElementById('mail-subject').value.trim();
+  var bodyEl  = document.getElementById('mail-body');
+  var body    = bodyEl.innerHTML;
+  // The date the drafted email actually quotes, so what lands on the row is
+  // what the author was told, even if the draft was left open overnight.
+  var dueDate = bodyEl.dataset.due || '';
+  var btn     = document.getElementById('mail-send');
+  var status  = document.getElementById('mail-status');
+
+  if (!to) { status.textContent = 'Add an address first.'; status.className = 'review-status err'; return; }
+
+  // An email cannot be unsent, and the address is the part most likely to be
+  // wrong, so it is the part the confirmation shows.
+  if (!confirm('Send this to ' + to + '?\n\nIt goes from cameron@expertauthor.community, copying kelly@expertauthor.community.')) return;
+
+  btn.disabled = true;
+  status.textContent = 'Sending…';
+  status.className = 'review-status';
+
+  try {
+    var res = await fetch('/api/qna-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: author.authorItemId, to: to, subject: subject, body: body, dueDate: dueDate }),
+    });
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) throw new Error(data.error || ('API error ' + res.status));
+
+    status.textContent = 'Sent to ' + data.to;
+    status.className = 'review-status ok';
+    btn.textContent = 'Send again';
+  } catch (err) {
+    status.textContent = err.message;
+    status.className = 'review-status err';
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function reopenSubmission(author) {
@@ -611,6 +787,8 @@ async function saveQuestionsForAuthor(author) {
     }
     statusEl.textContent = 'Saved.';
     statusEl.className = 'review-status ok';
+    reviewState.questionsSaved = true;
+    applySendGate();
   } catch (err) {
     statusEl.textContent = 'Failed: ' + err.message;
     statusEl.className = 'review-status err';

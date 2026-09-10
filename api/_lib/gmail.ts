@@ -211,10 +211,11 @@ export async function sendViaGmailAddress(
   body: string,
   replyTo?: string,
   toName?: string,
+  cc?: string,
 ): Promise<void> {
   const row = await getTokenRow(`gmail_email=eq.${encodeURIComponent(fromGmail)}`)
   if (!row) throw new Error('No Gmail connected for address ' + fromGmail)
-  return sendWithRow(row, to, subject, body, replyTo, toName)
+  return sendWithRow(row, to, subject, body, replyTo, toName, cc)
 }
 
 async function sendWithRow(
@@ -224,6 +225,7 @@ async function sendWithRow(
   body: string,
   replyTo?: string,
   toName?: string,
+  cc?: string,
 ): Promise<void> {
   const refreshToken = row.refresh_token
   const fromEmail    = row.gmail_email
@@ -245,6 +247,9 @@ async function sendWithRow(
   const msgHeaders = [
     `From: ${rfc2822Addr(resolvedName, fromEmail)}`,
     `To: ${rfc2822Addr(toName, to)}`,
+    // A Cc header is enough: Gmail's send endpoint takes the recipient list
+    // from the raw message, so the copy is delivered without naming it twice.
+    ...(cc?.trim() ? [`Cc: ${cc.trim()}`] : []),
     ...(replyTo ? [`Reply-To: ${replyTo}`] : []),
     `Subject: ${subject}`,
     `Date: ${date}`,
