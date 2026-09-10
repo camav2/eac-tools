@@ -113,6 +113,39 @@ async function signVoiceClips(row: any, questionCount: number) {
 }
 
 /**
+ * Signed playback for the author's own recordings, in page order.
+ *
+ * Without this a returning author sees the words "Recording saved" and no way
+ * to hear anything, which is indistinguishable from having lost it — the
+ * reason this was reported as recordings not persisting. They were persisting;
+ * there was simply no proof of it on the page.
+ *
+ * Handing back a signed URL rather than the storage path keeps the earlier
+ * rule intact: the path never leaves the server, and the link is theirs, for
+ * their own audio, behind their own token. Same shape as the voice clips, and
+ * best-effort for the same reason — a signing hiccup must not blank the page.
+ */
+async function signAnswerAudio(row: any): Promise<(string | null)[]> {
+  const base = baseQuestions(row)
+  const responses = parseJsonArray(row.fields['Responses'])
+  const paths: (string | undefined)[] = [
+    ...base.map((_, i) => responses[i]?.audioPath),
+    ...authorEntries(row).map(e => e.audioPath),
+  ]
+
+  return Promise.all(
+    paths.map(p =>
+      p
+        ? signedUrlFor(p, 3600).catch(err => {
+            console.error('[qna-intake] answer audio sign failed:', err)
+            return null
+          })
+        : Promise.resolve(null)
+    )
+  )
+}
+
+/**
  * Author-facing view of a pipeline row. Never widen this without a reason.
  *
  * `questions` is Cam's set and `authorQuestions` is what the author appended;
@@ -167,7 +200,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Both are presentation only, and both are allowed to fail quietly —
       // an author must never be blocked from answering because Webflow or
       // Supabase had a bad moment. Fetched together so the page waits once.
-      const [voice, media] = await Promise.all([
+      const [voice, media, audio] = await Promise.all([
         signVoiceClips(row, view.questions.length).catch(err => {
           console.error('[qna-intake] voice signing failed:', err)
           return { intro: null, questions: [] as (string | null)[] }
@@ -179,9 +212,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.error('[qna-intake] media fetch failed:', err)
           return {}
         }),
+        signAnswerAudio(row).catch(err => {
+          console.error('[qna-intake] answer audio signing failed:', err)
+          return [] as (string | null)[]
+        }),
       ])
 
-      return res.status(200).json({ ...view, voice, media })
+      return res.status(200).json({ ...view, voice, media, audio })
     }
 
     if (req.method === 'POST') {
