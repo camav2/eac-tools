@@ -199,15 +199,16 @@
      * made, not a condition attached to the one they already answered.
      */
     .cta {
-      max-width: 470px; margin: 48px auto 0; padding: 28px 26px;
+      max-width: 470px; margin: 48px auto 0;
       background: #fff; border: 1px solid var(--grey-200); border-radius: 14px;
       text-align: center;
+      /* Clips the photo to the card's rounded top corners. */
+      overflow: hidden;
     }
-    .cta-photo {
-      width: 76px; height: 76px; border-radius: 50%; object-fit: cover;
-      margin: 0 auto 16px; display: block;
-      border: 3px solid #fff; box-shadow: 0 3px 14px rgba(0,0,61,0.18);
-    }
+    /* Full bleed rather than a round headshot: the point of the picture is the
+     * manuscripts all over the floor, which a 76px circle throws away. */
+    .cta-image { width: 100%; height: auto; display: block; }
+    .cta-body { padding: 24px 26px 28px; }
     .cta h3 { font-size: 1.05rem; font-weight: 800; margin-bottom: 10px; }
     .cta p { font-size: 0.9rem; color: var(--grey-700); margin-bottom: 8px; }
     .cta-btn {
@@ -326,15 +327,18 @@ function renderSubmitted(name) {
 function ctaHtml() {
   if (!BOOKING_URL) return '';
   return '<div class="cta">' +
-    '<img class="cta-photo" src="/cameron-mcgrane.webp" alt="Cameron McGrane" ' +
+    '<img class="cta-image" src="/cameron-kelly.webp" ' +
+      'alt="Cameron and Kelly on the floor, working through printed manuscripts" ' +
       'onerror="this.remove()">' +
-    '<h3>Before you go, can I ask you some questions?</h3>' +
-    '<p>I\'m Cameron. I build the tools behind the Expert Author Community.</p>' +
-    '<p>I\'m talking to members about what we should build next, and whether the ideas ' +
-    'I have are any good. Nothing to sell you. Just questions, like these ones.</p>' +
-    '<a class="cta-btn" href="' + esc(BOOKING_URL) + '" target="_blank" rel="noopener">' +
-      'Book a time with me</a>' +
-    '<div class="cta-note">We\'ll meet on Google Meet.</div>' +
+    '<div class="cta-body">' +
+      '<h3>Before you go, can I ask you some questions?</h3>' +
+      '<p>I\'m Cameron. I build the tools behind the Expert Author Community.</p>' +
+      '<p>I\'m talking to members about what we should build next, and whether the ideas ' +
+      'I have are any good. Nothing to sell you. Just questions, like these ones.</p>' +
+      '<a class="cta-btn" href="' + esc(BOOKING_URL) + '" target="_blank" rel="noopener">' +
+        'Book a time with me</a>' +
+      '<div class="cta-note">We\'ll meet on Google Meet.</div>' +
+    '</div>' +
   '</div>';
 }
 
