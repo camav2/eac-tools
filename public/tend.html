@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tend — EAC Tools</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #00003D;
+      --navy-light: #1a1a5e;
+      --grey-100: #f3f4f6;
+      --grey-200: #e5e7eb;
+      --grey-400: #9ca3af;
+      --grey-500: #6b7280;
+      --grey-700: #374151;
+      --green: #059669;
+      --amber: #d97706;
+      --red: #dc2626;
+      --radius: 10px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fb; color: var(--navy); min-height: 100vh; }
+
+    /* ── Header ── */
+    .site-header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 60px; background: #fff; border-bottom: 1px solid var(--grey-200); position: sticky; top: 0; z-index: 100; }
+    .header-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--navy); }
+    .header-logo-img { width: 28px; height: 28px; }
+    .header-logo-text { font-weight: 700; font-size: 1rem; letter-spacing: -0.01em; }
+    .beta-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .header-auth { position: relative; display: flex; align-items: center; }
+    .header-user-btn { display: flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+    .header-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+    .header-avatar-placeholder { width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+    .header-user-name { font-size: 0.875rem; font-weight: 500; }
+    .header-chevron { opacity: 0.5; }
+    .header-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--grey-200); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,10,0.1); min-width: 180px; padding: 4px; }
+    .header-dropdown.open { display: block; }
+    .dropdown-item { display: block; width: 100%; text-align: left; padding: 8px 12px; border-radius: 5px; font-size: 0.875rem; color: var(--navy); text-decoration: none; background: none; border: none; cursor: pointer; }
+    .dropdown-item:hover { background: var(--grey-100); }
+    .dropdown-divider { height: 1px; background: var(--grey-200); margin: 4px 0; }
+    .dropdown-logout { color: var(--red); }
+
+    /* ── Page ── */
+    .page-wrap { max-width: 960px; margin: 0 auto; padding: 48px 24px 100px; }
+    .page-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-500); margin-bottom: 8px; }
+    .page-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; display: flex; align-items: center; gap: 12px; }
+    .admin-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .page-sub { color: var(--grey-500); font-size: 0.95rem; margin-top: 8px; max-width: 60ch; }
+
+    .section { margin-top: 40px; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+    .section-title { font-size: 1.05rem; font-weight: 700; }
+    .section-note { font-size: 0.8rem; color: var(--grey-500); }
+
+    /* ── Buttons ── */
+    .btn { padding: 9px 16px; border-radius: 7px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; background: var(--navy); color: #fff; font-family: inherit; }
+    .btn:hover { background: var(--navy-light); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost { background: #fff; color: var(--navy); border-color: var(--grey-200); }
+    .btn-ghost:hover { background: var(--grey-100); }
+    .btn-danger { background: #fff; color: var(--red); border-color: #fecaca; }
+    .btn-danger:hover { background: #fef2f2; }
+    .btn-go { background: var(--green); }
+    .btn-go:hover { background: #047857; }
+    .btn-sm { padding: 6px 12px; font-size: 0.78rem; }
+
+    /* ── Agent cards ── */
+    .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .agent-card { background: #fff; border: 1px solid var(--grey-200); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+    .agent-card.off { opacity: 0.6; }
+    .agent-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .agent-name { font-weight: 700; font-size: 1rem; }
+    .agent-role { font-size: 0.8rem; color: var(--grey-500); margin-top: 2px; }
+    .agent-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: var(--grey-100); color: var(--grey-700); }
+    .chip.gate { background: #fff7ed; color: var(--amber); }
+    .chip.open { background: #fef2f2; color: var(--red); }
+    .agent-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 4px; }
+    .agent-last { font-size: 0.72rem; color: var(--grey-400); }
+
+    /* ── Workspace ── */
+    .ws-card { background: #fff; border: 1px solid var(--grey-200); border-radius: var(--radius); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .ws-name { font-weight: 700; font-size: 0.95rem; }
+    .ws-people { font-size: 0.8rem; color: var(--grey-500); margin-top: 2px; }
+    .ws-warn { font-size: 0.78rem; color: var(--amber); font-weight: 600; margin-top: 4px; }
+
+    /* ── Approvals ── */
+    .approval { background: #fff7ed; border: 1px solid #fed7aa; border-radius: var(--radius); padding: 18px; margin-bottom: 12px; }
+    .approval-head { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .approval-sub { font-size: 0.8rem; color: var(--grey-500); margin-bottom: 12px; }
+    .action-block { background: #fff; border: 1px solid var(--grey-200); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+    .action-name { font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .action-args { font-size: 0.78rem; }
+    .action-arg { display: grid; grid-template-columns: 90px 1fr; gap: 8px; padding: 3px 0; border-top: 1px solid var(--grey-100); }
+    .action-arg:first-child { border-top: none; }
+    .action-key { color: var(--grey-500); font-weight: 600; }
+    .action-val { white-space: pre-wrap; word-break: break-word; }
+    .approval-actions { display: flex; gap: 8px; }
+
+    /* ── Runs ── */
+    .run { background: #fff; border: 1px solid var(--grey-200); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; }
+    .run-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .run-agent { font-weight: 700; font-size: 0.9rem; }
+    .run-when { font-size: 0.72rem; color: var(--grey-400); margin-left: auto; }
+    .run-summary { font-size: 0.85rem; color: var(--grey-700); margin-top: 8px; white-space: pre-wrap; }
+    .run-toggle { font-size: 0.75rem; color: var(--grey-500); background: none; border: none; cursor: pointer; padding: 6px 0 0; font-family: inherit; text-decoration: underline; }
+    .run-trail { margin-top: 10px; border-top: 1px solid var(--grey-100); padding-top: 10px; display: none; }
+    .run-trail.open { display: block; }
+    .trail-item { font-size: 0.75rem; padding: 6px 0; border-bottom: 1px solid var(--grey-100); }
+    .trail-item:last-child { border-bottom: none; }
+    .trail-tool { font-weight: 700; }
+    .trail-detail { color: var(--grey-500); white-space: pre-wrap; word-break: break-word; margin-top: 3px; max-height: 8em; overflow: auto; }
+    .status { font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .status.completed { background: #f0fdf4; color: var(--green); }
+    .status.failed, .status.rejected { background: #fef2f2; color: var(--red); }
+    .status.awaiting_approval { background: #fff7ed; color: var(--amber); }
+    .status.running { background: #eff6ff; color: #2563eb; }
+
+    /* ── Modal ── */
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,20,0.45); z-index: 200; padding: 32px 16px; overflow-y: auto; }
+    .modal-bg.open { display: block; }
+    .modal { background: #fff; border-radius: 14px; max-width: 620px; margin: 0 auto; padding: 26px; }
+    .modal-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 18px; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 5px; }
+    .field .hint { font-size: 0.74rem; color: var(--grey-500); font-weight: 400; margin-bottom: 6px; }
+    .field input[type=text], .field textarea, .field select { width: 100%; padding: 9px 11px; border: 1px solid var(--grey-200); border-radius: 7px; font-size: 0.88rem; font-family: inherit; color: var(--navy); background: #fff; }
+    .field textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
+    .row { display: flex; gap: 10px; }
+    .row > * { flex: 1; }
+    .tool-group { border: 1px solid var(--grey-200); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+    .tool-group-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--grey-500); margin-bottom: 6px; }
+    .tool-row { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; font-size: 0.82rem; }
+    .tool-row input { margin-top: 3px; }
+    .tool-desc { font-size: 0.72rem; color: var(--grey-500); }
+    .check { display: flex; gap: 9px; align-items: flex-start; font-size: 0.85rem; }
+    .check input { margin-top: 3px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 22px; }
+    .empty { background: #fff; border: 1px dashed var(--grey-200); border-radius: var(--radius); padding: 34px; text-align: center; color: var(--grey-500); font-size: 0.88rem; }
+    .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--navy); color: #fff; padding: 11px 20px; border-radius: 8px; font-size: 0.85rem; z-index: 300; display: none; box-shadow: 0 6px 20px rgba(0,0,40,0.25); }
+    .toast.show { display: block; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="header-logo" href="/">
+      <img class="header-logo-img" src="/eac-logo.png" alt="">
+      <span class="header-logo-text">EAC Tools</span>
+      <span class="beta-badge">Beta</span>
+    </a>
+    <div class="header-auth" id="header-auth"></div>
+  </header>
+
+  <main class="page-wrap">
+    <div class="page-eyebrow">Automation</div>
+    <h1 class="page-title">Tend <span class="admin-badge">Admin</span></h1>
+    <p class="page-sub">
+      AI teammates that do a recurring job on a schedule. Each one has its own
+      instructions, its own tools, and its own log. Anything that changes the
+      outside world waits for you to say yes.
+    </p>
+
+    <section class="section" style="margin-top: 28px">
+      <div class="ws-card" id="workspace"></div>
+    </section>
+
+    <section class="section" id="approvals-section" style="display:none">
+      <div class="section-head">
+        <div class="section-title">Waiting on you</div>
+      </div>
+      <div id="approvals"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-title">Your teammates</div>
+        <button class="btn" onclick="openEditor()">+ New teammate</button>
+      </div>
+      <div class="agent-grid" id="agents"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-title">Activity</div>
+        <div class="section-note">Last 40 runs</div>
+      </div>
+      <div id="runs"></div>
+    </section>
+  </main>
+
+  <!-- ── Agent editor ── -->
+  <div class="modal-bg" id="editor-bg">
+    <div class="modal">
+      <div class="modal-title" id="editor-title">New teammate</div>
+
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="f-name" placeholder="e.g. Wins Watcher" maxlength="80">
+      </div>
+
+      <div class="field">
+        <label>Role</label>
+        <div class="hint">One line. What this teammate is for.</div>
+        <input type="text" id="f-role" placeholder="e.g. Spots member book launches and reports them" maxlength="200">
+      </div>
+
+      <div class="field">
+        <label>Standing instructions</label>
+        <div class="hint">The job, in your words. Be specific about what "done" looks like.</div>
+        <textarea id="f-instructions" placeholder="Each week, list EAC authors whose books published in the last 30 days. For each one, check their website for launch news. Report anything worth posting in the Wins space."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Tools</label>
+        <div class="hint">Only tick what the job needs. Fewer tools, better runs.</div>
+        <div id="f-tools"></div>
+      </div>
+
+      <div class="field">
+        <label class="check">
+          <input type="checkbox" id="f-approval" checked>
+          <span>
+            Ask me before anything that changes the outside world
+            <div class="hint" style="margin:2px 0 0">Sending email, writing records. Leave this on unless you have a reason.</div>
+          </span>
+        </label>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Runs</label>
+          <select id="f-schedule" onchange="onScheduleChange()">
+            <option value="manual">Only when I press go</option>
+            <option value="hourly">Every hour</option>
+            <option value="daily">Every day</option>
+            <option value="weekly">Every week</option>
+          </select>
+        </div>
+        <div class="field" id="f-dow-wrap" style="display:none">
+          <label>On</label>
+          <select id="f-dow">
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+            <option value="0">Sunday</option>
+          </select>
+        </div>
+        <div class="field" id="f-hour-wrap" style="display:none">
+          <label>At</label>
+          <select id="f-hour"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Brain</label>
+          <div class="hint">Which vendor this teammate thinks with.</div>
+          <select id="f-provider" onchange="onProviderChange()"></select>
+        </div>
+        <div class="field">
+          <label>Model</label>
+          <div class="hint" id="f-model-hint">Pick one.</div>
+          <select id="f-model"></select>
+          <input type="text" id="f-model-custom" placeholder="or type any model id" maxlength="120" style="margin-top:6px;display:none">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Thinking effort</label>
+          <div class="hint">Higher costs more and takes longer.</div>
+          <select id="f-effort">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <div class="hint">Paused teammates never run on a schedule.</div>
+          <select id="f-enabled">
+            <option value="true">Active</option>
+            <option value="false">Paused</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeEditor()">Cancel</button>
+        <button class="btn" id="f-save" onclick="saveAgent()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Workspace editor ── -->
+  <div class="modal-bg" id="ws-bg">
+    <div class="modal">
+      <div class="modal-title">Your community</div>
+      <p class="hint" style="font-size:0.8rem;color:var(--grey-500);margin-bottom:18px">
+        Every teammate reads this before it starts. Change it here, not in code.
+      </p>
+
+      <div class="field">
+        <label>Community name</label>
+        <div class="hint">As a teammate would say it in a sentence.</div>
+        <input type="text" id="w-community" placeholder="e.g. the Expert Author Community (EAC)" maxlength="120">
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Who runs the community</label>
+          <input type="text" id="w-operator" placeholder="e.g. Kelly Irving" maxlength="120">
+        </div>
+        <div class="field">
+          <label>Who runs the tools</label>
+          <div class="hint">Reads the reports. Approves actions.</div>
+          <input type="text" id="w-admin" placeholder="e.g. Cameron McGrane" maxlength="120">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>About the community</label>
+        <div class="hint">What it is, who the members are, what a win looks like, which systems you use.</div>
+        <textarea id="w-about" placeholder="A paid community for..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>House style</label>
+        <div class="hint">Rules every teammate must follow when it writes anything.</div>
+        <textarea id="w-style" style="min-height:80px" placeholder="No exclamation marks. Never write testimonial copy."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeWorkspace()">Cancel</button>
+        <button class="btn" id="w-save" onclick="saveWorkspace()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/eac.js"></script>
+  <script>
+  /* ============================================================
+     EAC TEND — dashboard
+     Roster, approval gates, and the run log. Talks to /api/tend
+     and /api/tend-run. Admin-only; the API enforces that too.
+     ============================================================ */
+
+  let STATE = { agents: [], runs: [], tools: [], workspace: {}, providers: [] };
+  let EDITING = null;   // agent id when editing, null when creating
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 3200);
+  }
+
+  async function api(path, options) {
+    const res = await fetch(path, options);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    return data;
+  }
+
+  /* ── Hour picker ──────────────────────────────────────────────
+     Stored as UTC, shown in the browser's timezone. The offset is
+     read at edit time, so a schedule set in summer shifts by an
+     hour when daylight saving ends. That is a known trade for not
+     making Cam do UTC arithmetic. */
+  const TZ_OFFSET_HOURS = -new Date().getTimezoneOffset() / 60;
+
+  function utcToLocalHour(h) { return ((h + TZ_OFFSET_HOURS) % 24 + 24) % 24; }
+  function localToUtcHour(h) { return ((h - TZ_OFFSET_HOURS) % 24 + 24) % 24; }
+
+  function hourLabel(h) {
+    const suffix = h < 12 ? 'am' : 'pm';
+    const twelve = h % 12 === 0 ? 12 : h % 12;
+    return twelve + suffix;
+  }
+
+  (function fillHours() {
+    const sel = document.getElementById('f-hour');
+    for (let h = 0; h < 24; h++) {
+      const o = document.createElement('option');
+      o.value = h;
+      o.textContent = hourLabel(h) + ' your time';
+      sel.appendChild(o);
+    }
+  })();
+
+  /* ── Providers ─────────────────────────────────────────────── */
+
+  function providerById(id) {
+    return STATE.providers.find(p => p.id === id) || STATE.providers[0] || { models: [], freeText: true };
+  }
+
+  // Short name for the card chip. Curated models have a label; free-text
+  // ids show as typed, minus the vendor prefix so "openai/gpt-5" reads "gpt-5".
+  function modelLabel(a) {
+    const p = providerById(a.provider);
+    const known = (p.models || []).find(m => m.id === a.model);
+    if (known) return known.label.split(' — ')[0];
+    return (a.model || '').split('/').pop() || 'no model';
+  }
+
+  function onProviderChange(keepModel) {
+    const p = providerById(document.getElementById('f-provider').value);
+    const sel = document.getElementById('f-model');
+    const custom = document.getElementById('f-model-custom');
+    const hint = document.getElementById('f-model-hint');
+
+    sel.innerHTML = (p.models || []).map(m =>
+      `<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('');
+
+    custom.style.display = p.freeText ? '' : 'none';
+    hint.innerHTML = p.freeText
+      ? `Pick one, or type any id from <a href="${esc(p.modelsUrl || '#')}" target="_blank" rel="noopener">the catalogue</a>.`
+      : 'Pick one.';
+
+    // keepModel is the agent's saved model when opening the editor. If it is
+    // in the list, select it; otherwise it was typed, so show it in the box.
+    const listed = (p.models || []).some(m => m.id === keepModel);
+    sel.value = listed ? keepModel : (p.defaultModel || '');
+    custom.value = (keepModel && !listed && p.freeText) ? keepModel : '';
+  }
+
+  function scheduleText(a) {
+    if (a.schedule === 'manual') return 'Manual only';
+    if (a.schedule === 'hourly') return 'Every hour';
+    const at = hourLabel(Math.round(utcToLocalHour(a.hour_utc)));
+    if (a.schedule === 'daily') return 'Daily at ' + at;
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    return days[a.dow] + 's at ' + at;
+  }
+
+  function ago(iso) {
+    if (!iso) return 'never';
+    const mins = Math.floor((Date.now() - new Date(iso)) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    return Math.floor(hrs / 24) + 'd ago';
+  }
+
+  /* ── Render ─────────────────────────────────────────────────── */
+
+  function render() {
+    renderWorkspace();
+    renderApprovals();
+    renderAgents();
+    renderRuns();
+  }
+
+  function renderAgents() {
+    const el = document.getElementById('agents');
+    if (!STATE.agents.length) {
+      el.innerHTML = '<div class="empty">No teammates yet. Create one and give it a job.</div>';
+      return;
+    }
+    el.innerHTML = STATE.agents.map(a => {
+      const writes = (a.tools || []).filter(t =>
+        (STATE.tools.find(x => x.name === t) || {}).write).length;
+      return `
+      <div class="agent-card ${a.enabled ? '' : 'off'}">
+        <div class="agent-top">
+          <div>
+            <div class="agent-name">${esc(a.name)}</div>
+            <div class="agent-role">${esc(a.role || 'No role set')}</div>
+          </div>
+        </div>
+        <div class="agent-meta">
+          <span class="chip">${esc(scheduleText(a))}</span>
+          <span class="chip" title="${esc(a.provider)}">${esc(modelLabel(a))}</span>
+          <span class="chip">${(a.tools || []).length} tool${(a.tools || []).length === 1 ? '' : 's'}</span>
+          ${writes ? `<span class="chip ${a.approval_required ? 'gate' : 'open'}">${
+            a.approval_required ? 'Asks first' : 'Acts alone'}</span>` : ''}
+          ${a.enabled ? '' : '<span class="chip">Paused</span>'}
+        </div>
+        <div class="agent-last">Last run ${esc(ago(a.last_run_at))}</div>
+        <div class="agent-actions">
+          <button class="btn btn-go btn-sm" onclick="runNow('${a.id}')">Run now</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEditor('${a.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="removeAgent('${a.id}')">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function argRows(input) {
+    const entries = Object.entries(input || {});
+    if (!entries.length) return '<div class="action-arg"><div class="action-key">(no arguments)</div><div></div></div>';
+    return entries.map(([k, v]) => {
+      const text = typeof v === 'string' ? v : JSON.stringify(v);
+      return `<div class="action-arg">
+        <div class="action-key">${esc(k)}</div>
+        <div class="action-val">${esc(text.length > 1200 ? text.slice(0, 1200) + '…' : text)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderApprovals() {
+    const waiting = STATE.runs.filter(r => r.status === 'awaiting_approval');
+    document.getElementById('approvals-section').style.display = waiting.length ? '' : 'none';
+    document.getElementById('approvals').innerHTML = waiting.map(r => {
+      const blocks = (r.pending && r.pending.blocks) || [];
+      return `
+      <div class="approval">
+        <div class="approval-head">${esc(r.agent_name)} wants to do something</div>
+        <div class="approval-sub">Started ${esc(ago(r.started_at))}. Nothing has happened yet.</div>
+        ${blocks.map(b => `
+          <div class="action-block">
+            <div class="action-name">
+              ${esc(b.name)}
+              ${b.write ? '<span class="chip gate">Changes things</span>' : '<span class="chip">Read only</span>'}
+            </div>
+            <div class="action-args">${argRows(b.input)}</div>
+          </div>`).join('')}
+        <div class="approval-actions">
+          <button class="btn btn-go" onclick="decide('${r.id}','approve',this)">Approve</button>
+          <button class="btn btn-danger" onclick="decide('${r.id}','reject',this)">Decline</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderRuns() {
+    const el = document.getElementById('runs');
+    const done = STATE.runs.filter(r => r.status !== 'awaiting_approval');
+    if (!done.length) {
+      el.innerHTML = '<div class="empty">Nothing has run yet.</div>';
+      return;
+    }
+    el.innerHTML = done.map(r => {
+      const trail = (r.log || []).map(e => `
+        <div class="trail-item">
+          <span class="trail-tool">${esc(e.tool)}</span>
+          ${e.decision ? `<span class="chip ${e.decision === 'rejected' ? 'open' : ''}">${esc(e.decision)}</span>` : ''}
+          <div class="trail-detail">${esc(e.error ? 'Error: ' + e.error : (e.result || ''))}</div>
+        </div>`).join('');
+      return `
+      <div class="run">
+        <div class="run-top">
+          <span class="run-agent">${esc(r.agent_name)}</span>
+          <span class="status ${esc(r.status)}">${esc(r.status.replace(/_/g, ' '))}</span>
+          <span class="chip">${esc(r.trigger)}</span>
+          <span class="run-when">${esc(ago(r.started_at))}</span>
+        </div>
+        <div class="run-summary">${esc(r.error ? r.error : (r.summary || '(no summary)'))}</div>
+        ${trail ? `<button class="run-toggle" onclick="this.nextElementSibling.classList.toggle('open')">Show what it did (${(r.log || []).length})</button>
+        <div class="run-trail">${trail}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  /* ── Actions ────────────────────────────────────────────────── */
+
+  async function load() {
+    try {
+      STATE = await api('/api/tend');
+      render();
+    } catch (e) {
+      document.getElementById('agents').innerHTML =
+        `<div class="empty">Could not load your teammates: ${esc(e.message)}</div>`;
+    }
+  }
+
+  async function runNow(id) {
+    const agent = STATE.agents.find(a => a.id === id);
+    // A run calls the model and its tools inside the request, so this can sit
+    // for minutes. Say so, rather than looking frozen.
+    toast((agent ? agent.name : 'Agent') + ' is working. This can take a few minutes.');
+    document.querySelectorAll('.btn-go').forEach(b => b.disabled = true);
+    try {
+      const { run } = await api('/api/tend-run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agentId: id }),
+      });
+      toast(run.status === 'awaiting_approval'
+        ? 'Needs your approval.'
+        : run.status === 'completed' ? 'Done.' : 'Run ' + run.status + '.');
+    } catch (e) {
+      toast('Failed: ' + e.message);
+    } finally {
+      document.querySelectorAll('.btn-go').forEach(b => b.disabled = false);
+      load();
+    }
+  }
+
+  async function decide(runId, decision, btn) {
+    btn.parentElement.querySelectorAll('button').forEach(b => b.disabled = true);
+    toast(decision === 'approve' ? 'Approved. Carrying on…' : 'Declined. Carrying on…');
+    try {
+      const { run } = await api('/api/tend-run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ runId, decision }),
+      });
+      toast(run.status === 'awaiting_approval' ? 'Another action needs you.' : 'Run ' + run.status + '.');
+    } catch (e) {
+      toast('Failed: ' + e.message);
+    } finally {
+      load();
+    }
+  }
+
+  async function removeAgent(id) {
+    const agent = STATE.agents.find(a => a.id === id);
+    if (!confirm(`Delete ${agent ? agent.name : 'this teammate'}? Its run history goes too.`)) return;
+    try {
+      await api('/api/tend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ op: 'delete', id }),
+      });
+      toast('Deleted.');
+      load();
+    } catch (e) { toast('Failed: ' + e.message); }
+  }
+
+  /* ── Workspace ──────────────────────────────────────────────── */
+
+  function renderWorkspace() {
+    const w = STATE.workspace || {};
+    const people = [w.operator_name, w.admin_name].filter(Boolean).join(' · ');
+    // An empty "about" is the one thing that quietly makes every run worse:
+    // the teammate has no idea what a win looks like here. Say so up front.
+    document.getElementById('workspace').innerHTML = `
+      <div>
+        <div class="ws-name">${esc(w.community_name || 'Community not set')}</div>
+        <div class="ws-people">${esc(people || 'No names set')}</div>
+        ${w.about ? '' : '<div class="ws-warn">Tell your teammates about the community. They read this before every job.</div>'}
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="openWorkspace()">Edit</button>`;
+  }
+
+  function openWorkspace() {
+    const w = STATE.workspace || {};
+    document.getElementById('w-community').value = w.community_name || '';
+    document.getElementById('w-operator').value  = w.operator_name  || '';
+    document.getElementById('w-admin').value     = w.admin_name     || '';
+    document.getElementById('w-about').value     = w.about          || '';
+    document.getElementById('w-style').value     = w.style_notes    || '';
+    document.getElementById('ws-bg').classList.add('open');
+  }
+
+  function closeWorkspace() {
+    document.getElementById('ws-bg').classList.remove('open');
+  }
+
+  async function saveWorkspace() {
+    const btn = document.getElementById('w-save');
+    btn.disabled = true;
+    try {
+      await api('/api/tend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          op: 'workspace',
+          community_name: document.getElementById('w-community').value,
+          operator_name:  document.getElementById('w-operator').value,
+          admin_name:     document.getElementById('w-admin').value,
+          about:          document.getElementById('w-about').value,
+          style_notes:    document.getElementById('w-style').value,
+        }),
+      });
+      toast('Saved.');
+      closeWorkspace();
+      load();
+    } catch (e) {
+      toast('Failed: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById('ws-bg').addEventListener('click', e => {
+    if (e.target.id === 'ws-bg') closeWorkspace();
+  });
+
+  /* ── Editor ─────────────────────────────────────────────────── */
+
+  function onScheduleChange() {
+    const value = document.getElementById('f-schedule').value;
+    document.getElementById('f-hour-wrap').style.display = (value === 'daily' || value === 'weekly') ? '' : 'none';
+    document.getElementById('f-dow-wrap').style.display  = (value === 'weekly') ? '' : 'none';
+  }
+
+  function renderToolPicker(selected) {
+    const chosen = new Set(selected || []);
+    const group = (title, tools) => !tools.length ? '' : `
+      <div class="tool-group">
+        <div class="tool-group-title">${esc(title)}</div>
+        ${tools.map(t => `
+          <label class="tool-row">
+            <input type="checkbox" value="${esc(t.name)}" ${chosen.has(t.name) ? 'checked' : ''}>
+            <span>
+              ${esc(t.label)}
+              <div class="tool-desc">${esc(t.description)}</div>
+            </span>
+          </label>`).join('')}
+      </div>`;
+    document.getElementById('f-tools').innerHTML =
+      group('Reads — safe, runs unattended', STATE.tools.filter(t => !t.write)) +
+      group('Changes things — approval gated', STATE.tools.filter(t => t.write));
+  }
+
+  function openEditor(id) {
+    EDITING = id || null;
+    const a = id ? STATE.agents.find(x => x.id === id) : null;
+    document.getElementById('editor-title').textContent = a ? 'Edit ' + a.name : 'New teammate';
+    document.getElementById('f-name').value         = a ? a.name : '';
+    document.getElementById('f-role').value         = a ? a.role : '';
+    document.getElementById('f-instructions').value = a ? a.instructions : '';
+    document.getElementById('f-approval').checked   = a ? a.approval_required : true;
+    document.getElementById('f-schedule').value     = a ? a.schedule : 'manual';
+    document.getElementById('f-dow').value          = a ? String(a.dow) : '1';
+    document.getElementById('f-hour').value         = String(Math.round(utcToLocalHour(a ? a.hour_utc : 21)));
+    document.getElementById('f-effort').value       = a ? a.effort : 'medium';
+    document.getElementById('f-enabled').value      = a ? String(a.enabled) : 'true';
+
+    const provSel = document.getElementById('f-provider');
+    provSel.innerHTML = STATE.providers.map(p =>
+      `<option value="${esc(p.id)}">${esc(p.label)}</option>`).join('');
+    provSel.value = a ? a.provider : (STATE.providers[0] ? STATE.providers[0].id : '');
+    onProviderChange(a ? a.model : null);
+
+    renderToolPicker(a ? a.tools : []);
+    onScheduleChange();
+    document.getElementById('editor-bg').classList.add('open');
+  }
+
+  function closeEditor() {
+    document.getElementById('editor-bg').classList.remove('open');
+  }
+
+  async function saveAgent() {
+    const name = document.getElementById('f-name').value.trim();
+    if (!name) return toast('Give it a name.');
+
+    const tools = [...document.querySelectorAll('#f-tools input:checked')].map(i => i.value);
+    const body = {
+      op: EDITING ? 'update' : 'create',
+      id: EDITING || undefined,
+      name,
+      role:              document.getElementById('f-role').value.trim(),
+      instructions:      document.getElementById('f-instructions').value,
+      tools,
+      approval_required: document.getElementById('f-approval').checked,
+      schedule:          document.getElementById('f-schedule').value,
+      dow:      Number(document.getElementById('f-dow').value),
+      hour_utc: Math.round(localToUtcHour(Number(document.getElementById('f-hour').value))),
+      effort:   document.getElementById('f-effort').value,
+      enabled:  document.getElementById('f-enabled').value === 'true',
+      provider: document.getElementById('f-provider').value,
+      // A typed id wins over the dropdown, so "pick one or type" is literal.
+      model:    document.getElementById('f-model-custom').value.trim()
+             || document.getElementById('f-model').value,
+    };
+
+    const btn = document.getElementById('f-save');
+    btn.disabled = true;
+    try {
+      await api('/api/tend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      toast('Saved.');
+      closeEditor();
+      load();
+    } catch (e) {
+      toast('Failed: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById('editor-bg').addEventListener('click', e => {
+    if (e.target.id === 'editor-bg') closeEditor();
+  });
+
+  load();
+  </script>
+</body>
+</html>

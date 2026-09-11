@@ -144,6 +144,19 @@ export async function getConnectedAccount(adminEmail: string): Promise<{ gmailEm
   return { gmailEmail: rows[0].gmail_email, displayName: rows[0].display_name ?? '' }
 }
 
+/**
+ * Every admin who has connected a mailbox. Lets an unattended job act as the
+ * connected admin without being told who that is in an env var.
+ */
+export async function listConnectedAdmins(): Promise<string[]> {
+  const res = await fetch(sbUrl('gmail_tokens?select=admin_email&order=updated_at.desc'), {
+    headers: sbHeaders(),
+  })
+  if (!res.ok) return []
+  const rows = await res.json() as { admin_email: string }[]
+  return rows.map(r => r.admin_email).filter(Boolean)
+}
+
 export async function disconnectGmail(adminEmail: string): Promise<void> {
   await fetch(
     sbUrl(`gmail_tokens?admin_email=eq.${encodeURIComponent(adminEmail)}`),

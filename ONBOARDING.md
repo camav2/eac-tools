@@ -23,6 +23,7 @@
 | `/dashboard` | `public/dashboard.html` | multiple GET endpoints | — |
 | `/settings` | `public/settings.html` | `api/access-config.ts` | — |
 | `/editor` | `public/editor.html` | `api/content.ts` | — |
+| `/tend` | `public/tend.html` | `api/tend.ts`, `api/tend-run.ts`, `api/tend-cron.ts` | — (Supabase) |
 
 ### Sibling repos
 | Repo | Live URL | Notes |
@@ -561,7 +562,96 @@ To check a deployment: Vercel dashboard at `vercel.com` or `vercel ls` in CLI.
 
 ---
 
-## 18. Related Memory Files
+## 18. Tend (AI teammates)
+
+Admin-only, at `/tend`. Named agents that do a recurring job on a schedule,
+each with its own instructions, its own tool allowlist, and its own run log.
+Built to replace a paid seat on squad.so using integrations this repo already
+has.
+
+### Files
+
+| File | What it is |
+|---|---|
+| `sql/tend.sql` | Schema. Run once in the Supabase SQL editor. |
+| `api/_lib/tend-db.ts` | Supabase REST wrapper for `tend_agents` / `tend_runs`. |
+| `api/_lib/tend-tools.ts` | The tool registry. Add a tool here and nothing else changes. |
+| `api/_lib/tend-providers.ts` | The model-provider registry and the two wire-format adapters. |
+| `api/_lib/tend-runner.ts` | The model loop, the approval gate, and resume. Provider-agnostic. |
+| `api/tend.ts` | Roster CRUD and the run log. Fast. |
+| `api/tend-run.ts` | Run an agent, or approve/decline a held action. `maxDuration 300`. |
+| `api/tend-cron.ts` | Hourly scheduler. Needs `CRON_SECRET`. Acts as the Gmail-connected admin. |
+| `public/tend.html` | Dashboard. |
+
+### The two rules that matter
+
+**Write tools are gated.** A tool in the registry is `write: true` when it
+changes something outside this app. If an agent has `approval_required` (the
+default) and asks for one, the run stops at `awaiting_approval` and nothing
+happens until Cam clicks Approve on the dashboard. Set `write` deliberately —
+it is the only thing standing between a research assistant and something that
+emails members unattended.
+
+**Assistant turns are replayed verbatim, in the provider's own shape.** Claude
+thinking blocks carry signatures; OpenRouter reasoning models return
+`reasoning_details` that must be echoed back. The full `messages` array is
+stored on the run in native format and sent back unmodified on resume. A run
+is pinned to the `provider` + `model` it started with, even if the agent has
+since been switched. Never rebuild an assistant turn by hand, and never answer
+only some of a turn's tool calls — that is why a gated write holds the *whole*
+turn, not just the write.
+
+### Providers and models
+
+Each teammate has a `provider` and a `model`. Two providers ship:
+
+| Provider | Wire format | Env var | Models |
+|---|---|---|---|
+| `anthropic` | `/v1/messages` (content blocks) | `ANTHROPIC_API_KEY` | Curated list, default `claude-opus-5` |
+| `openrouter` | `/chat/completions` (OpenAI-compatible) | `OPENROUTER_API_KEY` | Free text, any id from openrouter.ai/models |
+
+The runner never sees a wire format; it sees a `ModelTurn` (text, tool calls,
+usage) and asks the adapter to shape tool results back. A new provider that
+speaks the OpenAI format is a registry row with a `baseUrl` — no new adapter.
+Cursor is absent on purpose: its API runs coding agents on a repo and does not
+expose inference.
+
+**A provider only appears in the picker when its API key is set.** With just
+`ANTHROPIC_API_KEY` present, the Brain dropdown offers Claude alone. Add
+`OPENROUTER_API_KEY` and OpenRouter shows up on the next page load. No other
+change needed.
+
+`TEND_ADMIN_EMAIL` is optional. Scheduled runs act as whichever admin has
+connected Gmail on `/mail-merge` (from `gmail_tokens`); the env var only picks
+one when several have. A run with only read tools needs no mailbox at all.
+
+### Workspace
+
+`tend_workspace` is one row holding who this install belongs to: community
+name, who runs it, who runs the tools, an "about" paragraph, and house style.
+The system prompt is built from that row, never from literals, so a second
+community edits a form rather than source. EAC's values are seeded by
+`sql/tend.sql`.
+
+### Adding a tool
+
+Append to `TOOLS` in `api/_lib/tend-tools.ts`: a name, a label, `write`, a
+description the model reads, a JSON schema, and a `run()` that calls an
+existing `_lib` helper. It shows up in the picker on next load.
+
+### Cost and limits
+
+`MAX_STEPS = 10` tool calls per run, `MAX_PER_TICK = 3` agents started per
+cron tick. Per-agent `effort` (low/medium/high) maps to `output_config.effort`
+on Claude and `reasoning.effort` on OpenRouter. Manual runs send Gmail as the
+logged-in admin; scheduled runs as the connected admin (see Providers above).
+
+The hourly cron is a third entry in `vercel.json` and needs a Vercel plan that
+allows sub-daily crons. Hobby does not.
+
+---
+
+## 19. Related Memory Files
 
 - `eac_auth_architecture.md` — full canonical `_lib/auth.ts` source + integration checklist
 - `project_cowrite_auth_migration.md` — cowrite migration context (Clerk → custom auth, DO → Vercel)
