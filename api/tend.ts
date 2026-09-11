@@ -24,7 +24,7 @@ import { sanitiseAgent, sanitiseWorkspace } from './_lib/tend-validate'
 import {
   listAgents, createAgent, updateAgent, deleteAgent,
   listRuns, listRunsForAgent, getRun,
-  getWorkspace, updateWorkspace,
+  getWorkspace, updateWorkspace, getWorkerStatus,
 } from './_lib/tend-db'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -45,8 +45,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (agentId) {
         return res.json({ runs: await listRunsForAgent(agentId) })
       }
-      const [agents, runs, workspace] = await Promise.all([listAgents(), listRuns(), getWorkspace()])
-      return res.json({ agents, runs, workspace, tools: toolCatalogue(), providers: providerCatalogue() })
+      const [agents, runs, workspace, worker] = await Promise.all([
+        listAgents(), listRuns(), getWorkspace(), getWorkerStatus(),
+      ])
+      return res.json({
+        agents, runs, workspace,
+        worker: { alive: worker.alive, id: worker.worker?.id ?? null, lastSeen: worker.worker?.last_seen ?? null, version: worker.worker?.version ?? null },
+        tools: toolCatalogue(),
+        providers: providerCatalogue(),
+      })
     }
 
     if (req.method === 'POST') {

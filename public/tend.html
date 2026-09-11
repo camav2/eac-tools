@@ -79,6 +79,9 @@
     .ws-name { font-weight: 700; font-size: 0.82rem; }
     .ws-people { font-size: 0.72rem; color: var(--grey-500); margin-top: 2px; }
     .ws-warn { font-size: 0.72rem; color: var(--amber); font-weight: 600; margin-top: 4px; }
+    .ws-worker { font-size: 0.72rem; color: var(--grey-500); margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+    .wk-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--grey-400); display: inline-block; }
+    .wk-dot.on { background: var(--green); }
     .side-foot .btn { margin-top: 8px; }
 
     .thread { display: flex; flex-direction: column; min-height: 0; }
@@ -367,7 +370,7 @@
      including after closing the tab and coming back.
      ============================================================ */
 
-  let STATE = { agents: [], runs: [], tools: [], workspace: {}, providers: [] };
+  let STATE = { agents: [], runs: [], tools: [], workspace: {}, providers: [], worker: {} };
   let THREAD = [];            // runs for the selected teammate, oldest first
   let SELECTED = null;        // agent id
   let EDITING = null;         // agent id in the editor, null when creating
@@ -470,7 +473,8 @@
 
   /* ── Live state ────────────────────────────────────────────── */
 
-  const isLive = r => r && (r.status === 'running' || r.status === 'awaiting_approval');
+  const isBusy = r => r && (r.status === 'queued' || r.status === 'running');
+  const isLive = r => r && (isBusy(r) || r.status === 'awaiting_approval');
   const latestRunFor = id => STATE.runs.find(r => r.agent_id === id); // runs are newest-first
   const selectedAgent = () => STATE.agents.find(a => a.id === SELECTED);
 
@@ -485,7 +489,7 @@
     el.innerHTML = STATE.agents.map(a => {
       const last = latestRunFor(a.id);
       const dot = !a.enabled ? 'off'
-        : last?.status === 'running' ? 'busy'
+        : isBusy(last) ? 'busy'
         : last?.status === 'awaiting_approval' ? 'wait' : '';
       return `
       <li class="${a.id === SELECTED ? 'active' : ''}" onclick="select('${a.id}')">
@@ -501,10 +505,15 @@
   function renderWorkspace() {
     const w = STATE.workspace || {};
     const people = [w.operator_name, w.admin_name].filter(Boolean).join(' · ');
+    const wk = STATE.worker || {};
+    const workerLine = wk.alive
+      ? `<span class="wk-dot on"></span>Worker online${wk.id ? ' · ' + esc(wk.id) : ''}`
+      : `<span class="wk-dot"></span>Worker offline · runs in the cloud`;
     document.getElementById('workspace').innerHTML = `
       <div class="ws-name">${esc(w.community_name || 'Community not set')}</div>
       <div class="ws-people">${esc(people || 'No names set')}</div>
       ${w.about ? '' : '<div class="ws-warn">Tell your teammates about the community.</div>'}
+      <div class="ws-worker" title="${wk.lastSeen ? 'Last heartbeat ' + esc(ago(wk.lastSeen)) : 'No worker has ever checked in'}">${workerLine}</div>
       <button class="btn btn-ghost btn-sm" onclick="openWorkspace()">Edit community</button>`;
   }
 
@@ -529,6 +538,11 @@
   }
 
   function botBubble(r, agent) {
+    if (r.status === 'queued') {
+      const w = STATE.worker || {};
+      const where = w.alive ? 'on the worker' : 'for the next cloud run';
+      return `<div class="bubble working">${esc(agent.name)} is queued ${where}<span class="dots"></span></div>`;
+    }
     if (r.status === 'running') {
       return `<div class="bubble working">${esc(agent.name)} is working<span class="dots"></span></div>`;
     }
@@ -577,7 +591,7 @@
     if (!agent) { el.innerHTML = `<div class="empty">Pick a teammate on the left.</div>`; return; }
 
     const live = THREAD.some(isLive);
-    const busy = THREAD.some(r => r.status === 'running');
+    const busy = THREAD.some(isBusy);
 
     const items = THREAD.map(r => {
       const parts = [];
@@ -661,7 +675,7 @@
   // human, so it does not need polling; a running job does.
   function schedulePoll() {
     clearTimeout(pollTimer);
-    const busy = THREAD.some(r => r.status === 'running') || STATE.runs.some(r => r.status === 'running');
+    const busy = THREAD.some(isBusy) || STATE.runs.some(isBusy);
     if (busy) pollTimer = setTimeout(load, POLL_MS);
   }
 

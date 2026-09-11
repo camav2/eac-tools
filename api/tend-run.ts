@@ -6,17 +6,18 @@
  * POST /api/tend-run  { runId, decision: 'approve' }    → run the held action
  * POST /api/tend-run  { runId, decision: 'reject' }     → decline it and carry on
  *
- * Returns the run's end state: completed, awaiting_approval, or failed.
+ * WHERE THE WORK HAPPENS. If a worker (the Mac mini) has heartbeated in the
+ * last minute, the run is written as `queued` and this returns at once; the
+ * worker claims it, runs it for as long as it takes, and the page sees the
+ * result by polling. If no worker is alive, the run executes inside this
+ * request as before, within the 300 s cap. The page cannot tell the
+ * difference and does not need to.
  *
- * ASYNC BY DESIGN. The run is written to the database as `running` before the
- * model is called, and every transition is persisted. The page does not wait
- * for this response — it polls the thread. So the operator can close the tab
- * and the reply is there when they come back. If this function is killed
- * mid-run (timeout, deploy), the cron sweeps the row to `failed` with a plain
- * message rather than leaving "Working…" forever.
+ * Either way the run is persisted before the model is called, and every
+ * transition is saved, so the operator can close the tab and the reply is
+ * there when they come back. A killed run is swept to `failed` by the cron.
  *
- * Admin-only, and long-running — the model loop and its tool calls happen
- * inside this request.
+ * Admin-only.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
@@ -25,11 +26,12 @@ import { drive, resolveApproval, kickoffMessages, type Exchange } from './_lib/t
 import { sanitiseMessage } from './_lib/tend-validate'
 import {
   getAgent, getRun, createRun, updateAgent, hasLiveRun, getWorkspace, listRunsForAgent,
+  getWorkerStatus, queueDecision,
 } from './_lib/tend-db'
 
 export const maxDuration = 300
 
-/** The run's end state, trimmed for the browser. `messages` never goes out. */
+/** The run's state, trimmed for the browser. `messages` never goes out. */
 function publicRun(run: any) {
   return {
     id:            run.id,
@@ -68,6 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { agentId, runId, decision } = req.body ?? {}
+    const { alive: workerAlive } = await getWorkerStatus()
 
     // ── Resolve a held approval ──────────────────────────────────────────
     if (runId) {
@@ -82,7 +85,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const agent = await getAgent(run.agent_id)
       if (!agent) return res.status(404).json({ error: 'Agent no longer exists' })
 
-      console.log(`[tend] ${session.email} ${decision}d run ${runId}`)
+      console.log(`[tend] ${session.email} ${decision}d run ${runId}${workerAlive ? ' (handed to worker)' : ''}`)
+
+      if (workerAlive) {
+        await queueDecision(runId, decision)
+        return res.json({ run: publicRun({ ...run, status: 'queued', pending: null }) })
+      }
       const done = await resolveApproval(run, agent, decision === 'approve', ctx)
       return res.json({ run: publicRun(done) })
     }
@@ -105,7 +113,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const run = await createRun({
       agent_id:   agent.id,
       agent_name: agent.name,
-      status:     'running',
+      status:     workerAlive ? 'queued' : 'running',
       trigger:    'manual',
       provider:   agent.provider,
       model:      agent.model,
@@ -119,7 +127,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
 
     await updateAgent(agent.id, { last_run_at: new Date().toISOString() })
-    console.log(`[tend] ${session.email} started ${agent.name} (run ${run.id})${text ? ' from chat' : ''}`)
+    console.log(
+      `[tend] ${session.email} started ${agent.name} (run ${run.id})` +
+      `${text ? ' from chat' : ''}${workerAlive ? ' → queued for worker' : ''}`
+    )
+
+    if (workerAlive) return res.json({ run: publicRun(run) })
 
     const done = await drive(run, agent, ctx)
     return res.json({ run: publicRun(done) })

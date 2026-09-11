@@ -80,9 +80,19 @@ create table if not exists tend_runs (
   -- Denormalised so the log still reads correctly after an agent is renamed
   -- or deleted.
   agent_name    text        not null default '',
-  -- running | awaiting_approval | completed | failed | rejected
+  -- queued | running | awaiting_approval | completed | failed | rejected
+  -- `queued` means "waiting for the worker to pick it up". Created that way
+  -- whenever a worker is alive; otherwise Vercel runs it inline as `running`.
   status        text        not null default 'running',
   trigger       text        not null default 'manual',   -- manual | schedule
+  -- Which worker took the run. Null while queued or when Vercel ran it.
+  claimed_by    text,
+  -- Set with status=queued when an approval was decided but the tools have to
+  -- run on the worker. Cleared on claim. approve | reject
+  pending_decision text,
+  -- Touched on every persist. The stale sweep uses this, not started_at, so a
+  -- long run that is still making progress is never mistaken for a dead one.
+  updated_at    timestamptz not null default now(),
   -- Pinned from the agent when the run starts. The transcript below is in
   -- this provider's native shape, so a resume must use the same one.
   provider      text        not null default 'anthropic',
@@ -112,6 +122,23 @@ alter table tend_agents add column if not exists model    text not null default 
 alter table tend_runs   add column if not exists provider text not null default 'anthropic';
 alter table tend_runs   add column if not exists model    text not null default 'claude-opus-5';
 alter table tend_runs   add column if not exists prompt   text;
+alter table tend_runs   add column if not exists claimed_by       text;
+alter table tend_runs   add column if not exists pending_decision text;
+alter table tend_runs   add column if not exists updated_at       timestamptz not null default now();
+
+-- Worker heartbeats. One row per worker machine (the Mac mini). The API
+-- treats a worker as alive if its last_seen is within the last minute, and
+-- routes runs to it; otherwise Vercel runs them inline. No config needed.
+create table if not exists tend_workers (
+  id         text primary key,             -- hostname, or TEND_WORKER_ID
+  last_seen  timestamptz not null default now(),
+  version    text,                          -- git commit the worker is running
+  started_at timestamptz default now()
+);
+
+create index if not exists tend_runs_queued_idx
+  on tend_runs (started_at)
+  where status = 'queued';
 
 create index if not exists tend_runs_agent_started_idx
   on tend_runs (agent_id, started_at desc);
@@ -123,3 +150,4 @@ create index if not exists tend_runs_status_idx
 alter table tend_workspace enable row level security;
 alter table tend_agents    enable row level security;
 alter table tend_runs      enable row level security;
+alter table tend_workers   enable row level security;

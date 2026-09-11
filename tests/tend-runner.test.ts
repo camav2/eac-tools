@@ -57,7 +57,8 @@ function run(over: Partial<TendRun> = {}): TendRun {
     provider: 'anthropic', model: 'claude-opus-5',
     prompt: null, summary: null, error: null,
     messages: [{ role: 'user', content: 'go' }], log: [], pending: null,
-    input_tokens: 0, output_tokens: 0, started_at: '', finished_at: null,
+    input_tokens: 0, output_tokens: 0, claimed_by: null, pending_decision: null,
+    started_at: '', updated_at: '', finished_at: null,
     ...over,
   }
 }

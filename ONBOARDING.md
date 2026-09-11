@@ -585,10 +585,20 @@ persisted before the model is called, so closing the tab loses nothing.
 `HISTORY_EXCHANGES` (8) prompt/reply pairs as plain text — never the old tool
 transcripts. See `kickoffMessages` in `tend-runner.ts`.
 
-**Stale runs.** A run still `running` 15 minutes after it started was killed
-(timeout, deploy). The hourly cron sweeps it to `failed` with a plain reason
-(`expireStaleRuns`), which also unblocks the teammate — `hasLiveRun` would
-otherwise refuse new runs forever.
+**Stale runs.** A run still `running` with no progress (`updated_at`) for 15
+minutes was killed (timeout, deploy, worker crash). The hourly cron sweeps it
+to `failed` with a plain reason (`expireStaleRuns`), which also unblocks the
+teammate — `hasLiveRun` would otherwise refuse new runs forever.
+
+### Where a run executes: worker or inline
+
+`tend_workers` holds heartbeats. If any worker has beaten in the last 60 s
+(`isWorkerAlive`), new runs are created `queued` and approval decisions are
+handed over with `pending_decision`; the worker claims them
+(`claimNextRun`, two-step optimistic) and runs them for as long as they
+take. If no worker is alive, `/api/tend-run` and the cron execute inline as
+before, and the cron drains any stranded queue. The page shows which is
+happening; nothing else changes. Full setup in `docs/tend-worker.md`.
 
 ### Files
 
@@ -601,7 +611,9 @@ otherwise refuse new runs forever.
 | `api/_lib/tend-runner.ts` | The model loop, the approval gate, and resume. Provider-agnostic. |
 | `api/tend.ts` | Roster CRUD and the run log. Fast. |
 | `api/tend-run.ts` | Run an agent, or approve/decline a held action. `maxDuration 300`. |
-| `api/tend-cron.ts` | Hourly scheduler. Needs `CRON_SECRET`. Acts as the Gmail-connected admin. |
+| `api/tend-cron.ts` | Hourly scheduler. Needs `CRON_SECRET`. Acts as the Gmail-connected admin. Drains the queue if the worker is gone. |
+| `api/_lib/tend-schedule.ts` | Pure scheduling rules shared by cron and worker. |
+| `worker/` | The Mac mini worker. See `docs/tend-worker.md`. |
 | `public/tend.html` | Dashboard. |
 
 ### The two rules that matter

@@ -14,6 +14,7 @@ import type { ProviderId } from './tend-providers'
 export type Schedule = 'manual' | 'hourly' | 'daily' | 'weekly'
 export type Effort   = 'low' | 'medium' | 'high'
 export type RunStatus =
+  | 'queued'
   | 'running'
   | 'awaiting_approval'
   | 'completed'
@@ -92,7 +93,13 @@ export interface TendRun {
   pending:       PendingAction | null
   input_tokens:  number
   output_tokens: number
+  /** Which worker took the run. Null while queued, or when Vercel ran it. */
+  claimed_by:    string | null
+  /** An approval decided in the UI but executed on the worker. Cleared on claim. */
+  pending_decision: 'approve' | 'reject' | null
   started_at:    string
+  /** Touched on every persist. The stale sweep keys on this, not started_at. */
+  updated_at:    string
   finished_at:   string | null
 }
 
@@ -206,7 +213,7 @@ export async function updateRun(id: string, patch: Partial<TendRun>): Promise<vo
   await sb(`tend_runs?id=eq.${id}`, {
     method:  'PATCH',
     headers: { Prefer: 'return=minimal' },
-    body:    JSON.stringify(patch),
+    body:    JSON.stringify({ ...patch, updated_at: new Date().toISOString() }),
   })
 }
 
@@ -216,7 +223,7 @@ export async function updateRun(id: string, patch: Partial<TendRun>): Promise<vo
  */
 const RUN_LIST_COLS =
   'id,agent_id,agent_name,status,trigger,provider,model,prompt,summary,error,log,pending,' +
-  'input_tokens,output_tokens,started_at,finished_at'
+  'input_tokens,output_tokens,claimed_by,pending_decision,started_at,updated_at,finished_at'
 
 export type RunSummary = Omit<TendRun, 'messages'>
 
@@ -242,7 +249,7 @@ export async function listRunsForAgent(agentId: string, limit = 60): Promise<Run
  */
 export async function expireStaleRuns(cutoffIso: string): Promise<number> {
   const rows = await sb<{ id: string }[]>(
-    `tend_runs?status=eq.running&started_at=lt.${encodeURIComponent(cutoffIso)}`,
+    `tend_runs?status=eq.running&updated_at=lt.${encodeURIComponent(cutoffIso)}`,
     {
       method:  'PATCH',
       headers: { Prefer: 'return=representation' },
@@ -263,7 +270,77 @@ export async function expireStaleRuns(cutoffIso: string): Promise<number> {
  */
 export async function hasLiveRun(agentId: string): Promise<boolean> {
   const rows = await sb<{ id: string }[]>(
-    `tend_runs?agent_id=eq.${agentId}&status=in.(running,awaiting_approval)&select=id&limit=1`
+    `tend_runs?agent_id=eq.${agentId}&status=in.(queued,running,awaiting_approval)&select=id&limit=1`
   )
   return (rows?.length ?? 0) > 0
+}
+
+// ── Worker ────────────────────────────────────────────────────────────────────
+
+/** A worker that has not heartbeated within this window is treated as gone. */
+export const WORKER_TIMEOUT_MS = 60 * 1000
+
+export interface TendWorker {
+  id:         string
+  last_seen:  string
+  version:    string | null
+  started_at: string | null
+}
+
+export function isWorkerAlive(lastSeenIso: string | null | undefined, now: Date): boolean {
+  if (!lastSeenIso) return false
+  const t = new Date(lastSeenIso).getTime()
+  return Number.isFinite(t) && now.getTime() - t < WORKER_TIMEOUT_MS
+}
+
+export async function heartbeat(id: string, version: string | null): Promise<void> {
+  await sb('tend_workers', {
+    method:  'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body:    JSON.stringify({ id, version, last_seen: new Date().toISOString() }),
+  })
+}
+
+export async function getWorkerStatus(now = new Date()): Promise<{ alive: boolean; worker: TendWorker | null }> {
+  const rows = await sb<TendWorker[]>('tend_workers?select=*&order=last_seen.desc&limit=1')
+  const worker = rows?.[0] ?? null
+  return { alive: isWorkerAlive(worker?.last_seen, now), worker }
+}
+
+/**
+ * Take the oldest queued run. Two steps, optimistic: read the candidate, then
+ * PATCH it with `status=eq.queued` still in the filter. If a second worker
+ * got there first the PATCH matches nothing and this returns null. The
+ * decision is read before the claim because the claim clears it.
+ */
+export async function claimNextRun(
+  workerId: string,
+): Promise<{ run: TendRun; decision: 'approve' | 'reject' | null } | null> {
+  const next = await sb<{ id: string; pending_decision: string | null }[]>(
+    'tend_runs?status=eq.queued&select=id,pending_decision&order=started_at.asc&limit=1'
+  )
+  const cand = next?.[0]
+  if (!cand) return null
+
+  const claimed = await sb<TendRun[]>(`tend_runs?id=eq.${cand.id}&status=eq.queued`, {
+    method: 'PATCH',
+    body:   JSON.stringify({
+      status:           'running',
+      claimed_by:       workerId,
+      pending_decision: null,
+      updated_at:       new Date().toISOString(),
+    }),
+  })
+  const run = claimed?.[0]
+  if (!run) return null
+
+  const decision = cand.pending_decision === 'approve' || cand.pending_decision === 'reject'
+    ? cand.pending_decision
+    : null
+  return { run, decision }
+}
+
+/** Hand an approval decision to the worker instead of executing it here. */
+export async function queueDecision(runId: string, decision: 'approve' | 'reject'): Promise<void> {
+  await updateRun(runId, { status: 'queued', pending_decision: decision })
 }
