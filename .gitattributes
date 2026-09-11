@@ -1,0 +1,2 @@
+# Shell scripts run on the Mac mini. CRLF breaks the #! line there.
+*.sh text eol=lf
