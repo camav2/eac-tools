@@ -83,6 +83,8 @@ export interface TendRun {
    */
   provider:      ProviderId
   model:         string
+  /** What the operator typed to start this run. Null for scheduled runs. */
+  prompt:        string | null
   summary:       string | null
   error:         string | null
   messages:      any[]
@@ -212,12 +214,46 @@ export async function updateRun(id: string, patch: Partial<TendRun>): Promise<vo
  * Recent runs for the dashboard. `messages` is deliberately excluded — a
  * transcript can be hundreds of kilobytes and the list view never shows it.
  */
-export async function listRuns(limit = 40): Promise<Omit<TendRun, 'messages'>[]> {
-  const cols = 'id,agent_id,agent_name,status,trigger,provider,model,summary,error,log,pending,' +
-               'input_tokens,output_tokens,started_at,finished_at'
-  return (await sb<Omit<TendRun, 'messages'>[]>(
-    `tend_runs?select=${cols}&order=started_at.desc&limit=${limit}`
+const RUN_LIST_COLS =
+  'id,agent_id,agent_name,status,trigger,provider,model,prompt,summary,error,log,pending,' +
+  'input_tokens,output_tokens,started_at,finished_at'
+
+export type RunSummary = Omit<TendRun, 'messages'>
+
+export async function listRuns(limit = 40): Promise<RunSummary[]> {
+  return (await sb<RunSummary[]>(
+    `tend_runs?select=${RUN_LIST_COLS}&order=started_at.desc&limit=${limit}`
   )) ?? []
+}
+
+/** One teammate's thread, oldest first, so it reads top to bottom. */
+export async function listRunsForAgent(agentId: string, limit = 60): Promise<RunSummary[]> {
+  const rows = await sb<RunSummary[]>(
+    `tend_runs?agent_id=eq.${agentId}&select=${RUN_LIST_COLS}&order=started_at.desc&limit=${limit}`
+  )
+  return (rows ?? []).reverse()
+}
+
+/**
+ * A run that is still "running" long after it started is a run whose
+ * function was killed — timeout, deploy, crash. Left alone it blocks its
+ * teammate forever (hasLiveRun) and shows "Working…" in the thread until the
+ * end of time. The cron sweeps these into failed with a plain reason.
+ */
+export async function expireStaleRuns(cutoffIso: string): Promise<number> {
+  const rows = await sb<{ id: string }[]>(
+    `tend_runs?status=eq.running&started_at=lt.${encodeURIComponent(cutoffIso)}`,
+    {
+      method:  'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body:    JSON.stringify({
+        status:      'failed',
+        error:       'Stopped: the run did not finish in time. Try again, or give it a smaller job.',
+        finished_at: new Date().toISOString(),
+      }),
+    },
+  )
+  return rows?.length ?? 0
 }
 
 /**

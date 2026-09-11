@@ -1,11 +1,19 @@
 /*
  * EAC Tend — run an agent, or resolve an approval
  *
- * POST /api/tend-run  { agentId }                      → start a run now
+ * POST /api/tend-run  { agentId }                      → run the standing job now
+ * POST /api/tend-run  { agentId, text }                → chat: run with a message
  * POST /api/tend-run  { runId, decision: 'approve' }    → run the held action
  * POST /api/tend-run  { runId, decision: 'reject' }     → decline it and carry on
  *
  * Returns the run's end state: completed, awaiting_approval, or failed.
+ *
+ * ASYNC BY DESIGN. The run is written to the database as `running` before the
+ * model is called, and every transition is persisted. The page does not wait
+ * for this response — it polls the thread. So the operator can close the tab
+ * and the reply is there when they come back. If this function is killed
+ * mid-run (timeout, deploy), the cron sweeps the row to `failed` with a plain
+ * message rather than leaving "Working…" forever.
  *
  * Admin-only, and long-running — the model loop and its tool calls happen
  * inside this request.
@@ -13,9 +21,10 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAuth } from './_lib/auth'
-import { drive, resolveApproval, kickoffMessages } from './_lib/tend-runner'
+import { drive, resolveApproval, kickoffMessages, type Exchange } from './_lib/tend-runner'
+import { sanitiseMessage } from './_lib/tend-validate'
 import {
-  getAgent, getRun, createRun, updateAgent, hasLiveRun, getWorkspace,
+  getAgent, getRun, createRun, updateAgent, hasLiveRun, getWorkspace, listRunsForAgent,
 } from './_lib/tend-db'
 
 export const maxDuration = 300
@@ -29,6 +38,7 @@ function publicRun(run: any) {
     status:        run.status,
     provider:      run.provider,
     model:         run.model,
+    prompt:        run.prompt ?? null,
     summary:       run.summary ?? null,
     error:         run.error ?? null,
     pending:       run.pending ?? null,
@@ -36,6 +46,13 @@ function publicRun(run: any) {
     inputTokens:   run.input_tokens ?? 0,
     outputTokens:  run.output_tokens ?? 0,
   }
+}
+
+/** Prompt + reply pairs from finished runs, oldest first. Tool output stays out. */
+function historyFrom(runs: { prompt: string | null; summary: string | null; status: string }[]): Exchange[] {
+  return runs
+    .filter(r => r.status === 'completed' && r.summary)
+    .map(r => ({ prompt: r.prompt, summary: r.summary as string }))
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -46,7 +63,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!session) return
   if (!session.isAdmin) return res.status(403).json({ error: 'Admin only' })
 
-  const ctx = { adminEmail: session.email, workspace: await getWorkspace() }
+  const workspace = await getWorkspace()
+  const ctx = { adminEmail: session.email, workspace }
 
   try {
     const { agentId, runId, decision } = req.body ?? {}
@@ -69,7 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json({ run: publicRun(done) })
     }
 
-    // ── Start a run ──────────────────────────────────────────────────────
+    // ── Start a run (standing job, or a chat message) ────────────────────
     if (!agentId) return res.status(400).json({ error: 'agentId or runId required' })
 
     const agent = await getAgent(agentId)
@@ -78,8 +96,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // One live run per agent. Two in flight would fork the transcript, and an
     // approval would then attach to whichever row happened to finish last.
     if (await hasLiveRun(agentId)) {
-      return res.status(409).json({ error: `${agent.name} already has a run in progress` })
+      return res.status(409).json({ error: `${agent.name} is still working. Wait for it to finish.` })
     }
+
+    const text    = sanitiseMessage(req.body?.text)
+    const history = text ? historyFrom(await listRunsForAgent(agentId)) : []
 
     const run = await createRun({
       agent_id:   agent.id,
@@ -88,11 +109,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       trigger:    'manual',
       provider:   agent.provider,
       model:      agent.model,
-      messages:   kickoffMessages(agent.provider, new Date()),
+      prompt:     text || null,
+      messages:   kickoffMessages(agent.provider, {
+        now:       new Date(),
+        prompt:    text || undefined,
+        history,
+        adminName: workspace.admin_name,
+      }),
     })
 
     await updateAgent(agent.id, { last_run_at: new Date().toISOString() })
-    console.log(`[tend] ${session.email} started ${agent.name} (run ${run.id})`)
+    console.log(`[tend] ${session.email} started ${agent.name} (run ${run.id})${text ? ' from chat' : ''}`)
 
     const done = await drive(run, agent, ctx)
     return res.json({ run: publicRun(done) })

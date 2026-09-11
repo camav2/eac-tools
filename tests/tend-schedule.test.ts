@@ -14,7 +14,15 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { isDue, resolveAdminEmail } from '../api/tend-cron'
+import { isDue, resolveAdminEmail, staleCutoff, STALE_AFTER_MS } from '../api/tend-cron'
+
+test('a run is stale well after the function cap, not before', () => {
+  const now = new Date('2026-09-14T12:00:00Z')
+  const cutoff = new Date(staleCutoff(now))
+  assert.equal(now.getTime() - cutoff.getTime(), STALE_AFTER_MS)
+  // Longer than any single function can run, so a slow run is never swept.
+  assert.ok(STALE_AFTER_MS > 300_000, 'cutoff exceeds the 300s maxDuration')
+})
 import type { TendAgent } from '../api/_lib/tend-db'
 
 function agent(over: Partial<TendAgent> = {}): TendAgent {

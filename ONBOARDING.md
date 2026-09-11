@@ -564,10 +564,31 @@ To check a deployment: Vercel dashboard at `vercel.com` or `vercel ls` in CLI.
 
 ## 18. Tend (AI teammates)
 
-Admin-only, at `/tend`. Named agents that do a recurring job on a schedule,
-each with its own instructions, its own tool allowlist, and its own run log.
-Built to replace a paid seat on squad.so using integrations this repo already
-has.
+Admin-only, at `/tend`. Named agents, each with its own instructions, tool
+allowlist, schedule, and thread. Built to replace a paid seat on squad.so
+using integrations this repo already has.
+
+### The UI is a chat thread per teammate
+
+A thread is that teammate's runs, oldest first. Each run is one exchange:
+`prompt` (what the operator typed; null for a scheduled run) and `summary`
+(the reply). Approval gates render inline as cards. "Working…" renders while
+`status = running`.
+
+**Async by design.** Sending a message does not wait for the reply. The page
+fires `POST /api/tend-run { agentId, text }`, does not await it for the UI,
+and polls `GET /api/tend?agentId=` every 3s while a run is live. The run is
+persisted before the model is called, so closing the tab loses nothing.
+`document.visibilitychange` reloads on return.
+
+**Continuity is shallow on purpose.** A chat run's kickoff includes the last
+`HISTORY_EXCHANGES` (8) prompt/reply pairs as plain text — never the old tool
+transcripts. See `kickoffMessages` in `tend-runner.ts`.
+
+**Stale runs.** A run still `running` 15 minutes after it started was killed
+(timeout, deploy). The hourly cron sweeps it to `failed` with a plain reason
+(`expireStaleRuns`), which also unblocks the teammate — `hasLiveRun` would
+otherwise refuse new runs forever.
 
 ### Files
 

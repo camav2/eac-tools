@@ -31,7 +31,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { drive, kickoffMessages } from './_lib/tend-runner'
 import { listConnectedAdmins } from './_lib/gmail'
 import {
-  listAgents, createRun, updateAgent, hasLiveRun, getWorkspace,
+  listAgents, createRun, updateAgent, hasLiveRun, getWorkspace, expireStaleRuns,
   type TendAgent,
 } from './_lib/tend-db'
 
@@ -45,6 +45,17 @@ export const maxDuration = 300
 const MAX_PER_TICK = 3
 
 const HOUR_MS = 60 * 60 * 1000
+
+/**
+ * A run still "running" this long after it started was killed, not slow.
+ * The function cap is 300 seconds; this leaves generous room for a retry
+ * before declaring it dead and unblocking the teammate.
+ */
+export const STALE_AFTER_MS = 15 * 60 * 1000
+
+export function staleCutoff(now: Date): string {
+  return new Date(now.getTime() - STALE_AFTER_MS).toISOString()
+}
 
 /**
  * Who an unattended run acts as. An explicit override wins; otherwise the
@@ -102,6 +113,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    const now = new Date()
+
+    // Housekeeping first, so a teammate blocked by a dead run can be
+    // scheduled again on this same tick.
+    const expired = await expireStaleRuns(staleCutoff(now))
+    if (expired) console.warn(`[tend-cron] marked ${expired} stale run(s) as failed`)
+
     // Resolve, don't require. See the header comment.
     const { adminEmail, note } = resolveAdminEmail(
       process.env.TEND_ADMIN_EMAIL,
@@ -109,7 +127,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     )
     if (note) console.warn(`[tend-cron] ${note}`)
 
-    const now = new Date()
     const due = (await listAgents()).filter(a => isDue(a, now))
 
     if (!due.length) {
@@ -136,7 +153,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         trigger:    'schedule',
         provider:   agent.provider,
         model:      agent.model,
-        messages:   kickoffMessages(agent.provider, now),
+        prompt:     null,
+        messages:   kickoffMessages(agent.provider, { now, adminName: workspace.admin_name }),
       })
 
       // Stamped before the run, not after. A crash mid-run must not leave the

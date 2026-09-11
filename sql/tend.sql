@@ -87,6 +87,9 @@ create table if not exists tend_runs (
   -- this provider's native shape, so a resume must use the same one.
   provider      text        not null default 'anthropic',
   model         text        not null default 'claude-opus-5',
+  -- What the operator typed to start this run. Null for scheduled runs. The
+  -- thread view is prompt + summary per run; this column is the "you" bubble.
+  prompt        text,
   summary       text,
   error         text,
   -- Verbatim Anthropic messages array, thinking blocks included. Required for
@@ -108,6 +111,7 @@ alter table tend_agents add column if not exists provider text not null default 
 alter table tend_agents add column if not exists model    text not null default 'claude-opus-5';
 alter table tend_runs   add column if not exists provider text not null default 'anthropic';
 alter table tend_runs   add column if not exists model    text not null default 'claude-opus-5';
+alter table tend_runs   add column if not exists prompt   text;
 
 create index if not exists tend_runs_agent_started_idx
   on tend_runs (agent_id, started_at desc);

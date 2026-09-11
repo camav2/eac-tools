@@ -101,16 +101,63 @@ STYLE
 Write like a sharp colleague reporting back: plain words, short sentences, specifics over adjectives.${ws.style_notes ? `\n${ws.style_notes}` : ''}`
 }
 
+/** One earlier exchange in the thread, for continuity. */
+export interface Exchange {
+  /** What the operator said. Null for a scheduled run. */
+  prompt:  string | null
+  /** What the teammate replied. */
+  summary: string
+}
+
+export interface KickoffOptions {
+  now:        Date
+  /** The operator's message. Absent for a scheduled run. */
+  prompt?:    string
+  /** Recent exchanges, oldest first. Only prompt + reply, never tool transcripts. */
+  history?:   Exchange[]
+  adminName?: string
+}
+
+/** How much of the thread a new run gets to see. */
+export const HISTORY_EXCHANGES = 8
+
 /**
  * The opening message of every run, in the provider's shape. Lives here so
- * the manual and scheduled entry points cannot drift apart.
+ * the manual, chat and scheduled entry points cannot drift apart.
+ *
+ * Continuity is deliberately shallow: the last few prompt/reply pairs as
+ * plain text, never the old tool transcripts. A teammate that remembers what
+ * you asked last week is useful; one that drags 40KB of member lists into
+ * every call is expensive and no smarter.
  */
-export function kickoffMessages(providerId: string, now: Date, adapter?: ProviderAdapter): any[] {
-  return (adapter ?? adapterFor(providerId)).initialMessages(
-    'Start your scheduled job now. Follow your standing instructions. ' +
-    `Today is ${now.toISOString().slice(0, 10)} (UTC). ` +
-    'When you are done, call finish.'
-  )
+export function kickoffMessages(providerId: string, opts: KickoffOptions, adapter?: ProviderAdapter): any[] {
+  const admin = opts.adminName || 'The operator'
+  const date  = `Today is ${opts.now.toISOString().slice(0, 10)} (UTC).`
+  const parts: string[] = []
+
+  const history = (opts.history ?? []).slice(-HISTORY_EXCHANGES)
+  if (history.length) {
+    parts.push('RECENT CONVERSATION (oldest first, for context only):')
+    for (const h of history) {
+      parts.push(h.prompt ? `[${admin}]: ${h.prompt}` : '[Scheduled run]')
+      parts.push(`[You]: ${h.summary}`)
+    }
+    parts.push('')
+  }
+
+  if (opts.prompt) {
+    parts.push(`${admin} says:`)
+    parts.push(opts.prompt)
+    parts.push('')
+    parts.push(
+      `Do what is asked. Use your tools where they help. ${date} ` +
+      'When you are done, call finish. Your reply goes in summary; put anything long in details.'
+    )
+  } else {
+    parts.push(`Start your scheduled job now. Follow your standing instructions. ${date} When you are done, call finish.`)
+  }
+
+  return (adapter ?? adapterFor(providerId)).initialMessages(parts.join('\n'))
 }
 
 function serialise(value: unknown): string {
