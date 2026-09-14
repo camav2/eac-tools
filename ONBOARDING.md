@@ -726,12 +726,6 @@ allows sub-daily crons. Hobby does not.
 
 ---
 
-## 19. Related Memory Files
-
-- `eac_auth_architecture.md` — full canonical `_lib/auth.ts` source + integration checklist
-- `project_cowrite_auth_migration.md` — cowrite migration context (Clerk → custom auth, DO → Vercel)
-- `project_eac_cms_buttons.md` — CMS button/link editing via `data-content-href-key`
-
 ---
 
 ## 19. Attending Tool — LinkedIn Setup Runbook
@@ -784,3 +778,11 @@ non-members can use the tool too.
 
 The tool is fully usable in the first mode — ship read-only, upgrade later
 without a code change.
+
+---
+
+## 20. Related Memory Files
+
+- `eac_auth_architecture.md` — full canonical `_lib/auth.ts` source + integration checklist
+- `project_cowrite_auth_migration.md` — cowrite migration context (Clerk → custom auth, DO → Vercel)
+- `project_eac_cms_buttons.md` — CMS button/link editing via `data-content-href-key`

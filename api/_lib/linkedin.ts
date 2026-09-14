@@ -196,13 +196,32 @@ export async function fetchPhotoDataUrl(url?: string): Promise<string | null> {
 
 // ── Posting ──────────────────────────────────────────────────────────────────
 
+const RESERVED = /[|{}@[\]()<>#*_~\\]/g
+const URL_RE   = /https?:\/\/[^\s]+/g
+
 /**
  * The Posts API `commentary` field uses LinkedIn's "Little Text" format, where
- * these characters are reserved and must be backslash-escaped or the request
- * 422s with an unhelpful error.
+ * the reserved characters above must be backslash-escaped or the request 422s
+ * with an unhelpful error.
+ *
+ * URLs are deliberately left verbatim. `utm_source` and `utm_campaign` both
+ * contain underscores, so escaping them rewrites the link to `utm\_source` and
+ * quietly breaks campaign tracking on every post — a failure nobody notices
+ * until the analytics are already wrong. Leaving the URL alone fails loudly
+ * (a 422 on the very first test post) rather than silently, which is the
+ * failure mode we want.
  */
 export function escapeCommentary(text: string): string {
-  return text.replace(/[|{}@[\]()<>#*_~\\]/g, c => '\\' + c)
+  let out   = ''
+  let last  = 0
+  URL_RE.lastIndex = 0
+
+  for (let m = URL_RE.exec(text); m; m = URL_RE.exec(text)) {
+    out += text.slice(last, m.index).replace(RESERVED, c => '\\' + c)
+    out += m[0]
+    last = m.index + m[0].length
+  }
+  return out + text.slice(last).replace(RESERVED, c => '\\' + c)
 }
 
 function restHeaders(accessToken: string): Record<string, string> {
