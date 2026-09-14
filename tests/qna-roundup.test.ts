@@ -12,7 +12,7 @@ import assert from 'node:assert/strict'
 
 import { findRoundup, linkNameInHtml } from '../api/_lib/qna-roundup'
 
-const URL = 'https://www.expertauthor.community/blog/penelope-barr-on-win-the-night'
+const URL = 'https://www.expertauthor.community/blog-posts/penelope-barr-on-win-the-night'
 
 test('links the name', () => {
   const r = linkNameInHtml('<p>Win the Night by Penelope Barr is superb.</p>', 'Penelope Barr', URL)

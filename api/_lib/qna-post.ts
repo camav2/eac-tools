@@ -15,7 +15,7 @@ import { mainTitle } from '../qna-voice'
 export interface DraftItem { question: string; answer: string }
 export interface Draft { standfirst: string; items: DraftItem[]; editorNotes?: string }
 
-export const BLOG_BASE_URL = 'https://www.expertauthor.community/blog'
+export const BLOG_BASE_URL = 'https://www.expertauthor.community/blog-posts'
 
 function esc(s: string): string {
   return String(s ?? '')
