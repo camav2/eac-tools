@@ -121,7 +121,10 @@ export function postBodyHtml(draft: Draft, opts: BodyOptions = {}): string {
     // Never before the first pair: the standfirst already put a rule there.
     if (!first) parts.push('<p>&nbsp;</p>')
     first = false
-    if (q) parts.push(`<h3>${esc(q)}</h3>`)
+    // <strong> inside the heading, because the site's h3 does not set a
+    // font-weight and inherits a light one - the questions were rendering at
+    // the same weight as the answers and the interview read as one voice.
+    if (q) parts.push(`<h3><strong>${esc(q)}</strong></h3>`)
     for (const p of a) parts.push(`<p>${esc(p)}</p>`)
   }
 
