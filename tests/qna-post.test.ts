@@ -72,7 +72,7 @@ test('questions are h3, not h2', () => {
   // Site H2 is 28px and set for section headings; every question would shout
   // over the answer beneath it.
   const html = postBodyHtml(DRAFT)
-  assert.match(html, /<h3>What did writing it clarify\?<\/h3>/)
+  assert.match(html, /<h3><strong>What did writing it clarify\?<\/strong><\/h3>/)
   assert.doesNotMatch(html, /<h2>/)
 })
 
@@ -252,7 +252,7 @@ test('space separates each answer from the next question', () => {
   const html = postBodyHtml(DRAFT)
   const parts = html.split('<h3>')
   assert.equal(parts.length - 1, 2, 'two questions')
-  assert.match(html, /<\/p>\n<p>&nbsp;<\/p>\n<h3>What surprised you\?<\/h3>/)
+  assert.match(html, /<\/p>\n<p>&nbsp;<\/p>\n<h3><strong>What surprised you\?<\/strong><\/h3>/)
   // The rule is gone. Six of them down a page turned the interview into a form.
   assert.doesNotMatch(html.split('<hr>').slice(1).join('<hr>'), /<hr>/)
 })
@@ -374,4 +374,12 @@ test('the headshot never appears without a standfirst to sit beside', () => {
     { headshotUrl: 'https://wf.test/p.jpg', authorName: 'Penelope Barr' }
   )
   assert.doesNotMatch(html, /<img/)
+})
+
+test('questions are bold, not just headings', () => {
+  // The site h3 sets no font-weight and inherits a light one, so the questions
+  // rendered at the same weight as the answers and the interview read as one
+  // voice rather than two.
+  const html = postBodyHtml(DRAFT)
+  assert.match(html, /<h3><strong>What did writing it clarify\?<\/strong><\/h3>/)
 })

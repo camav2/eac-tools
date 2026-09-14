@@ -1287,6 +1287,16 @@ async function stagePost(authorItemId) {
     var data = await res.json().catch(function() { return {}; });
     if (!res.ok) throw new Error(data.error || ('API error ' + res.status));
     await loadPublish(authorItemId);
+    // The post and the author page are two writes. Saying only 'done' when
+    // the second one failed is how a missing link goes unnoticed.
+    var after = document.getElementById('pub-status');
+    if (after && data.summaryWritten === false) {
+      after.textContent = 'Post saved, but the author page was not updated: ' + (data.summaryError || 'unknown error');
+      after.className = 'review-status err';
+    } else if (after) {
+      after.textContent = data.restaged ? 'Post and author page updated.' : 'Post and author page staged.';
+      after.className = 'review-status ok';
+    }
   } catch (err) {
     btn.disabled = false;
     status.textContent = 'Failed: ' + err.message;

@@ -286,12 +286,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // The summary links to the slug Webflow actually kept, not the one we
       // asked for. A collision would otherwise leave the author page pointing
       // at a page that does not exist.
-      await writeEditorialQna(authorItemId, authorSummaryHtml(draft, post.slug))
+      const summary = await writeEditorialQna(authorItemId, authorSummaryHtml(draft, post.slug))
+      if (!summary.ok) {
+        console.error(`[qna-publish] ${authorName} summary not written: ${summary.error}`)
+      }
 
       return res.status(200).json({
         ok: true,
         restaged: Boolean(existing),
         staged: { ...post, url: blogUrl(post.slug) },
+        // Reported rather than thrown: the post exists either way, and an
+        // error that killed the whole stage said nothing about which half of
+        // it had worked.
+        summaryWritten: summary.ok,
+        summaryError: summary.ok ? null : summary.error,
       })
     }
 

@@ -176,13 +176,35 @@ export async function getQnaMedia(
  * not go live until the item or site is explicitly published. That publish
  * step stays a separate, Cam-triggered action (see api/qna-publish.ts).
  */
-export async function writeEditorialQna(authorItemId: string, html: string): Promise<void> {
-  await wfFetch(`/collections/${AUTHORS_COLLECTION_ID}/items/${authorItemId}`, {
-    method: 'PATCH',
-    body: JSON.stringify({
-      fieldData: { 'editorial-q-a': html },
-    }),
-  })
+/**
+ * Writes the summary and its link to the author's own item.
+ *
+ * Reports rather than throws. The blog post is created before this runs, so a
+ * failure here used to take down the whole stage after the post already
+ * existed - leaving a post in Webflow and an error on screen that said nothing
+ * about which half had worked.
+ *
+ * The likely failure is that `editorial-q-a` does not exist on the Authors
+ * collection, which Webflow answers with a 400 naming the field. That is worth
+ * putting in front of Cam verbatim, because it is a thing only he can fix.
+ */
+export async function writeEditorialQna(
+  authorItemId: string,
+  html: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await wfFetch(`/collections/${AUTHORS_COLLECTION_ID}/items/${authorItemId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        fieldData: { 'editorial-q-a': html },
+      }),
+    })
+    return { ok: true }
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err)
+    console.error('[webflow] author summary write failed:', error)
+    return { ok: false, error }
+  }
 }
 
 // ── Blog ─────────────────────────────────────────────────────────────────────
