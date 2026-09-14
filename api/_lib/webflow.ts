@@ -320,3 +320,99 @@ export async function getAuthorHeadshotUrl(authorItemId: string): Promise<string
     return null
   }
 }
+
+// ── What the end of a published interview needs ──────────────────────────────
+
+export interface PostFooterData {
+  authorName?: string
+  authorLinkedin?: string
+  authorWebsite?: string
+  bookTitle?: string
+  bookCoverUrl?: string
+  bookCoverAlt?: string
+  /** Where to buy, best first. Booktopia before Amazon: it is the Australian
+   *  shop, and these are overwhelmingly Australian authors and readers. */
+  buyLinks: Array<{ label: string; url: string }>
+  /** Cover on a background, which reads better as a post image than a bare
+   *  cover floating on white. */
+  bookHeroUrl?: string
+}
+
+export async function getPostFooterData(
+  authorItemId?: string,
+  bookItemId?: string
+): Promise<PostFooterData> {
+  const [author, book] = await Promise.all([
+    authorItemId
+      ? wfFetch(`/collections/${AUTHORS_COLLECTION_ID}/items/${authorItemId}`).catch(err => {
+          console.error('[webflow] author footer fetch failed:', err)
+          return null
+        })
+      : null,
+    bookItemId
+      ? wfFetch(`/collections/${BOOKS_COLLECTION_ID}/items/${bookItemId}`).catch(err => {
+          console.error('[webflow] book footer fetch failed:', err)
+          return null
+        })
+      : null,
+  ])
+
+  const a = author?.fieldData ?? {}
+  const b = book?.fieldData ?? {}
+
+  const buyLinks: Array<{ label: string; url: string }> = []
+  const push = (label: string, value: unknown) => {
+    const url = linkUrl(value)
+    if (url) buyLinks.push({ label, url })
+  }
+  push('Booktopia', b['view-on-booktopia'])
+  push('Amazon',    b['view-on-amazon'])
+  push('the publisher', b['view-on-website'])
+
+  return {
+    authorName:     a.name,
+    authorLinkedin: linkUrl(a.linkedin),
+    authorWebsite:  linkUrl(a['author-website']),
+    bookTitle:      b.name,
+    bookCoverUrl:   b['book-thumbnail']?.url,
+    bookCoverAlt:   b['alt-text-for-image'] || b.name,
+    bookHeroUrl:    b.image?.url,
+    buyLinks,
+  }
+}
+
+// ── The "best business books" round-up ───────────────────────────────────────
+
+export interface BlogPostSummary {
+  id: string
+  name: string
+  slug: string
+  isDraft: boolean
+}
+
+/** Every blog post, titles and slugs only, for locating the round-up. */
+export async function listBlogPosts(): Promise<Array<BlogPostSummary & { bodyHtml: string }>> {
+  const items = await listAllItems(BLOG_COLLECTION_ID)
+  return items.map((i: any) => ({
+    id:       i.id,
+    name:     i.fieldData?.name ?? '',
+    slug:     i.fieldData?.slug ?? '',
+    isDraft:  Boolean(i.isDraft),
+    bodyHtml: i.fieldData?.['full-blog-post'] ?? '',
+  }))
+}
+
+/**
+ * Rewrites one post's body.
+ *
+ * Only ever called with HTML that came from that same post a moment earlier
+ * and had exactly one link inserted. Nothing here composes a body from
+ * scratch, because the round-up is a live article that ranks and this tool has
+ * no business rewriting anyone's prose.
+ */
+export async function writeBlogBody(itemId: string, bodyHtml: string): Promise<void> {
+  await wfFetch(`/collections/${BLOG_COLLECTION_ID}/items/${itemId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ fieldData: { 'full-blog-post': bodyHtml } }),
+  })
+}
