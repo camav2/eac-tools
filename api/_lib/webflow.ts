@@ -416,3 +416,29 @@ export async function writeBlogBody(itemId: string, bodyHtml: string): Promise<v
     body: JSON.stringify({ fieldData: { 'full-blog-post': bodyHtml } }),
   })
 }
+
+/**
+ * Rewrites an interview post that has already been staged.
+ *
+ * Needed because staging is not a one-shot: Cam re-reads the draft, changes
+ * the headline, picks a different photograph, and expects the post to catch
+ * up. Refusing the second attempt - which is what happened before this - left
+ * him deleting items in Webflow by hand to get another go.
+ *
+ * The slug is deliberately NOT updated. It is how this tool finds the post
+ * again, and changing it would orphan the staged item and break any link
+ * already pointing at it, including the one on the author's page.
+ */
+export async function updateBlogPost(itemId: string, input: Omit<BlogPostInput, 'slug'>): Promise<void> {
+  const fieldData: Record<string, unknown> = {
+    name:                input.title,
+    'full-blog-post':    input.bodyHtml,
+    'short-description': input.description,
+  }
+  if (input.imageUrl) fieldData['main-image'] = { url: input.imageUrl }
+
+  await wfFetch(`/collections/${BLOG_COLLECTION_ID}/items/${itemId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ fieldData }),
+  })
+}
