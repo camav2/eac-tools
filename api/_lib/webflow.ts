@@ -188,22 +188,84 @@ export async function getQnaMedia(
  * collection, which Webflow answers with a 400 naming the field. That is worth
  * putting in front of Cam verbatim, because it is a thing only he can fix.
  */
+const EDITORIAL_QNA_SLUG = 'editorial-q-a'
+
+/**
+ * Creates the Editorial Q&A field on Authors if it is not there.
+ *
+ * Same reasoning as the self-provisioning storage buckets in this repo: a
+ * feature that needs somebody to hand-create a field first is a feature that
+ * sits broken until they do, and the failure it produces says nothing useful.
+ *
+ * Idempotent. Webflow answers a duplicate slug with a 400 mentioning the slug
+ * rather than a 409, so the body has to be read - the status alone would make
+ * every call after the first one look like a failure.
+ */
+async function ensureEditorialQnaField(): Promise<void> {
+  try {
+    await wfFetch(`/collections/${AUTHORS_COLLECTION_ID}/fields`, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'RichText',
+        displayName: 'Editorial Q&A',
+        slug: EDITORIAL_QNA_SLUG,
+        isRequired: false,
+        helpText: 'A short summary of the author interview and a link to the full post. Written by the Q&A tool.',
+      }),
+    })
+    console.log('[webflow] created the Editorial Q&A field on Authors')
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (/already exists|duplicate|slug/i.test(msg)) return
+    throw err
+  }
+}
+
+/**
+ * Writes the summary and its link to the author's own item.
+ *
+ * Reports rather than throws. The blog post is created before this runs, so a
+ * failure here used to take down the whole stage after the post already
+ * existed - leaving a post in Webflow and an error on screen that said nothing
+ * about which half had worked.
+ *
+ * A missing field is fixed rather than reported: create it and try once more.
+ * Anything still failing after that is Cam's to see, verbatim.
+ */
 export async function writeEditorialQna(
   authorItemId: string,
   html: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  try {
-    await wfFetch(`/collections/${AUTHORS_COLLECTION_ID}/items/${authorItemId}`, {
+  const write = () =>
+    wfFetch(`/collections/${AUTHORS_COLLECTION_ID}/items/${authorItemId}`, {
       method: 'PATCH',
       body: JSON.stringify({
-        fieldData: { 'editorial-q-a': html },
+        fieldData: { [EDITORIAL_QNA_SLUG]: html },
       }),
     })
+
+  try {
+    await write()
     return { ok: true }
   } catch (err) {
-    const error = err instanceof Error ? err.message : String(err)
-    console.error('[webflow] author summary write failed:', error)
-    return { ok: false, error }
+    const first = err instanceof Error ? err.message : String(err)
+
+    // Webflow rejects an unknown field by name, which is the one failure worth
+    // trying to repair rather than report.
+    if (!new RegExp(EDITORIAL_QNA_SLUG, 'i').test(first) && !/unknown field|not exist|invalid/i.test(first)) {
+      console.error('[webflow] author summary write failed:', first)
+      return { ok: false, error: first }
+    }
+
+    try {
+      await ensureEditorialQnaField()
+      await write()
+      return { ok: true }
+    } catch (err2) {
+      const error = err2 instanceof Error ? err2.message : String(err2)
+      console.error('[webflow] author summary write failed after creating the field:', error)
+      return { ok: false, error }
+    }
   }
 }
 
