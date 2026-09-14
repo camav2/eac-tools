@@ -16,6 +16,8 @@ import {
   choosePostImage,
   defaultTitle,
   footerHtml,
+  INTERVIEW_HEADING,
+  mergeAuthorStory,
   metaDescription,
   postBodyHtml,
   slugify,
@@ -382,4 +384,50 @@ test('questions are bold, not just headings', () => {
   // voice rather than two.
   const html = postBodyHtml(DRAFT)
   assert.match(html, /<h3><strong>What did writing it clarify\?<\/strong><\/h3>/)
+})
+
+/* ── The interview block on the author page ── */
+
+test('the author story keeps what was already there', () => {
+  // That field holds words somebody wrote about the author. Losing them to
+  // make room for a link would be a bad trade even once.
+  const story = '<p>Penelope came to us with three chapters and a lot of doubt.</p>'
+  const block = authorSummaryHtml(DRAFT, 'a-slug')
+  const merged = mergeAuthorStory(story, block)
+
+  assert.match(merged, /three chapters and a lot of doubt/)
+  assert.match(merged, /Read the full interview/)
+  assert.ok(merged.indexOf('three chapters') < merged.indexOf('Read the full'), 'their story comes first')
+})
+
+test('re-staging replaces our block instead of stacking another', () => {
+  const story = '<p>Their story.</p>'
+  const once = mergeAuthorStory(story, authorSummaryHtml(DRAFT, 'a-slug'))
+  const twice = mergeAuthorStory(once, authorSummaryHtml(DRAFT, 'a-slug'))
+
+  assert.equal(twice, once)
+  assert.equal((twice.match(/Read the full interview/g) || []).length, 1)
+})
+
+test('a changed slug updates the link rather than adding a second', () => {
+  const once = mergeAuthorStory('<p>Their story.</p>', authorSummaryHtml(DRAFT, 'old-slug'))
+  const twice = mergeAuthorStory(once, authorSummaryHtml(DRAFT, 'new-slug'))
+
+  assert.match(twice, /new-slug/)
+  assert.doesNotMatch(twice, /old-slug/)
+  assert.match(twice, /Their story/)
+})
+
+test('an empty story gives just the interview, with no stray gap', () => {
+  const block = authorSummaryHtml(DRAFT, 'a-slug')
+  assert.equal(mergeAuthorStory('', block), block)
+  assert.equal(mergeAuthorStory('   ', block), block)
+})
+
+test('the block is marked by a heading a reader also sees', () => {
+  // A comment or a class would be stripped by a rich text field, and the
+  // marker is what lets a re-stage find its own work.
+  const block = authorSummaryHtml(DRAFT, 'a-slug')
+  assert.ok(block.startsWith(INTERVIEW_HEADING))
+  assert.match(INTERVIEW_HEADING, /<h3>/)
 })

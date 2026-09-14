@@ -152,13 +152,38 @@ export function metaDescription(draft: Draft, limit = 155): string {
  * A summary with no link is a dead end, and the whole point of the author page
  * carrying this is to send people to the interview.
  */
+/**
+ * The heading that marks our block inside the author's own story field.
+ *
+ * It is how the block is found again and replaced, so it has to survive a
+ * Webflow rich text field. A heading does; an HTML comment or a class does
+ * not, which is why the marker is something the reader also sees.
+ */
+export const INTERVIEW_HEADING = '<h3><strong>The interview</strong></h3>'
+
 export function authorSummaryHtml(draft: Draft, slug: string): string {
   const stand = String(draft?.standfirst ?? '').trim()
   const url = `${BLOG_BASE_URL}/${encodeURIComponent(slug)}`
-  const parts: string[] = []
+  const parts: string[] = [INTERVIEW_HEADING]
   if (stand) parts.push(`<p>${esc(stand)}</p>`)
   parts.push(`<p><a href="${esc(url)}">Read the full interview</a></p>`)
   return parts.join('\n')
+}
+
+/**
+ * Puts the interview block at the end of the author's existing story.
+ *
+ * Appends, never replaces. That field holds words somebody wrote about the
+ * author, and losing them to make room for a link would be a bad trade even
+ * once.
+ *
+ * Re-staging replaces our block rather than stacking another one under it,
+ * which is what the heading marker is for: everything from it onwards is ours
+ * and can go, everything before it is theirs and stays.
+ */
+export function mergeAuthorStory(existing: string, block: string): string {
+  const before = String(existing ?? '').split(INTERVIEW_HEADING)[0].trim()
+  return before ? `${before}\n${block}` : block
 }
 
 /**
