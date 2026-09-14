@@ -71,6 +71,34 @@
     /* The publish fields hold a headline and a meta description, not a short
      * link, so they need the room the link input does not give them. */
     .pub-input { width: 100%; max-width: 560px; }
+    /* ── Their words, beside the edit ──
+     * Side by side rather than stacked: the comparison only works if both are
+     * in view at once, and stacking turns every check into a scroll.
+     */
+    .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 8px; }
+    .cmp-side { min-width: 0; display: flex; flex-direction: column; }
+    .cmp-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--grey-500); margin-bottom: 6px; }
+    .cmp-tag { font-size: 0.62rem; font-weight: 700; background: var(--grey-100); color: var(--grey-700); padding: 2px 6px; border-radius: 99px; letter-spacing: 0.04em; }
+    .cmp-count { color: var(--amber); font-weight: 700; letter-spacing: 0; text-transform: none; }
+    .cmp-same { color: var(--green); font-weight: 700; letter-spacing: 0; text-transform: none; }
+    .cmp-warn { color: var(--red); font-weight: 700; letter-spacing: 0; text-transform: none; }
+    .cmp-orig {
+      flex: 1; background: #fafafa; border: 1px solid var(--grey-200); border-radius: 8px;
+      padding: 12px 14px; font-size: 0.85rem; line-height: 1.6; color: var(--grey-700);
+      white-space: pre-wrap; overflow-y: auto; max-height: 320px;
+    }
+    /* Struck through rather than only tinted: colour alone is not a signal
+     * everyone can see. */
+    .diff-cut { background: #fee2e2; color: #991b1b; text-decoration: line-through; }
+    .diff-new { background: #dcfce7; color: #065f46; }
+    .cmp-revert { margin-top: 8px; align-self: flex-start; font-size: 0.72rem; font-weight: 600; padding: 5px 11px; border-radius: 99px; border: 1px solid var(--grey-200); background: #fff; color: var(--grey-700); cursor: pointer; }
+    .cmp-revert:hover:not(:disabled) { border-color: var(--navy); }
+    .cmp-revert:disabled { opacity: 0.4; cursor: default; }
+    .cmp-added { margin-top: 8px; }
+    .cmp-added summary { font-size: 0.72rem; font-weight: 600; color: var(--grey-500); cursor: pointer; }
+    .cmp-added summary:hover { color: var(--navy); }
+    .cmp-added .cmp-orig { margin-top: 8px; max-height: 220px; }
+    @media (max-width: 900px) { .cmp { grid-template-columns: 1fr; } }
 
     /* ── The invitation email draft ── */
     .mail-draft { margin-top: 16px; padding: 18px; background: #fafafa; border: 1px solid var(--grey-200); border-radius: 10px; }
@@ -1019,11 +1047,31 @@ function renderDraft(authorItemId, data) {
     return;
   }
 
+  var compare = data.compare || [];
+
   var items = (d.items || []).map(function(it, i) {
+    var c = compare[i];
     return '<div class="draft-item">' +
       '<div class="question-label">Q' + (i + 1) + '</div>' +
       '<textarea class="draft-q" data-dq="' + i + '" rows="2">' + escHtml(it.question) + '</textarea>' +
-      '<textarea class="draft-a" data-da="' + i + '" rows="7">' + escHtml(it.answer) + '</textarea>' +
+      '<div class="cmp">' +
+        '<div class="cmp-side">' +
+          '<div class="cmp-label">Their words' +
+            (c && c.spoken ? ' <span class="cmp-tag">spoken</span>' : '') +
+            (c ? changeNote(c) : '') + '</div>' +
+          '<div class="cmp-orig">' + (c ? c.originalHtml : '') + '</div>' +
+        '</div>' +
+        '<div class="cmp-side">' +
+          '<div class="cmp-label">The edit</div>' +
+          '<textarea class="draft-a" data-da="' + i + '" rows="9">' + escHtml(it.answer) + '</textarea>' +
+          (c && c.added && !c.tooLong
+            ? '<details class="cmp-added"><summary>See the ' + c.added +
+              (c.added === 1 ? ' word' : ' words') + ' that are not theirs</summary>' +
+              '<div class="cmp-orig">' + c.editedHtml + '</div></details>'
+            : '') +
+          '<button type="button" class="cmp-revert" data-revert="' + i + '">Use their words instead</button>' +
+        '</div>' +
+      '</div>' +
     '</div>';
   }).join('');
 
@@ -1062,6 +1110,7 @@ function renderDraft(authorItemId, data) {
 
   document.getElementById('draft-save').addEventListener('click', function() { saveDraft(authorItemId, d); });
   loadPublish(authorItemId);
+  bindRevert(compare);
   var appBtn = document.getElementById('draft-approve');
   if (appBtn && !data.approvedAt) {
     appBtn.addEventListener('click', function() { approveDraft(authorItemId); });
@@ -1184,6 +1233,39 @@ async function publishPost(authorItemId) {
     status.textContent = 'Failed: ' + err.message;
     status.className = 'review-status err';
   }
+}
+
+/* How much of the author survived, said plainly.
+ * A count is the thing Cam can act on: "12 words cut" is a glance, where a
+ * wall of highlighting is a reading job. */
+function changeNote(c) {
+  if (!c.matched) return ' <span class="cmp-warn">no matching answer</span>';
+  if (c.tooLong) return ' <span class="cmp-warn">too long to compare</span>';
+  if (!c.removed && !c.added) return ' <span class="cmp-same">unchanged</span>';
+  var bits = [];
+  if (c.removed) bits.push(c.removed + ' cut');
+  if (c.added) bits.push(c.added + ' added');
+  return ' <span class="cmp-count">' + bits.join(', ') + '</span>';
+}
+
+/* Puts the author's own words back into the editable box.
+ * The point of showing the diff is being able to undo it, and retyping an
+ * answer by hand to recover it would make the comparison decorative. */
+function bindRevert(compare) {
+  document.querySelectorAll('[data-revert]').forEach(function(btn) {
+    var i = Number(btn.dataset.revert);
+    var c = compare[i];
+    if (!c || !c.matched) { btn.disabled = true; return; }
+    btn.addEventListener('click', function() {
+      var box = document.querySelector('[data-da="' + i + '"]');
+      if (!box) return;
+      // Their words as text, not as the marked-up HTML shown beside it.
+      var tmp = document.createElement('div');
+      tmp.innerHTML = c.originalHtml;
+      box.value = tmp.textContent || '';
+      box.focus();
+    });
+  });
 }
 
 function collectDraft(original) {

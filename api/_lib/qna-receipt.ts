@@ -40,9 +40,9 @@ function lines(...parts: string[]): string {
     .join('\n')
 }
 
-export function receiptEmail(authorName: string, bookTitle: string, link: string) {
+export function receiptEmail(authorName: string, link: string) {
   return {
-    subject: `Got them - thanks for the answers about ${bookTitle}`,
+    subject: 'I got your answers.',
     body: lines(
       `Hi ${esc(firstName(authorName))},`,
       '',
@@ -51,13 +51,11 @@ export function receiptEmail(authorName: string, bookTitle: string, link: string
       `You can read back everything you sent us here:`,
       `<a href="${esc(link)}">${esc(link)}</a>`,
       '',
-      `Next, we shape it into an edited Q&amp;A. You will see that before anyone else does - nothing gets published without your approval.`,
-      '',
-      `If you have thought of something since, or want to change an answer, just reply to this email.`,
+      `Next, we shape it into an edited Q&amp;A and share with you for approval.`,
       '',
       `Thanks again.`,
       '',
-      `Cameron`,
+      `Cam`,
     ),
   }
 }
@@ -72,13 +70,12 @@ export function receiptEmail(authorName: string, bookTitle: string, link: string
 export async function sendReceipt(opts: {
   to: string
   authorName: string
-  bookTitle: string
   token: string
 }): Promise<'sent' | 'no-address' | 'failed'> {
   if (!opts.to?.trim()) return 'no-address'
 
   const link = `${INTAKE_BASE_URL}?token=${encodeURIComponent(opts.token)}`
-  const { subject, body } = receiptEmail(opts.authorName, opts.bookTitle, link)
+  const { subject, body } = receiptEmail(opts.authorName, link)
 
   try {
     await sendViaGmailAddress(

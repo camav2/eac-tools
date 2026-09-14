@@ -12,6 +12,8 @@
  * Env vars required: ANTHROPIC_API_KEY
  */
 
+import { houseDashes } from './house-style'
+
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages'
 const MODEL = 'claude-opus-5'
 
@@ -206,7 +208,7 @@ export async function generateQuestions(ctx: QuestionGenContext): Promise<string
 
 const RETURN_DRAFT_TOOL = {
   name: 'return_draft',
-  description: 'Return the edited magazine Q&A draft.',
+  description: 'Return the standfirst and any flags for the human editor.',
   input_schema: {
     type: 'object',
     properties: {
@@ -216,26 +218,15 @@ const RETURN_DRAFT_TOOL = {
           'A 1-2 sentence editorial introduction placed above the Q&A. States what this ' +
           'interview is about, drawn only from what the author actually said. No praise, no hype.',
       },
-      items: {
-        type: 'array',
-        description: 'The edited Q&A pairs, in the original question order. Omit unanswered questions.',
-        items: {
-          type: 'object',
-          properties: {
-            question: { type: 'string', description: 'The question, lightly edited for print.' },
-            answer:   { type: 'string', description: "The author's edited answer." },
-          },
-          required: ['question', 'answer'],
-        },
-      },
       editorNotes: {
         type: 'string',
         description:
-          'Notes for the human editor: anything cut and why, claims that may need checking, ' +
-          'places the answer was thin. Not for publication. Empty string if nothing to flag.',
+          'Notes for the human editor: claims worth checking, places an answer reads thin, ' +
+          'anything inconsistent between answers. Not for publication, and never edits - ' +
+          "the answers are published as the author wrote them. Empty string if nothing to flag.",
       },
     },
-    required: ['standfirst', 'items', 'editorNotes'],
+    required: ['standfirst', 'editorNotes'],
   },
 }
 
@@ -252,42 +243,42 @@ export interface DraftContext {
   answers: DraftAnswer[]
 }
 
-const DRAFT_SYSTEM = `You are editing an interview for EAC's Author Editorial Q&A — a magazine-style interview series with Expert Author Community authors, published on each author's profile page.
+const DRAFT_SYSTEM = `You are writing the standfirst for EAC's Author Editorial Q&A - a magazine-style interview series with Expert Author Community authors.
 
-Your job is EDITING, not writing. The author has already answered. You are the editor who makes their answers read well in print without putting words in their mouth.
+## What you are NOT doing
 
-## The one rule that overrides everything
+You are NOT editing the answers. The author's words are published exactly as they wrote them. You will never be asked for them and you must not return them.
 
-Every substantive claim, opinion, example and fact in your output must come from what the author actually said. You may cut, tighten, reorder within an answer, and fix grammar. You may NOT invent, embellish, infer, or "improve" their thinking. If an answer is thin, let it be thin — a short honest answer is better than a padded one. Never fabricate a quote.
-
-## This is NOT a testimonial
-
-The series exists to show the depth of the author's thinking about writing, publishing and their subject. It is not promotional material for EAC.
-
-If the author volunteered praise for EAC, Kelly Irving, or the programme, CUT IT. Not because it's untrue, but because it isn't what this series is for, and it cheapens everything around it. Keep the substance of what they learned; drop the endorsement. The reader should finish thinking "that person thinks carefully about their work" — not "that programme sounds good".
-
-## Editing spoken answers
-
-Answers marked [SPOKEN] are transcripts. People speak differently from how they write, and a verbatim transcript reads badly in print. For these:
-- Remove filler ("um", "like", "you know"), false starts, and repeated run-ups to the same point.
-- Join fragments into complete sentences where the meaning is unambiguous.
-- Cut tangents that go nowhere, and side-comments to the interviewer.
-- Keep their actual vocabulary, their rhythm, and their specific examples. Do not translate a plain-spoken answer into polished prose — the point is that it still sounds like them.
-- Keep a hesitation or self-correction when it carries real meaning ("I thought X — actually, no, it was more that Y").
-
-Answers marked [WRITTEN] were typed. Edit these much more lightly: typos, obvious slips, and clear redundancy only. If in doubt, leave written answers alone.
-
-## The questions
-
-Lightly edit questions for print — trim throat-clearing, keep them crisp. They must remain recognisably the same question the author was asked. If an answer clearly responds to something other than what was asked, adjust the question to fit the answer rather than the reverse, and flag it in editorNotes.
-
-## Length and shape
-
-Don't pad, and don't compress an answer to the point of losing its texture. A good answer keeps the specific detail — the example, the number, the moment — and loses the throat-clearing around it. Omit any question the author did not answer; do not invent an answer for it.
+You write one short introduction, and you flag anything a human editor should look at. That is the whole job.
 
 ## The standfirst
 
-1-2 sentences introducing the interview. Grounded in what the author actually said — not a summary of their book, and not a claim about their importance. Plain and specific. No "In this fascinating interview…".
+1-2 sentences, placed above the Q&A.
+
+Grounded in what the author actually said. Not a summary of their book, and not a claim about their importance. Plain and specific.
+
+No "In this fascinating interview". No praise, no hype, no adjectives doing work the facts should do.
+
+It is not a testimonial. If the author praised EAC, Kelly Irving or the programme, ignore it completely - the series exists to show how the author thinks, and an endorsement in the standfirst cheapens everything under it.
+
+## Punctuation
+
+NO EM DASHES and no en dashes. EAC writes with hyphens. If a sentence seems to want a dash, rewrite it or use a full stop. This is a house rule, not a preference to weigh against readability.
+
+No exclamation marks.
+
+## Editor notes
+
+For the human editor, never published. Worth flagging:
+
+- a claim or figure worth checking, especially one that appears twice with different wording
+- an answer that reads thin, so a follow-up can be asked
+- anything inconsistent between two answers
+- a question the author did not really answer
+
+Never suggest rewording an answer. That is not a decision this series makes.
+
+Empty string if there is genuinely nothing to flag.
 
 Call return_draft and nothing else.`
 
@@ -330,18 +321,27 @@ export interface Draft {
   editorNotes: string
 }
 
-export async function generateDraft(ctx: DraftContext): Promise<Draft> {
+/**
+ * The standfirst, and anything the editor should look at.
+ *
+ * The answers are NOT sent back through the model. Cam's call: an author's
+ * words go out as the author wrote them, and the only thing written here is
+ * the one paragraph that was always ours. Nothing the model returns can
+ * change what an author said, because the model is not asked for it.
+ */
+export async function generateStandfirst(
+  ctx: DraftContext
+): Promise<{ standfirst: string; editorNotes: string }> {
   const input = await callWithTool(DRAFT_SYSTEM, draftUserPrompt(ctx), RETURN_DRAFT_TOOL)
 
-  if (!Array.isArray(input?.items) || input.items.length === 0) {
-    throw new Error('Model returned no Q&A items')
-  }
+  const standfirst = String(input?.standfirst ?? '').trim()
+  if (!standfirst) throw new Error('Model returned no standfirst')
+
+  // The prompt asks for hyphens; this makes sure. A model honours a style
+  // rule most of the time, and most of the time is not good enough for
+  // punctuation that goes out above an author's name.
   return {
-    standfirst:  String(input.standfirst ?? ''),
-    items:       input.items.map((it: any) => ({
-      question: String(it?.question ?? ''),
-      answer:   String(it?.answer ?? ''),
-    })),
+    standfirst: houseDashes(standfirst),
     editorNotes: String(input.editorNotes ?? ''),
   }
 }
