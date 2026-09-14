@@ -345,7 +345,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const receipt = await sendReceipt({
           to:         String(row.fields['Author Email'] ?? ''),
           authorName: String(row.fields['Author Name'] ?? ''),
-          bookTitle:  String(row.fields['Book Title'] ?? ''),
           token:      String(row.fields['Intake Token'] ?? ''),
         })
         console.log(`[qna-intake] ${row.fields['Author Name']} submitted; receipt ${receipt}`)
