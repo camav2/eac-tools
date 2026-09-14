@@ -365,9 +365,15 @@ export async function getPostFooterData(
     const url = linkUrl(value)
     if (url) buyLinks.push({ label, url })
   }
+  // Shops only, and only these two.
+  //
+  // `view-on-website` was in here labelled "the publisher" and it is not the
+  // publisher - on Penelope's book it points at her own site, so the post
+  // offered "available from the publisher" and sent the reader to the author
+  // page they had just come from. A field whose contents vary by record cannot
+  // carry a fixed label.
   push('Booktopia', b['view-on-booktopia'])
   push('Amazon',    b['view-on-amazon'])
-  push('the publisher', b['view-on-website'])
 
   return {
     authorName:     a.name,
