@@ -17,7 +17,8 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getSession } from './_lib/auth'
-import { generateDraft } from './_lib/anthropic'
+import { generateStandfirst } from './_lib/anthropic'
+import { houseDashes } from './_lib/house-style'
 import { sourceText, wordDiff } from './_lib/qna-diff'
 
 // Drafting six answers at high effort is not a 15-second job.
@@ -162,7 +163,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
       }
 
-      const draft = await generateDraft({
+      const { standfirst, editorNotes } = await generateStandfirst({
         authorName: row.fields['Author Name'] ?? '',
         bookTitle:  row.fields['Book Title'] ?? '',
         bucket:     row.fields['Bucket'] ?? '',
@@ -172,6 +173,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           transcript: r?.transcript ?? '',
         })),
       })
+
+      // The answers are the author's, unedited. Nothing the model returns can
+      // change them, because the model is never asked for them - it writes the
+      // standfirst and flags anything worth a look, and that is all.
+      //
+      // Only the dash rule is applied, and only because it is punctuation
+      // rather than words. It is visible in the comparison beside each answer,
+      // so it is a change Cam can see and undo like any other.
+      const draft = {
+        standfirst,
+        items: answered.map((r: any) => ({
+          question: houseDashes(String(r?.question ?? '')),
+          answer:   houseDashes(String(r?.text ?? '').trim() || String(r?.transcript ?? '').trim()),
+        })),
+        editorNotes,
+      }
 
       await atPatch(row.id, {
         'Draft QnA':          JSON.stringify(draft),
