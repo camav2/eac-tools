@@ -119,7 +119,7 @@ test('author summary always carries a link', () => {
   // A summary with no way through is a dead end, and sending people to the
   // interview is the only reason the author page carries this.
   const html = authorSummaryHtml(DRAFT, 'benita-bensch-on-seen-again')
-  assert.match(html, /href="https:\/\/www\.expertauthor\.community\/blog\/benita-bensch-on-seen-again"/)
+  assert.match(html, /href="https:\/\/www\.expertauthor\.community\/blog-posts\/benita-bensch-on-seen-again"/)
   assert.match(html, /Read the full interview/)
 })
 
