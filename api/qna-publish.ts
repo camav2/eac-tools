@@ -26,6 +26,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getSession } from './_lib/auth'
 import {
   createBlogPost,
+  findBlogPostBySlugs,
   getAuthorHeadshotUrl,
   getBlogPost,
   publishAuthorItem,
@@ -35,6 +36,7 @@ import {
 import {
   authorSummaryHtml,
   blogUrl,
+  candidateSlugs,
   defaultTitle,
   metaDescription,
   postBodyHtml,
@@ -110,8 +112,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const authorName = String(row.fields['Author Name'] ?? '')
     const bookTitle  = String(row.fields['Book Title'] ?? '')
     const draft      = parseDraft(row.fields['Draft QnA'])
-    const blogItemId = String(row.fields['Blog Item ID'] ?? '')
     const approved   = Boolean(row.fields['Approved At'])
+
+    // Whether a post already exists is asked of Webflow, not remembered here.
+    // Nothing about this feature needs a column in Airtable, and a hand-made
+    // field would be one more thing standing between it and working.
+    const existing = await findBlogPostBySlugs(
+      candidateSlugs(authorName, bookTitle)
+    ).catch(err => {
+      console.error('[qna-publish] blog lookup failed:', err)
+      return null
+    })
 
     if (req.method === 'GET') {
       const title = defaultTitle(authorName, bookTitle)
@@ -119,19 +130,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         authorName,
         bookTitle,
         approved,
-        hasDraft:   Boolean(draft),
-        status:     row.fields['Status'] ?? '',
-        blogItemId: blogItemId || null,
-        // Once staged, report where it actually lives rather than where it
-        // would have gone - the slug can differ if it hit a collision.
-        staged: blogItemId
-          ? await getBlogPost(blogItemId)
-              .then(p => ({ ...p, url: blogUrl(p.slug) }))
-              .catch(err => {
-                console.error('[qna-publish] blog lookup failed:', err)
-                return null
-              })
-          : null,
+        hasDraft: Boolean(draft),
+        status:   row.fields['Status'] ?? '',
+        // Report where it actually lives rather than where it would have gone
+        // - the slug differs if it hit a collision.
+        staged: existing ? { ...existing, url: blogUrl(existing.slug) } : null,
         preview: draft ? {
           title,
           slug:        slugify(title),
@@ -154,7 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           error: 'The author has not approved this yet. They were promised they would see it first.',
         })
       }
-      if (blogItemId) {
+      if (existing) {
         return res.status(409).json({ error: 'A post already exists for this author.' })
       }
 
@@ -177,8 +180,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // asked for. A collision would otherwise leave the author page pointing
       // at a page that does not exist.
       await writeEditorialQna(authorItemId, authorSummaryHtml(draft, post.slug))
-
-      await atPatch(row.id, { 'Blog Item ID': post.id })
       console.log(`[qna-publish] staged ${authorName} as ${post.slug}`)
 
       return res.status(200).json({
@@ -187,7 +188,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (action === 'publish') {
-      if (!blogItemId) return res.status(400).json({ error: 'Stage the post first.' })
+      if (!existing) return res.status(400).json({ error: 'Stage the post first.' })
       if (!approved) {
         return res.status(400).json({ error: 'The author has not approved this yet.' })
       }
@@ -195,10 +196,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Post first, then the author page. If the second fails the interview is
       // live and the author page simply lacks its link; the opposite order puts
       // a link to a 404 on a live page.
-      await publishBlogPost(blogItemId)
+      await publishBlogPost(existing.id)
       await publishAuthorItem(authorItemId)
 
-      const post = await getBlogPost(blogItemId).catch(() => null)
+      const post = await getBlogPost(existing.id).catch(() => null)
       await atPatch(row.id, { 'Status': 'Published' })
       console.log(`[qna-publish] published ${authorName}`)
 

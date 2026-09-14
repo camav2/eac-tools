@@ -262,6 +262,35 @@ export async function publishBlogPost(itemId: string): Promise<void> {
   })
 }
 
+/**
+ * Finds an already-staged post by trying the slugs createBlogPost would have
+ * used, in the order it would have used them.
+ *
+ * This exists so nothing has to be stored in Airtable. The alternative was a
+ * "Blog Item ID" column, which meant a hand-made field standing between the
+ * feature and working at all - and the post is already addressable by a slug
+ * derived from the author's own name.
+ *
+ * Listing and matching locally rather than using Webflow's slug filter: that
+ * filter has returned zero matches for a slug Webflow then rejected as a
+ * duplicate, so it cannot be trusted for exactly this question.
+ */
+export async function findBlogPostBySlugs(slugs: string[]): Promise<{ id: string; slug: string; name: string; isDraft: boolean } | null> {
+  const items = await listAllItems(BLOG_COLLECTION_ID)
+  for (const slug of slugs) {
+    const hit = items.find((i: any) => i.fieldData?.slug === slug)
+    if (hit) {
+      return {
+        id:      hit.id,
+        slug:    hit.fieldData?.slug ?? slug,
+        name:    hit.fieldData?.name ?? '',
+        isDraft: Boolean(hit.isDraft),
+      }
+    }
+  }
+  return null
+}
+
 /** The post as it stands, for reading back the slug Webflow actually kept. */
 export async function getBlogPost(itemId: string): Promise<{ id: string; slug: string; name: string; isDraft: boolean }> {
   const data = await wfFetch(`/collections/${BLOG_COLLECTION_ID}/items/${itemId}`)

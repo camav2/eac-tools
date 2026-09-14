@@ -129,6 +129,18 @@ export function authorSummaryHtml(draft: Draft, slug: string): string {
   return parts.join('\n')
 }
 
+/**
+ * Every slug createBlogPost might have settled on, in order.
+ *
+ * The base slug comes from the author's name and book, never from the headline
+ * Cam edits, so it stays derivable from the pipeline row alone. The suffixed
+ * ones mirror the collision retry: first choice, then -2, then -3.
+ */
+export function candidateSlugs(authorName: string, bookTitle: string): string[] {
+  const base = slugify(defaultTitle(authorName, bookTitle))
+  return [base, `${base}-2`, `${base}-3`]
+}
+
 export function blogUrl(slug: string): string {
   return `${BLOG_BASE_URL}/${encodeURIComponent(slug)}`
 }

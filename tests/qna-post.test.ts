@@ -12,6 +12,7 @@ import assert from 'node:assert/strict'
 
 import {
   authorSummaryHtml,
+  candidateSlugs,
   defaultTitle,
   metaDescription,
   postBodyHtml,
@@ -121,4 +122,21 @@ test('author summary always carries a link', () => {
 test('author summary still links when there is no standfirst', () => {
   const html = authorSummaryHtml({ standfirst: '', items: [] }, 'a-slug')
   assert.match(html, /Read the full interview/)
+})
+
+test('candidate slugs mirror the collision retry, in order', () => {
+  // These are how a staged post is found again. If they drift from what
+  // createBlogPost actually tries, a post exists that nothing can locate, and
+  // the next stage makes a second one.
+  assert.deepEqual(
+    candidateSlugs('Benita Bensch', 'Seen Again: Light on Matrescence'),
+    ['benita-bensch-on-seen-again', 'benita-bensch-on-seen-again-2', 'benita-bensch-on-seen-again-3']
+  )
+})
+
+test('candidate slugs ignore an edited headline', () => {
+  // The base slug comes from the row, never from the headline Cam types, so a
+  // staged post stays findable from the pipeline alone.
+  const a = candidateSlugs('Benita Bensch', 'Seen Again: Light on Matrescence')[0]
+  assert.equal(a, slugify(defaultTitle('Benita Bensch', 'Seen Again: Light on Matrescence')))
 })
