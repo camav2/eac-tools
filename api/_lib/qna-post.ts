@@ -211,8 +211,19 @@ export function footerHtml(f: PostFooter): string {
     // The cover sits with the buy line rather than alone: a cover with no way
     // to act on it is decoration, and this is the one place the post asks for
     // something.
+    // Sized down hard. A cover in a rich text field fills the column by
+    // default, which put a full-width book jacket in the middle of the page
+    // and dwarfed the interview it was meant to sit under.
+    //
+    // Both the attribute and the inline style, because which of them a
+    // Webflow rich text field preserves is not something to gamble a live
+    // page on - whichever survives does the job, and both surviving is
+    // harmless.
     if (f.bookCoverUrl) {
-      parts.push(`<p><img src="${esc(f.bookCoverUrl)}" alt="${esc(f.bookCoverAlt || book)}"></p>`)
+      parts.push(
+        `<p><img src="${esc(f.bookCoverUrl)}" alt="${esc(f.bookCoverAlt || book)}" ` +
+        `width="150" style="width:150px;max-width:150px;height:auto;"></p>`
+      )
     }
     parts.push(
       links.length

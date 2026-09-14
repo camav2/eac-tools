@@ -365,15 +365,19 @@ export async function getPostFooterData(
     const url = linkUrl(value)
     if (url) buyLinks.push({ label, url })
   }
-  // Shops only, and only these two.
+  // `view-on-website` is the author's own site, where the book can also be
+  // bought. It was briefly labelled "the publisher", which read as though it
+  // pointed somewhere else entirely; naming the author is both accurate and
+  // the better offer, since buying direct is usually worth more to them.
   //
-  // `view-on-website` was in here labelled "the publisher" and it is not the
-  // publisher - on Penelope's book it points at her own site, so the post
-  // offered "available from the publisher" and sent the reader to the author
-  // page they had just come from. A field whose contents vary by record cannot
-  // carry a fixed label.
+  // Last rather than first: Booktopia and Amazon are what a reader recognises,
+  // and an unfamiliar personal site leading the line costs the sale it was
+  // meant to help.
+  const firstName = String(a.name ?? '').trim().split(/\s+/)[0]
+
   push('Booktopia', b['view-on-booktopia'])
   push('Amazon',    b['view-on-amazon'])
+  if (firstName) push(`${firstName}'s website`, b['view-on-website'])
 
   return {
     authorName:     a.name,
