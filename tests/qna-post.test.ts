@@ -312,3 +312,29 @@ test('nothing left to buy from means no buy sentence', () => {
   assert.match(html, /A Book/)
   assert.doesNotMatch(html, /available from/)
 })
+
+test('the cover is sized down, not left to fill the column', () => {
+  // A rich text image defaults to full width, which put a full-width book
+  // jacket mid-page and dwarfed the interview it sat under.
+  const html = footerHtml({ bookTitle: 'Win the Night', bookCoverUrl: 'https://wf.test/cover.jpg' })
+  assert.match(html, /width="150"/)
+  assert.match(html, /max-width:150px/)
+  // Both the attribute and the style: which one a Webflow rich text field
+  // keeps is not worth gambling a live page on.
+  assert.match(html, /height:auto/)
+})
+
+test("the author's own site is a buy link, named after them", () => {
+  // It was briefly called "the publisher", which read as somewhere else
+  // entirely. It is where they sell the book themselves.
+  const html = footerHtml({
+    bookTitle: 'Win the Night',
+    buyLinks: [
+      { label: 'Booktopia', url: 'https://booktopia.com.au/win' },
+      { label: "Penelope's website", url: 'https://penelopebarr.com/book' },
+    ],
+  })
+  assert.match(html, /Penelope&#x27;s website|Penelope's website/)
+  assert.match(html, /penelopebarr\.com/)
+  assert.doesNotMatch(html, /the publisher/)
+})
