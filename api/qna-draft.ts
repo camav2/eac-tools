@@ -18,6 +18,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getSession } from './_lib/auth'
 import { generateDraft } from './_lib/anthropic'
+import { sourceText, wordDiff } from './_lib/qna-diff'
 
 // Drafting six answers at high effort is not a 15-second job.
 export const maxDuration = 300
@@ -79,6 +80,36 @@ function sanitiseDraft(input: any) {
   }
 }
 
+/**
+ * Lines each drafted item up against the answer it came from.
+ *
+ * Matched by position among ANSWERED responses, because the drafter is told to
+ * omit any question the author did not answer. Matching on question text would
+ * fail on exactly the questions the editor was allowed to trim.
+ */
+function compareToSource(row: any, draft: any) {
+  if (!draft?.items?.length) return []
+
+  const answered = (parseJson(row.fields['Responses']) ?? []).filter(
+    (r: any) => String(r?.text ?? '').trim() || String(r?.transcript ?? '').trim()
+  )
+
+  return draft.items.map((item: any, i: number) => {
+    const src = answered[i]
+    const original = src ? sourceText(src) : ''
+    const edited = String(item?.answer ?? '')
+    const diff = wordDiff(original, edited)
+    return {
+      question: src?.question ?? '',
+      spoken:   Boolean(src?.transcript?.trim()),
+      // No source to compare against is worth saying out loud rather than
+      // rendering as a diff in which the author said nothing.
+      matched:  Boolean(src),
+      ...diff,
+    }
+  })
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
 
@@ -96,11 +127,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!row) return res.status(404).json({ error: 'No pipeline row for this author' })
 
     if (req.method === 'GET') {
+      const draft = parseJson(row.fields['Draft QnA'])
       return res.status(200).json({
         authorName: row.fields['Author Name'] ?? '',
         bookTitle:  row.fields['Book Title'] ?? '',
         status:     row.fields['Status'] ?? '',
-        draft:      parseJson(row.fields['Draft QnA']),
+        draft,
+        // What the author actually said, beside what the edit made of it.
+        // Without this the draft screen shows the edit alone, which means
+        // approving changes to someone else's words unseen.
+        compare: compareToSource(row, draft),
         generatedAt: row.fields['Draft Generated At'] ?? null,
         approvedAt:  row.fields['Approved At'] ?? null,
       })
