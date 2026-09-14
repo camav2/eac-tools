@@ -327,6 +327,8 @@ export interface PostFooterData {
   authorName?: string
   authorLinkedin?: string
   authorWebsite?: string
+  /** Floated beside the standfirst at the top of the post. */
+  authorHeadshotUrl?: string
   bookTitle?: string
   bookCoverUrl?: string
   bookCoverAlt?: string
@@ -380,7 +382,8 @@ export async function getPostFooterData(
   if (firstName) push(`${firstName}'s website`, b['view-on-website'])
 
   return {
-    authorName:     a.name,
+    authorName:        a.name,
+    authorHeadshotUrl: a['author-headshot']?.url,
     authorLinkedin: linkUrl(a.linkedin),
     authorWebsite:  linkUrl(a['author-website']),
     bookTitle:      b.name,
