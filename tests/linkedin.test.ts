@@ -17,7 +17,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { escapeCommentary, postingEnabled, authorizeUrl } from '../api/_lib/linkedin'
+import { escapeCommentary, postingEnabled, authorizeUrl, renditionCandidates } from '../api/_lib/linkedin'
 
 // ── commentary escaping ──────────────────────────────────────────────────────
 
@@ -115,4 +115,45 @@ test('the authorize URL carries the state and redirect back unchanged', () => {
     assert.equal(u.searchParams.get('response_type'), 'code')
     assert.equal(u.searchParams.get('client_id'), 'abc123')
   })
+})
+
+// ── photo renditions ─────────────────────────────────────────────────────────
+
+test('a 100px portrait asks the CDN for bigger copies first, original last', () => {
+  // The OIDC claim hands over a 100x100 image that gets blown up ~4x into the
+  // badge. Larger renditions sit behind the same signature, so we try those
+  // before settling for the soft one.
+  const url = 'https://media.licdn.com/dms/image/v2/D5603AQ/profile-displayphoto-shrink_100_100/B56?e=1&v=beta&t=xyz'
+  const out = renditionCandidates(url)
+
+  assert.equal(out.length, 4)
+  assert.match(out[0], /shrink_800_800/)
+  assert.match(out[1], /shrink_400_400/)
+  assert.match(out[2], /shrink_200_200/)
+  assert.equal(out[3], url, 'the untouched URL must always be the last resort')
+})
+
+test('the signature and query string are never disturbed', () => {
+  const url = 'https://media.licdn.com/dms/image/profile-displayphoto-shrink_100_100/B56?e=1&v=beta&t=sig%3D%3D'
+  for (const c of renditionCandidates(url)) {
+    assert.match(c, /\?e=1&v=beta&t=sig%3D%3D$/)
+  }
+})
+
+test('a portrait already larger than our candidates is left alone', () => {
+  // No point requesting 400 when LinkedIn already gave us 800.
+  const url = 'https://media.licdn.com/dms/image/profile-displayphoto-shrink_800_800/B56?t=x'
+  assert.deepEqual(renditionCandidates(url), [url])
+})
+
+test('the scale_ variant is upgraded too', () => {
+  const url = 'https://media.licdn.com/dms/image/profile-displayphoto-scale_100_100/B56?t=x'
+  assert.match(renditionCandidates(url)[0], /scale_800_800/)
+})
+
+test('an unrecognised URL is passed straight through', () => {
+  // If LinkedIn changes the path format we must degrade to today's behaviour,
+  // not start requesting URLs that 404.
+  const url = 'https://media.licdn.com/dms/image/something-else/B56?t=x'
+  assert.deepEqual(renditionCandidates(url), [url])
 })

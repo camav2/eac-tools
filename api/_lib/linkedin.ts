@@ -161,8 +161,79 @@ export function cookie(name: string, value: string, maxAgeSeconds: number): stri
 
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024
 
+export interface Photo {
+  dataUrl: string
+  width:   number | null
+  height:  number | null
+  /** Which CDN rendition we actually got bytes from, for diagnostics. */
+  source:  string
+}
+
 /**
- * Download the LinkedIn CDN photo and return it as a data: URL.
+ * Read the pixel dimensions straight out of the file header.
+ *
+ * Dependency-free on purpose: this repo has no image library and does not need
+ * one for two dozen lines. Used only to report what we fetched, never to decode.
+ */
+function imageSize(buf: Buffer): { width: number; height: number } | null {
+  // PNG — IHDR is always the first chunk, width/height at a fixed offset.
+  if (buf.length > 24 && buf[0] === 0x89 && buf[1] === 0x50) {
+    return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) }
+  }
+  // JPEG — walk the marker segments to the start-of-frame.
+  if (buf.length > 4 && buf[0] === 0xff && buf[1] === 0xd8) {
+    let o = 2
+    while (o < buf.length - 9) {
+      if (buf[o] !== 0xff) { o++; continue }
+      const marker = buf[o + 1]
+      // SOF0-SOF15 carry the dimensions; DHT/JPG/DAC do not.
+      if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+        return { height: buf.readUInt16BE(o + 5), width: buf.readUInt16BE(o + 7) }
+      }
+      o += 2 + buf.readUInt16BE(o + 2)
+    }
+  }
+  return null
+}
+
+/**
+ * LinkedIn's OIDC `picture` claim points at a small rendition — typically
+ * `profile-displayphoto-shrink_100_100`. Upscaled into the badge portrait that
+ * is a visibly soft ~4x blow-up.
+ *
+ * The CDN stores larger renditions of the same image under the same signature,
+ * so swapping the size segment usually yields real pixels rather than an
+ * interpolated guess. "Usually" is doing work there — LinkedIn has never
+ * documented this, so every candidate is tried in turn and the original URL is
+ * always the last resort. If they change it, the badge quietly goes back to
+ * looking exactly as it does today rather than breaking.
+ */
+export function renditionCandidates(url: string): string[] {
+  const sizeRe = /(profile-displayphoto-(?:shrink|scale)_)(\d+)_(\d+)/
+  const m = sizeRe.exec(url)
+  if (!m) return [url]
+
+  const current = Number(m[2])
+  const bigger  = [800, 400, 200].filter(s => s > current)
+  return [...bigger.map(s => url.replace(sizeRe, `$1${s}_${s}`)), url]
+}
+
+async function tryFetchImage(url: string): Promise<{ buf: Buffer; type: string } | null> {
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const type = res.headers.get('content-type') || 'image/jpeg'
+    if (!type.startsWith('image/')) return null
+    const buf = Buffer.from(await res.arrayBuffer())
+    if (!buf.byteLength || buf.byteLength > MAX_PHOTO_BYTES) return null
+    return { buf, type }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Download the member's LinkedIn photo and return it as a data: URL.
  *
  * Two reasons this is server-side and not a browser fetch:
  *   1. The CDN URL is short-lived — we must grab the bytes while it is valid.
@@ -171,27 +242,27 @@ const MAX_PHOTO_BYTES = 4 * 1024 * 1024
  *
  * Returns null on any failure — the UI falls back to an initials monogram.
  */
-export async function fetchPhotoDataUrl(url?: string): Promise<string | null> {
+export async function fetchPhotoDataUrl(url?: string): Promise<Photo | null> {
   if (!url) return null
-  try {
-    const res = await fetch(url)
-    if (!res.ok) {
-      console.error('[linkedin] photo fetch failed:', res.status)
-      return null
-    }
-    const type = res.headers.get('content-type') || 'image/jpeg'
-    if (!type.startsWith('image/')) return null
 
-    const buf = Buffer.from(await res.arrayBuffer())
-    if (buf.byteLength > MAX_PHOTO_BYTES) {
-      console.error('[linkedin] photo too large:', buf.byteLength)
-      return null
+  for (const candidate of renditionCandidates(url)) {
+    const got = await tryFetchImage(candidate)
+    if (!got) continue
+
+    const size = imageSize(got.buf)
+    const label = /_(\d+)_(\d+)/.exec(candidate)?.[0]?.replace(/_/g, 'x').slice(1) ?? 'original'
+    console.log('[linkedin] photo', label, size ? size.width + 'x' + size.height : 'unknown', got.buf.byteLength + 'b')
+
+    return {
+      dataUrl: 'data:' + got.type + ';base64,' + got.buf.toString('base64'),
+      width:   size?.width  ?? null,
+      height:  size?.height ?? null,
+      source:  label,
     }
-    return 'data:' + type + ';base64,' + buf.toString('base64')
-  } catch (err) {
-    console.error('[linkedin] photo fetch failed:', err)
-    return null
   }
+
+  console.error('[linkedin] no photo rendition could be fetched')
+  return null
 }
 
 // ── Posting ──────────────────────────────────────────────────────────────────

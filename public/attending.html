@@ -385,7 +385,12 @@ function defaultCaption(name) {
 /* ==========================================================================
    STATE
    ========================================================================== */
-var state = { name: '', email: '', photo: null, canPost: false, photoImg: null };
+var state = { name: '', email: '', photo: null, canPost: false, photoImg: null,
+              photoSource: null, photoWidth: null, photoHeight: null };
+
+/* /attending?debug=1 shows what LinkedIn actually handed us, so a soft
+   portrait can be diagnosed without guessing. Hidden from members. */
+var DEBUG = new URLSearchParams(location.search).get('debug') === '1';
 
 var $ = function (id) { return document.getElementById(id); };
 
@@ -606,10 +611,17 @@ function renderConnectedAs() {
   var avatar = state.photo
     ? '<img src="' + state.photo + '" alt="">'
     : '<div class="email-icon" style="width:36px;height:36px;font-size:14px;margin:0">' + initials(state.name) + '</div>';
+  var meta = 'Connected via LinkedIn';
+  if (DEBUG) {
+    meta += ' · photo ' + (state.photoWidth || '?') + 'x' + (state.photoHeight || '?') +
+            ' (' + (state.photoSource || 'none') + ')' +
+            (state.photoImg ? ' · drawn into 392px' : '');
+  }
   el.innerHTML = avatar +
-    '<div><div class="ca-name"></div><div class="ca-meta">Connected via LinkedIn</div></div>' +
+    '<div><div class="ca-name"></div><div class="ca-meta"></div></div>' +
     '<button type="button" id="btn-disconnect">Not you?</button>';
   el.querySelector('.ca-name').textContent = state.name;
+  el.querySelector('.ca-meta').textContent = meta;
   $('btn-disconnect').addEventListener('click', function () {
     fetch('/api/attending-auth?action=logout').then(function () { location.href = '/attending'; });
   });
@@ -641,10 +653,13 @@ function init() {
         return;
       }
 
-      state.name    = data.name  || '';
-      state.email   = data.email || '';
-      state.photo   = data.photo || null;
-      state.canPost = !!data.canPost;
+      state.name        = data.name  || '';
+      state.email       = data.email || '';
+      state.photo       = data.photo || null;
+      state.canPost     = !!data.canPost;
+      state.photoSource = data.photoSource || null;
+      state.photoWidth  = data.photoWidth  || null;
+      state.photoHeight = data.photoHeight || null;
 
       return loadPhoto(state.photo).then(function (img) {
         state.photoImg = img;

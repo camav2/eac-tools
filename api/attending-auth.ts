@@ -64,7 +64,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     connected:      true,
     name:           token.name,
     email:          token.email,
-    photo,
+    photo:          photo?.dataUrl ?? null,
+    // Diagnostics only — which rendition we got and how big it really is.
+    // Lets us tell "LinkedIn gave us 100px" apart from "the canvas is wrong".
+    photoSource:    photo?.source ?? null,
+    photoWidth:     photo?.width  ?? null,
+    photoHeight:    photo?.height ?? null,
     canPost:        token.canPost,
     postingEnabled: postingEnabled(),
     configured:     true,
