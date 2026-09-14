@@ -338,3 +338,40 @@ test("the author's own site is a buy link, named after them", () => {
   assert.match(html, /penelopebarr\.com/)
   assert.doesNotMatch(html, /the publisher/)
 })
+
+test('the headshot floats beside the standfirst, inside it', () => {
+  // Inside the paragraph, not above it: that is what makes the text wrap
+  // around the picture instead of sitting under a lonely one.
+  const html = postBodyHtml(DRAFT, {
+    headshotUrl: 'https://wf.test/penelope.jpg',
+    authorName: 'Penelope Barr',
+  })
+  assert.match(html, /<p><img src="https:\/\/wf\.test\/penelope\.jpg"[^>]*><em>/)
+  assert.match(html, /float:left/)
+  assert.match(html, /width="96"/)
+})
+
+test('the headshot is named, for a reader who cannot see it', () => {
+  const html = postBodyHtml(DRAFT, {
+    headshotUrl: 'https://wf.test/p.jpg',
+    authorName: 'Penelope Barr',
+  })
+  assert.match(html, /alt="Penelope Barr"/)
+})
+
+test('no headshot leaves the standfirst exactly as it was', () => {
+  // The common case for an author with no photo on file, and it must not
+  // leave an empty image or a stray float behind.
+  const html = postBodyHtml(DRAFT)
+  assert.match(html, /<p><em>Benita Bensch spent four drafts/)
+  assert.doesNotMatch(html, /<img/)
+  assert.doesNotMatch(html, /float/)
+})
+
+test('the headshot never appears without a standfirst to sit beside', () => {
+  const html = postBodyHtml(
+    { standfirst: '', items: [{ question: 'Q', answer: 'A' }] },
+    { headshotUrl: 'https://wf.test/p.jpg', authorName: 'Penelope Barr' }
+  )
+  assert.doesNotMatch(html, /<img/)
+})

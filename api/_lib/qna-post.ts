@@ -79,12 +79,30 @@ function paragraphs(text: string): string[] {
  * mismatch, a guess at what an answer meant - and publishing them would put
  * our working-out on the author's page.
  */
-export function postBodyHtml(draft: Draft): string {
+export interface BodyOptions {
+  /** The author's headshot, floated beside the standfirst. */
+  headshotUrl?: string | null
+  authorName?: string
+}
+
+export function postBodyHtml(draft: Draft, opts: BodyOptions = {}): string {
   const parts: string[] = []
 
   const stand = String(draft?.standfirst ?? '').trim()
   if (stand) {
-    parts.push(`<p><em>${esc(stand)}</em></p>`)
+    // The headshot goes INSIDE the standfirst paragraph, not above it, so the
+    // text wraps around the float instead of sitting under a lonely picture.
+    //
+    // A float is the only side-by-side a rich text field can do - there is no
+    // grid and no wrapper to hang one on. If Webflow strips the style the
+    // image simply stacks above the text at 96px, which is a worse layout but
+    // not a broken one.
+    const face = opts.headshotUrl
+      ? `<img src="${esc(opts.headshotUrl)}" alt="${esc(opts.authorName || 'The author')}" ` +
+        `width="96" style="float:left;width:96px;max-width:96px;height:auto;` +
+        `margin:4px 18px 10px 0;border-radius:50%;">`
+      : ''
+    parts.push(`<p>${face}<em>${esc(stand)}</em></p>`)
     parts.push('<hr>')
   }
 

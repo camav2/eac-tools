@@ -217,7 +217,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           title,
           slug:        slugify(title),
           description: metaDescription(draft),
-          bodyHtml:    postBodyHtml(draft) + (footer ? '\n' + footerHtml(footer) : ''),
+          bodyHtml:    postBodyHtml(draft, {
+            headshotUrl: footer?.authorHeadshotUrl,
+            authorName,
+          }) + (footer ? '\n' + footerHtml(footer) : ''),
           summaryHtml: authorSummaryHtml(draft, slugify(title)),
           editorNotes: draft.editorNotes ?? '',
           hasLinkedin: Boolean(footer?.authorLinkedin),
@@ -262,7 +265,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         headshotUrl,
       })
 
-      const bodyHtml = postBodyHtml(draft) + (footer ? '\n' + footerHtml(footer) : '')
+      const bodyHtml = postBodyHtml(draft, {
+        headshotUrl: footer?.authorHeadshotUrl,
+        authorName,
+      }) + (footer ? '\n' + footerHtml(footer) : '')
 
       // Staging twice is how a post catches up with a changed draft, a new
       // headline or a different photograph. Refusing the second attempt left
