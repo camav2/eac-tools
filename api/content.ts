@@ -21,6 +21,7 @@ const PAGE_FILES: Record<string, string> = {
   'unblocker':    'public/unblocker.html',
   'book-canvas':  'public/book-canvas.html',
   'isbn-wizard':  'public/isbn-wizard.html',
+  'attending':    'public/attending.html',
 }
 
 const CONTENT_BLOCK_RE = /<script type="application\/json" id="page-content">([\s\S]*?)<\/script>/

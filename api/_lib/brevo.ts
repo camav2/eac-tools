@@ -17,6 +17,9 @@ export const BREVO_LISTS = {
   'idea-test':   65,
   'unblocker':   64,
   'isbn-wizard': 68,
+  // Set BREVO_ATTENDING_LIST_ID in Vercel once the list exists.
+  // While it is 0, addContactToList() skips the call instead of erroring.
+  'attending':   Number(process.env.BREVO_ATTENDING_LIST_ID ?? 0),
 } as const
 
 export const BREVO_TEMPLATES = {
@@ -24,6 +27,8 @@ export const BREVO_TEMPLATES = {
   'idea-test':   547,
   'unblocker':   548,
   'isbn-wizard': 550,
+  // Set BREVO_ATTENDING_TEMPLATE_ID in Vercel once the template exists.
+  'attending':   Number(process.env.BREVO_ATTENDING_TEMPLATE_ID ?? 0),
 } as const
 
 /**
@@ -38,6 +43,11 @@ export async function addContactToList(params: {
 }): Promise<void> {
   const { email, firstName, tool, attributes } = params
   const listId = BREVO_LISTS[tool]
+
+  if (!listId) {
+    console.log(`[brevo] no list configured for ${tool} — skipping`)
+    return
+  }
 
   try {
     const res = await fetch('https://api.brevo.com/v3/contacts', {
@@ -172,6 +182,11 @@ export async function sendResultsEmail(params: {
 }): Promise<void> {
   const { to, tool, templateParams } = params
   const templateId = BREVO_TEMPLATES[tool]
+
+  if (!templateId) {
+    console.log(`[brevo] no template configured for ${tool} — skipping`)
+    return
+  }
 
   try {
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {

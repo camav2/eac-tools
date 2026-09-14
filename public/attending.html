@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script type="application/json" id="page-content">{
+  "attending/event/name": "EAC Open House",
+  "attending/event/date": "PLACEHOLDER — set the real date",
+  "attending/event/url": "https://expertauthor.community/open-house",
+  "attending/connect/eyebrow": "Expert Author Community",
+  "attending/connect/headline": "Tell your network you'll be there",
+  "attending/connect/sub": "Connect LinkedIn and we'll build your personalised graphic — your photo, your name, ready to post in one click. No uploading, no cropping.",
+  "attending/badge/headline": "Here's your graphic",
+  "attending/badge/sub": "Add a line about what you do, edit the caption, then post it straight to your LinkedIn feed.",
+  "attending/done/headline": "You're on the feed",
+  "attending/done/sub": "Thanks for spreading the word. See you at the open house."
+}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I'm Attending — share the EAC Open House on LinkedIn | Expert Author Community</title>
+<meta name="description" content="Connect LinkedIn and get a personalised 'I'm attending' graphic for the EAC Open House — your photo, your name, posted in one click.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://hub.expertauthor.community/attending">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Expert Author Community">
+<meta property="og:url" content="https://hub.expertauthor.community/attending">
+<meta property="og:title" content="I'm Attending — EAC Open House">
+<meta property="og:description" content="Get your personalised 'I'm attending' graphic for the EAC Open House — straight from your LinkedIn profile.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@kellyirvingwrites">
+<meta name="twitter:title" content="I'm Attending — EAC Open House">
+<meta name="twitter:description" content="Get your personalised 'I'm attending' graphic for the EAC Open House.">
+
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/eac.css">
+<style>
+  body {
+    font-family: var(--font);
+    background: var(--color-off-white);
+    color: var(--color-black);
+    padding-top: 60px;
+    min-height: 100vh;
+  }
+
+  .screen { display: none; animation: fadeIn 0.3s ease; }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===================== */
+  /* CONNECT SCREEN        */
+  /* ===================== */
+  #screen-connect {
+    min-height: calc(100vh - 60px);
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+  }
+  #screen-connect.active { display: flex; }
+
+  .email-card {
+    background: var(--color-white);
+    border-radius: 24px;
+    padding: 44px 40px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+  }
+  .email-icon {
+    width: 64px; height: 64px;
+    background: var(--color-yellow);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 28px;
+  }
+  .intro-eyebrow {
+    display: inline-block;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--color-navy);
+    background: var(--color-yellow);
+    padding: 6px 14px; border-radius: var(--radius-full);
+    margin-bottom: 16px;
+  }
+  .email-title { font-size: 24px; font-weight: 900; color: var(--color-navy); letter-spacing: -0.02em; margin-bottom: 10px; }
+  .email-sub   { font-size: 14px; color: var(--color-grey-700); line-height: 1.6; margin-bottom: 28px; }
+
+  .form-consent { display: flex; align-items: flex-start; gap: 10px; margin: 14px 0 8px; text-align: left; }
+  .form-consent input[type="checkbox"] { flex-shrink: 0; width: 18px; height: 18px; margin-top: 2px; accent-color: var(--color-navy); cursor: pointer; }
+  .form-consent-label { font-size: 12px; color: var(--color-grey-700); line-height: 1.55; cursor: pointer; }
+
+  .btn-submit {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 16px 32px;
+    background: var(--color-navy); color: var(--color-white);
+    border: none; border-radius: var(--radius-full); cursor: pointer;
+    font-family: var(--font); font-size: 14px; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+    margin-top: 8px;
+    text-decoration: none;
+  }
+  .btn-submit:hover:not(:disabled) { background: #000055; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .btn-submit:disabled { background: var(--color-grey-400); cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-submit svg { width: 18px; height: 18px; fill: currentColor; flex-shrink: 0; }
+
+  .btn-ghost {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px 28px; margin-top: 10px;
+    background: transparent; color: var(--color-navy);
+    border: 2px solid var(--color-grey-200); border-radius: var(--radius-full);
+    cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    transition: border-color var(--transition), background var(--transition);
+    text-decoration: none;
+  }
+  .btn-ghost:hover { border-color: var(--color-navy); background: var(--color-grey-100); }
+
+  .form-privacy { font-size: 12px; color: var(--color-grey-400); margin-top: 16px; line-height: 1.5; }
+  .gate-error {
+    color: #c0392b; font-size: 13px; font-weight: 600;
+    margin-top: 14px; display: none;
+    background: #fdecea; border-radius: var(--radius-md); padding: 10px 14px;
+  }
+  .gate-error.show { display: block; }
+
+  /* ===================== */
+  /* BADGE SCREEN          */
+  /* ===================== */
+  #screen-badge { padding: 40px 24px 72px; }
+  .badge-wrap { max-width: 980px; margin: 0 auto; }
+  .badge-head { text-align: center; margin-bottom: 32px; }
+  .badge-head h1 { font-size: 30px; font-weight: 900; color: var(--color-navy); letter-spacing: -0.02em; margin-bottom: 8px; }
+  .badge-head p  { font-size: 14px; color: var(--color-grey-700); line-height: 1.6; max-width: 520px; margin: 0 auto; }
+
+  .badge-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
+    gap: 36px;
+    align-items: start;
+  }
+
+  .canvas-card {
+    background: var(--color-white);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: var(--shadow-lg);
+  }
+  #badge-canvas {
+    width: 100%; height: auto; display: block;
+    border-radius: 12px;
+    background: var(--color-navy);
+  }
+
+  .panel {
+    background: var(--color-white);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--shadow-md);
+  }
+  .panel + .panel { margin-top: 20px; }
+
+  .form-field { margin-bottom: 16px; text-align: left; }
+  .form-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-navy); margin-bottom: 6px; }
+  .form-hint  { font-size: 12px; color: var(--color-grey-400); margin-top: 6px; line-height: 1.5; }
+  .form-input, .form-textarea {
+    width: 100%; padding: 13px 16px;
+    border: 2px solid var(--color-grey-200);
+    border-radius: var(--radius-md);
+    font-family: var(--font); font-size: 15px; color: var(--color-black);
+    background: var(--color-white);
+    transition: border-color var(--transition);
+    appearance: none;
+  }
+  .form-textarea { resize: vertical; min-height: 190px; line-height: 1.6; font-size: 14px; }
+  .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--color-blue); box-shadow: 0 0 0 3px rgba(82,150,251,0.15); }
+  .form-input::placeholder, .form-textarea::placeholder { color: var(--color-grey-400); }
+
+  .char-count { font-size: 11px; color: var(--color-grey-400); text-align: right; margin-top: 6px; }
+  .char-count.over { color: #c0392b; font-weight: 700; }
+
+  .connected-as {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; margin-bottom: 20px;
+    background: var(--color-grey-100); border-radius: var(--radius-md);
+  }
+  .connected-as img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .connected-as .ca-name  { font-size: 13px; font-weight: 700; color: var(--color-navy); }
+  .connected-as .ca-meta  { font-size: 11px; color: var(--color-grey-600); }
+  .connected-as button {
+    margin-left: auto; background: none; border: none; cursor: pointer;
+    font-family: var(--font); font-size: 11px; font-weight: 700;
+    color: var(--color-grey-600); text-decoration: underline; letter-spacing: 0.04em;
+  }
+
+  .notice {
+    font-size: 12px; line-height: 1.6; color: var(--color-grey-700);
+    background: #FFF9DB; border-left: 3px solid var(--color-yellow);
+    padding: 12px 14px; border-radius: var(--radius-md); margin-bottom: 18px;
+  }
+
+  /* ===================== */
+  /* DONE SCREEN           */
+  /* ===================== */
+  #screen-done {
+    min-height: calc(100vh - 60px);
+    align-items: center; justify-content: center; padding: 48px 24px;
+  }
+  #screen-done.active { display: flex; }
+
+  .spinner {
+    width: 16px; height: 16px; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: var(--color-white);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 860px) {
+    .badge-grid { grid-template-columns: 1fr; gap: 24px; }
+    .canvas-card { max-width: 440px; margin: 0 auto; }
+    .badge-head h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="header-logo" href="https://hub.expertauthor.community">
+    <svg viewBox="0 0 53.3 53.3" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="32.1 53.3 0 53.3 0 21.2 21.1 0.1 53.2 32.2 32.1 53.3" fill="#FFE64B"/>
+      <polyline points="15.8 53.3 0 53.3 0 37.5" fill="#00003D"/>
+      <polygon points="46.6 25.4 33.2 38.8 26.6 32.3 40 19 33.9 13 20.6 26.3 14.4 20.1 27.9 6.7 21.2 0 0 21.2 32.1 53.3 53.3 32.1 46.6 25.4" fill="#00003D"/>
+    </svg>
+    <span class="header-logo-text">Author Hub</span><span class="beta-badge">Beta</span>
+  </a>
+  <div class="header-auth" id="header-auth"></div>
+</header>
+
+<!-- ===================== -->
+<!-- CONNECT SCREEN        -->
+<!-- ===================== -->
+<section class="screen" id="screen-connect">
+  <div class="email-card">
+    <div class="email-icon">👋</div>
+    <span class="intro-eyebrow" data-content-key="attending/connect/eyebrow">Expert Author Community</span>
+    <h1 class="email-title" data-content-key="attending/connect/headline">Tell your network you'll be there</h1>
+    <p class="email-sub" data-content-key="attending/connect/sub">
+      Connect LinkedIn and we'll build your personalised graphic — your photo, your name,
+      ready to post in one click. No uploading, no cropping.
+    </p>
+
+    <div class="form-consent">
+      <input type="checkbox" id="consent"
+        onchange="document.getElementById('btn-connect').disabled = !this.checked;">
+      <label class="form-consent-label" for="consent">
+        I agree that when I create my graphic, I will be added to a marketing list
+        where I will receive occasional news from EAC on writing, books and authors.
+      </label>
+    </div>
+
+    <button class="btn-submit" id="btn-connect" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+      Connect LinkedIn
+    </button>
+
+    <p class="form-privacy">
+      We read your name, email and profile photo to build the graphic. We never post
+      anything without you pressing the button, and you can disconnect at any time.
+    </p>
+
+    <p class="gate-error" id="connect-error"></p>
+  </div>
+</section>
+
+<!-- ===================== -->
+<!-- BADGE SCREEN          -->
+<!-- ===================== -->
+<section class="screen" id="screen-badge">
+  <div class="badge-wrap">
+    <div class="badge-head">
+      <h1 data-content-key="attending/badge/headline">Here's your graphic</h1>
+      <p data-content-key="attending/badge/sub">
+        Add a line about what you do, edit the caption, then post it straight to your LinkedIn feed.
+      </p>
+    </div>
+
+    <div class="badge-grid">
+      <div class="canvas-card">
+        <canvas id="badge-canvas" width="1200" height="1200" role="img"
+                aria-label="Your personalised I'm attending graphic"></canvas>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="connected-as" id="connected-as"></div>
+
+          <div class="form-field">
+            <label class="form-label" for="role-line">Your line (optional)</label>
+            <input class="form-input" type="text" id="role-line" maxlength="48"
+                   placeholder="e.g. Author, speaker &amp; leadership coach">
+            <p class="form-hint">Appears under your name on the graphic. 48 characters max.</p>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="caption">Your caption</label>
+            <textarea class="form-textarea" id="caption"></textarea>
+            <p class="char-count" id="char-count"></p>
+          </div>
+
+          <p class="notice" id="post-notice" style="display:none"></p>
+
+          <button class="btn-submit" id="btn-post">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+            <span id="btn-post-label">Post to LinkedIn</span>
+          </button>
+
+          <button class="btn-ghost" id="btn-download">Download the image instead</button>
+
+          <p class="gate-error" id="badge-error"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== -->
+<!-- DONE SCREEN           -->
+<!-- ===================== -->
+<section class="screen" id="screen-done">
+  <div class="email-card">
+    <div class="email-icon">🎉</div>
+    <h1 class="email-title" data-content-key="attending/done/headline">You're on the feed</h1>
+    <p class="email-sub" id="done-sub" data-content-key="attending/done/sub">
+      Thanks for spreading the word. See you at the open house.
+    </p>
+    <a class="btn-submit" id="btn-view-post" href="#" target="_blank" rel="noopener">View your post</a>
+    <a class="btn-ghost" id="btn-event" href="#">Open house details</a>
+  </div>
+</section>
+
+<script src="/eac.js"></script>
+<script>
+/* ==========================================================================
+   EVENT CONFIG
+   Edit these four values per event, or override them via /editor (CMS keys
+   attending/event/*). Everything else on the graphic is derived.
+   ========================================================================== */
+var EVENT = {
+  name:    'EAC Open House',
+  date:    'PLACEHOLDER — set the real date',
+  url:     'https://expertauthor.community/open-house',
+  utm:     '?utm_source=linkedin&utm_medium=attending&utm_campaign=open-house'
+};
+
+/* Pull CMS overrides if the editor has set them. */
+(function () {
+  try {
+    var cms = JSON.parse(document.getElementById('page-content').textContent);
+    if (cms['attending/event/name']) EVENT.name = cms['attending/event/name'];
+    if (cms['attending/event/date']) EVENT.date = cms['attending/event/date'];
+    if (cms['attending/event/url'])  EVENT.url  = cms['attending/event/url'];
+  } catch (e) { /* config block is optional */ }
+})();
+
+function defaultCaption(name) {
+  return "I'll be at the " + EVENT.name + " on " + EVENT.date + ".\n\n" +
+    "It's a session for experts who are writing a book — or who keep meaning to start one.\n\n" +
+    "If you're going too, say so in the comments and let's find each other on the day.\n\n" +
+    EVENT.url + EVENT.utm;
+}
+
+/* ==========================================================================
+   STATE
+   ========================================================================== */
+var state = { name: '', email: '', photo: null, canPost: false, photoImg: null };
+
+var $ = function (id) { return document.getElementById(id); };
+
+function show(screenId) {
+  ['screen-connect', 'screen-badge', 'screen-done'].forEach(function (s) {
+    $(s).classList.toggle('active', s === screenId);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showError(elId, message) {
+  var el = $(elId);
+  el.textContent = message;
+  el.classList.add('show');
+}
+function clearError(elId) { $(elId).classList.remove('show'); }
+
+/* ==========================================================================
+   BADGE RENDERING
+   Drawn client-side on a 1200x1200 canvas. No server render, no image
+   storage, no extra dependency — the bytes only leave the browser when the
+   member presses Post.
+   ========================================================================== */
+var C = {
+  navy:   '#00003D',
+  yellow: '#FFE64B',
+  white:  '#FFFFFF'
+};
+
+/** Shrink the font until the text fits maxWidth. Returns the size used. */
+function fitText(ctx, text, maxWidth, startSize, weight, minSize) {
+  var size = startSize;
+  do {
+    ctx.font = weight + ' ' + size + 'px Montserrat, sans-serif';
+    if (ctx.measureText(text).width <= maxWidth) break;
+    size -= 2;
+  } while (size > (minSize || 20));
+  return size;
+}
+
+/** Greedy word wrap. Returns an array of lines. */
+function wrapLines(ctx, text, maxWidth, maxLines) {
+  var words = String(text).split(/\s+/);
+  var lines = [];
+  var line = '';
+  for (var i = 0; i < words.length; i++) {
+    var test = line ? line + ' ' + words[i] : words[i];
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = words[i];
+      if (lines.length === maxLines - 1 && i < words.length - 1) {
+        // Last available line — dump the rest into it and let fitText shrink.
+        lines.push(words.slice(i).join(' '));
+        return lines;
+      }
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function initials(name) {
+  var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function drawBadge() {
+  var canvas = $('badge-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 1200, H = 1200;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  // Background
+  ctx.fillStyle = C.navy;
+  ctx.fillRect(0, 0, W, H);
+
+  // Soft yellow halo behind the portrait
+  var halo = ctx.createRadialGradient(600, 430, 120, 600, 430, 420);
+  halo.addColorStop(0, 'rgba(255,230,75,0.16)');
+  halo.addColorStop(1, 'rgba(255,230,75,0)');
+  ctx.fillStyle = halo;
+  ctx.fillRect(0, 0, W, 900);
+
+  // Eyebrow
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = C.yellow;
+  ctx.font = '800 22px Montserrat, sans-serif';
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '7px';
+  ctx.fillText('EXPERT AUTHOR COMMUNITY', 600, 116);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+
+  // Portrait — circular, yellow ring
+  var cx = 600, cy = 430, r = 196;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+
+  if (state.photoImg) {
+    // Cover-fit the (often small) LinkedIn photo into the circle.
+    var img = state.photoImg;
+    var scale = Math.max((r * 2) / img.width, (r * 2) / img.height);
+    var dw = img.width * scale, dh = img.height * scale;
+    ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
+  } else {
+    ctx.fillStyle = C.yellow;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+    ctx.fillStyle = C.navy;
+    ctx.font = '900 150px Montserrat, sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(initials(state.name), cx, cy + 6);
+    ctx.textBaseline = 'alphabetic';
+  }
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 7, 0, Math.PI * 2);
+  ctx.strokeStyle = C.yellow;
+  ctx.lineWidth = 14;
+  ctx.stroke();
+
+  // Name
+  var name = state.name || 'Your name';
+  var nameSize = fitText(ctx, name, 1000, 66, '900', 34);
+  ctx.fillStyle = C.white;
+  ctx.font = '900 ' + nameSize + 'px Montserrat, sans-serif';
+  ctx.fillText(name, 600, 736);
+
+  // Role line (optional)
+  var role = ($('role-line') ? $('role-line').value : '').trim();
+  if (role) {
+    var roleSize = fitText(ctx, role, 940, 30, '500', 18);
+    ctx.fillStyle = 'rgba(255,255,255,0.72)';
+    ctx.font = '500 ' + roleSize + 'px Montserrat, sans-serif';
+    ctx.fillText(role, 600, 784);
+  }
+
+  // "IS ATTENDING"
+  ctx.fillStyle = C.yellow;
+  ctx.font = '800 21px Montserrat, sans-serif';
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '8px';
+  ctx.fillText('IS ATTENDING', 600, role ? 858 : 846);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+
+  // Event name — up to two lines
+  ctx.font = '900 58px Montserrat, sans-serif';
+  var evLines = wrapLines(ctx, EVENT.name, 1020, 2);
+  var evSize = 58;
+  evLines.forEach(function (l) {
+    evSize = Math.min(evSize, fitText(ctx, l, 1020, 58, '900', 30));
+  });
+  ctx.fillStyle = C.white;
+  ctx.font = '900 ' + evSize + 'px Montserrat, sans-serif';
+  var evTop = (role ? 930 : 918);
+  evLines.forEach(function (l, i) {
+    ctx.fillText(l, 600, evTop + i * (evSize + 8));
+  });
+
+  // Bottom band
+  ctx.fillStyle = C.yellow;
+  ctx.fillRect(0, 1044, W, H - 1044);
+
+  ctx.fillStyle = C.navy;
+  var dateSize = fitText(ctx, EVENT.date, 1040, 34, '800', 20);
+  ctx.font = '800 ' + dateSize + 'px Montserrat, sans-serif';
+  ctx.fillText(EVENT.date, 600, 1114);
+
+  ctx.font = '600 19px Montserrat, sans-serif';
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '2px';
+  ctx.fillText(EVENT.url.replace(/^https?:\/\//, ''), 600, 1162);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+}
+
+/* Montserrat must be loaded before the first draw or the canvas silently
+   falls back to a system font at completely different metrics. */
+function drawWhenFontsReady() {
+  if (!document.fonts || !document.fonts.load) { drawBadge(); return; }
+  Promise.all([
+    document.fonts.load('900 66px Montserrat'),
+    document.fonts.load('800 22px Montserrat'),
+    document.fonts.load('600 20px Montserrat'),
+    document.fonts.load('500 30px Montserrat')
+  ]).then(drawBadge).catch(drawBadge);
+}
+
+/* ==========================================================================
+   FLOW
+   ========================================================================== */
+function loadPhoto(dataUrl) {
+  return new Promise(function (resolve) {
+    if (!dataUrl) return resolve(null);
+    var img = new Image();
+    img.onload = function () { resolve(img); };
+    img.onerror = function () { resolve(null); };
+    img.src = dataUrl;   // data: URL — same-origin, never taints the canvas
+  });
+}
+
+var ERRORS = {
+  declined:       'You cancelled the LinkedIn connection. Give it another go when you’re ready.',
+  state:          'That link expired. Please connect again.',
+  auth:           'We couldn’t reach LinkedIn just then. Please try again.',
+  not_configured: 'LinkedIn sign-in isn’t switched on yet. Let the EAC team know.'
+};
+
+function renderConnectedAs() {
+  var el = $('connected-as');
+  var avatar = state.photo
+    ? '<img src="' + state.photo + '" alt="">'
+    : '<div class="email-icon" style="width:36px;height:36px;font-size:14px;margin:0">' + initials(state.name) + '</div>';
+  el.innerHTML = avatar +
+    '<div><div class="ca-name"></div><div class="ca-meta">Connected via LinkedIn</div></div>' +
+    '<button type="button" id="btn-disconnect">Not you?</button>';
+  el.querySelector('.ca-name').textContent = state.name;
+  $('btn-disconnect').addEventListener('click', function () {
+    fetch('/api/attending-auth?action=logout').then(function () { location.href = '/attending'; });
+  });
+}
+
+function updateCharCount() {
+  var len = $('caption').value.length;
+  var el = $('char-count');
+  el.textContent = len + ' / 2800';
+  el.classList.toggle('over', len > 2800);
+}
+
+function init() {
+  var params = new URLSearchParams(location.search);
+  var err = params.get('error');
+  if (err) showError('connect-error', ERRORS[err] || 'Something went wrong. Please try again.');
+
+  $('btn-connect').addEventListener('click', function () {
+    location.href = '/api/attending-auth?action=start';
+  });
+  $('btn-event').href = EVENT.url + EVENT.utm;
+
+  fetch('/api/attending-auth?action=me')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (!data.connected) {
+        if (!data.configured) showError('connect-error', ERRORS.not_configured);
+        show('screen-connect');
+        return;
+      }
+
+      state.name    = data.name  || '';
+      state.email   = data.email || '';
+      state.photo   = data.photo || null;
+      state.canPost = !!data.canPost;
+
+      return loadPhoto(state.photo).then(function (img) {
+        state.photoImg = img;
+
+        renderConnectedAs();
+        $('caption').value = defaultCaption(state.name);
+        updateCharCount();
+
+        if (!state.canPost) {
+          $('btn-post-label').textContent = 'Download and open LinkedIn';
+          $('post-notice').style.display = 'block';
+          $('post-notice').textContent =
+            'One-click posting isn’t switched on yet, so we’ll download the image and open ' +
+            'the LinkedIn composer for you. Your caption is copied to the clipboard — just paste ' +
+            'it in and attach the image.';
+        }
+
+        show('screen-badge');
+        drawWhenFontsReady();
+      });
+    })
+    .catch(function () {
+      show('screen-connect');
+      showError('connect-error', 'We couldn’t load your details. Please refresh and try again.');
+    });
+
+  // Re-render as they type their role line.
+  var roleTimer;
+  $('role-line').addEventListener('input', function () {
+    clearTimeout(roleTimer);
+    roleTimer = setTimeout(drawBadge, 120);
+  });
+
+  $('caption').addEventListener('input', updateCharCount);
+  $('btn-post').addEventListener('click', onPost);
+  $('btn-download').addEventListener('click', function () { onPost(true); });
+}
+
+function downloadCanvas() {
+  var canvas = $('badge-canvas');
+  var link = document.createElement('a');
+  link.download = 'im-attending-' + EVENT.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
+  link.href = canvas.toDataURL('image/png');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function onPost(downloadOnly) {
+  clearError('badge-error');
+
+  var btn      = downloadOnly ? $('btn-download') : $('btn-post');
+  var original = btn.innerHTML;
+  var wantsPost = !downloadOnly && state.canPost;
+
+  btn.disabled = true;
+  btn.innerHTML = wantsPost
+    ? '<span class="spinner"></span> Posting…'
+    : '<span class="spinner" style="border-color:rgba(0,0,61,.25);border-top-color:#00003D"></span> Working…';
+
+  // JPEG for the wire (roughly a third of the PNG), PNG for the download.
+  var canvas = $('badge-canvas');
+  var payload = {
+    imageBase64: wantsPost ? canvas.toDataURL('image/jpeg', 0.92) : '',
+    commentary:  $('caption').value,
+    roleLine:    $('role-line').value.trim(),
+    eventName:   EVENT.name,
+    post:        wantsPost
+  };
+
+  fetch('/api/attending', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(payload)
+  })
+    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); })
+    .then(function (res) {
+      if (!res.ok) {
+        if (res.status === 401) {
+          showError('badge-error', res.body.error || 'Your LinkedIn connection expired.');
+          setTimeout(function () { location.href = '/api/attending-auth?action=start'; }, 1800);
+          return;
+        }
+        throw new Error(res.body.error || 'Something went wrong');
+      }
+
+      if (res.body.posted) {
+        $('btn-view-post').style.display = res.body.postUrl ? 'flex' : 'none';
+        if (res.body.postUrl) $('btn-view-post').href = res.body.postUrl;
+        show('screen-done');
+        return;
+      }
+
+      // Not posted — either download-only, or posting isn't enabled yet.
+      downloadCanvas();
+
+      if (res.body.postError) {
+        showError('badge-error', res.body.postError + ' — we’ve downloaded the image so you can post it yourself.');
+      }
+
+      if (!downloadOnly && !state.canPost) {
+        copyCaption().finally(function () {
+          window.open('https://www.linkedin.com/feed/', '_blank', 'noopener');
+        });
+      }
+    })
+    .catch(function (e) {
+      showError('badge-error', e.message || 'Something went wrong. Please try again.');
+    })
+    .finally(function () {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    });
+}
+
+function copyCaption() {
+  var text = $('caption').value;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text).catch(function () {});
+  }
+  return Promise.resolve();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

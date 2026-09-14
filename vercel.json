@@ -62,6 +62,10 @@
     {
       "source": "/tend",
       "destination": "/tend.html"
+    },
+    {
+      "source": "/attending",
+      "destination": "/attending.html"
     }
   ]
 }

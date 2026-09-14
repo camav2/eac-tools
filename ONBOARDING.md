@@ -20,6 +20,7 @@
 | `/unblocker` | `public/unblocker.html` | `api/unblocker.ts` | `AIRTABLE_UNBLOCKER_TABLE_ID` |
 | `/book-canvas` | `public/book-canvas.html` | `api/book-canvas.ts` | `tblqezI9SqgelqJA5` (hardcoded) |
 | `/isbn-wizard` | `public/isbn-wizard.html` | `api/isbn-wizard.ts` | `AIRTABLE_ISBN_WIZARD_TABLE_ID` → `tblZL8zS59pGTAyyY` |
+| `/attending` | `public/attending.html` | `api/attending.ts` + `attending-auth.ts` + `attending-callback.ts` | `AIRTABLE_ATTENDING_TABLE_ID` |
 | `/dashboard` | `public/dashboard.html` | multiple GET endpoints | — |
 | `/settings` | `public/settings.html` | `api/access-config.ts` | — |
 | `/editor` | `public/editor.html` | `api/content.ts` | — |
@@ -272,6 +273,8 @@ Keys follow the pattern `page/section/element`. Both text content (`data-content
 'idea-test':   'public/idea-test.html'
 'unblocker':   'public/unblocker.html'
 'book-canvas': 'public/book-canvas.html'
+'isbn-wizard': 'public/isbn-wizard.html'
+'attending':   'public/attending.html'
 ```
 
 ---
@@ -363,6 +366,9 @@ Key fields: Email, First Name, Is Member, Submitted At, Source Tool, Pillars Com
 **ISBN Wizard Results** (`tblZL8zS59pGTAyyY` — env var `AIRTABLE_ISBN_WIZARD_TABLE_ID`)
 Key fields: ID (auto-increment, primary), Email, First Name, Is Member, Submitted At, Source Tool, Country, Formats, Platform, Publisher, Quantity, ISBN Count, Recommended Pack, Person (link)
 
+**Open House Attending** (env var `AIRTABLE_ATTENDING_TABLE_ID`)
+Key fields: ID (auto-increment, primary), Email, First Name, Full Name, Is Member, Submitted At, Source Tool, Event Name, Role Line, LinkedIn ID, Posted (checkbox), Post URL, Person (link)
+
 ### `_lib/airtable.ts` helpers
 
 ```typescript
@@ -387,6 +393,7 @@ await logActivity({ personId, actionType, sourceTool, summary, referenceId })
 | idea-test | 65 |
 | book-canvas | 66 |
 | isbn-wizard | 68 |
+| attending | `BREVO_ATTENDING_LIST_ID` env var |
 
 ### Templates
 | Tool | Template ID |
@@ -395,6 +402,7 @@ await logActivity({ personId, actionType, sourceTool, summary, referenceId })
 | idea-test | 547 |
 | book-canvas | 546 |
 | isbn-wizard | 550 |
+| attending | `BREVO_ATTENDING_TEMPLATE_ID` env var |
 
 ### `_lib/brevo.ts` helpers
 
@@ -453,6 +461,13 @@ Circle API calls always fail silently — they must never block a form submissio
 | `CIRCLE_API_TOKEN` | ✅ | Circle API token (v2) |
 | `CIRCLE_COMMUNITY_ID` | ✅ | EAC community: `9832` |
 | `CIRCLE_ADMIN_GROUP` | optional | Default: `"Administrator"` |
+| `AIRTABLE_ATTENDING_TABLE_ID` | attending | Open House Attending table ID |
+| `LINKEDIN_CLIENT_ID` | attending | From the LinkedIn developer app |
+| `LINKEDIN_CLIENT_SECRET` | attending | From the LinkedIn developer app |
+| `LINKEDIN_ENABLE_POSTING` | optional | `'true'` requests `w_member_social` and turns on one-click posting |
+| `LINKEDIN_API_VERSION` | optional | `YYYYMM`, defaults to `202508`. Bump when LinkedIn retires it (426 responses) |
+| `BREVO_ATTENDING_LIST_ID` | optional | Brevo list — skipped while unset |
+| `BREVO_ATTENDING_TEMPLATE_ID` | optional | Brevo template — skipped while unset |
 
 > ⚠️ **`ADMIN_EMAILS` is NOT needed here.** Admin status is resolved in eac-auth at login time and stored in the JWT. Read `session.isAdmin` — do not check env vars.
 
@@ -534,6 +549,33 @@ The file was renamed to `api/idea-test.ts`. Any reference to `/api/airtable` is 
 
 ### CMS content override
 If a page has a CMS JSON block with `"page/section/key": "value"`, that overrides the hardcoded HTML fallback. Both must be kept consistent. When changing hero copy etc., update both the JSON block AND the `data-content-key` element's fallback content.
+
+### LinkedIn photo resolution
+The OIDC `picture` claim is often served small (100x100). The badge deliberately
+draws the portrait into a 392px circle with a heavy yellow ring and a cover-fit
+scale, so a low-res source still reads cleanly. Do not enlarge the portrait
+without re-checking against a real low-res account.
+
+### Canvas tainting
+The LinkedIn CDN (`media.licdn.com`) does not reliably send CORS headers. The
+photo is fetched **server-side** and handed to the browser as a `data:` URL —
+drawing the CDN URL directly taints the canvas and `toDataURL()` throws.
+
+### LinkedIn API versioning
+`/rest/*` calls send a `LinkedIn-Version: YYYYMM` header. LinkedIn retires
+versions on a rolling basis and returns **426** when yours is dead. Bump the
+`LINKEDIN_API_VERSION` env var — do not edit the default in code.
+
+### Posts API commentary escaping
+`commentary` uses LinkedIn's "Little Text" format. The characters
+`| { } @ [ ] ( ) < > # * _ ~ \` must be backslash-escaped or the request 422s
+with an unhelpful error. `escapeCommentary()` in `_lib/linkedin.ts` handles it —
+never build the body by hand.
+
+### Never use the og:image share trick for this
+Sharing a URL whose `og:image` is the badge produces a **link post**, which
+LinkedIn reach-suppresses. The tool posts a native image and puts the event URL
+in the commentary instead.
 
 ### Domain
 All references must use `hub.expertauthor.community`. The old `tools.expertauthor.community` is no longer the canonical domain. Check: `ALLOWED_ORIGINS`, `vercel.json` CORS headers, canonical/og meta tags, JSON-LD, `eac.js`.
@@ -689,3 +731,56 @@ allows sub-daily crons. Hobby does not.
 - `eac_auth_architecture.md` — full canonical `_lib/auth.ts` source + integration checklist
 - `project_cowrite_auth_migration.md` — cowrite migration context (Clerk → custom auth, DO → Vercel)
 - `project_eac_cms_buttons.md` — CMS button/link editing via `data-content-href-key`
+
+---
+
+## 19. Attending Tool — LinkedIn Setup Runbook
+
+`/attending` generates a personalised "I'm attending" graphic from the member's
+own LinkedIn profile photo and posts it to their feed.
+
+### Flow
+```
+/attending
+  └─ GET  /api/attending-auth?action=start     → LinkedIn consent screen
+       └─ GET /api/attending-callback          → code → token → userinfo
+            → signed 2h httpOnly cookie `eac_li`, redirect to /attending?connected=1
+  └─ GET  /api/attending-auth?action=me        → name, email, photo (data: URL), canPost
+  └─ browser renders the badge on a 1200x1200 <canvas>
+  └─ POST /api/attending                       → Airtable + Brevo (+ native LinkedIn post)
+```
+
+Identity for this tool is the **LinkedIn** cookie, not `eac_session`. The EAC
+session is read opportunistically to set `Is Member` and link the People record —
+non-members can use the tool too.
+
+### One-time setup (blocks everything else)
+```
+□ LinkedIn developer app at linkedin.com/developers
+  □ Must be associated with a LinkedIn Company Page, VERIFIED by a page admin
+□ Add product: "Sign In with LinkedIn using OpenID Connect"   (self-serve)
+□ Add product: "Share on LinkedIn"                            (self-serve, optional)
+     → only needed for one-click posting; no partner review required, because
+       we only ever post to the member's own profile
+□ Authorised redirect URL (exact match):
+     https://hub.expertauthor.community/api/attending-callback
+□ Vercel env: LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET
+□ Vercel env: LINKEDIN_ENABLE_POSTING=true   (only after "Share on LinkedIn" is added)
+□ Airtable: create the Open House Attending table (schema in §9), set
+     AIRTABLE_ATTENDING_TABLE_ID
+□ Brevo: create list + template, set BREVO_ATTENDING_LIST_ID / _TEMPLATE_ID
+     (both are skipped cleanly while unset)
+□ Set the event name/date/url — either the EVENT object at the top of the page
+  script, or the attending/event/* keys via /editor
+```
+
+### Graceful degradation
+`LINKEDIN_ENABLE_POSTING` is the switch between two shipped experiences:
+
+| Flag | Scopes | Button | Behaviour |
+|---|---|---|---|
+| unset | `openid profile email` | "Download and open LinkedIn" | downloads the PNG, copies the caption, opens the composer |
+| `true` | `+ w_member_social` | "Post to LinkedIn" | publishes a native image post, returns the post URL |
+
+The tool is fully usable in the first mode — ship read-only, upgrade later
+without a code change.
