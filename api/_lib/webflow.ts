@@ -184,3 +184,110 @@ export async function writeEditorialQna(authorItemId: string, html: string): Pro
     }),
   })
 }
+
+// ── Blog ─────────────────────────────────────────────────────────────────────
+
+const BLOG_COLLECTION_ID = '6870006917acd593b9a7f477'
+
+/** Cameron's Blog Authors record. The byline on every published interview. */
+const BLOG_AUTHOR_CAMERON = '6a6acf05de94fe5c48050dd4'
+
+/** Option ID, not the label — Webflow rejects the label. "Author Community". */
+const BLOG_CATEGORY_AUTHOR_COMMUNITY = '2b26c8d83a838028e2dc0e4815f235a0'
+
+export interface BlogPostInput {
+  title: string
+  slug: string
+  bodyHtml: string
+  description: string
+  /** The author's headshot, reused as the post image. Optional. */
+  imageUrl?: string | null
+}
+
+export interface BlogPostRef {
+  id: string
+  slug: string
+}
+
+/**
+ * Creates the interview as a DRAFT blog post.
+ *
+ * Draft on purpose. Cam authorises anything going live on the public site, so
+ * this only ever stages it; publishBlogPost is the separate, deliberate step.
+ *
+ * Webflow rejects a duplicate slug with a 400 rather than adjusting it, and its
+ * own slug filter is not reliable enough to check beforehand, so a collision is
+ * handled by retrying with a suffix. Second and third attempts are enough: the
+ * slug carries an author's name, and a fourth clash means something is wrong
+ * that a bigger number would only hide.
+ */
+export async function createBlogPost(input: BlogPostInput): Promise<BlogPostRef> {
+  const fieldData: Record<string, unknown> = {
+    name:                input.title,
+    slug:                input.slug,
+    'full-blog-post':    input.bodyHtml,
+    'short-description': input.description,
+    'blog-author':       BLOG_AUTHOR_CAMERON,
+    category:            BLOG_CATEGORY_AUTHOR_COMMUNITY,
+  }
+  // Webflow re-hosts a plain URL on its own CDN, which is the only way to set
+  // an image without the Designer app running.
+  if (input.imageUrl) fieldData['main-image'] = { url: input.imageUrl }
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const slug = attempt === 0 ? input.slug : `${input.slug}-${attempt + 1}`
+    try {
+      const data = await wfFetch(`/collections/${BLOG_COLLECTION_ID}/items`, {
+        method: 'POST',
+        body: JSON.stringify({ isDraft: true, fieldData: { ...fieldData, slug } }),
+      })
+      return { id: data.id, slug: data.fieldData?.slug ?? slug }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      const taken = /already (exists|in database)|Unique value/i.test(msg)
+      // An archived item keeps its slug while being invisible to a listing,
+      // so "taken" can be true for a post nobody can see.
+      if (!taken || attempt === 2) throw err
+      console.warn(`[webflow] slug "${slug}" taken, retrying`)
+    }
+  }
+  throw new Error('Could not find a free slug for the blog post')
+}
+
+/** Live on the site. Separate from creation, and only ever Cam's call. */
+export async function publishBlogPost(itemId: string): Promise<void> {
+  await wfFetch(`/collections/${BLOG_COLLECTION_ID}/items/publish`, {
+    method: 'POST',
+    body: JSON.stringify({ itemIds: [itemId] }),
+  })
+}
+
+/** The post as it stands, for reading back the slug Webflow actually kept. */
+export async function getBlogPost(itemId: string): Promise<{ id: string; slug: string; name: string; isDraft: boolean }> {
+  const data = await wfFetch(`/collections/${BLOG_COLLECTION_ID}/items/${itemId}`)
+  return {
+    id:      data.id,
+    slug:    data.fieldData?.slug ?? '',
+    name:    data.fieldData?.name ?? '',
+    isDraft: Boolean(data.isDraft),
+  }
+}
+
+/** Publishes the author's own item, so the summary and link go live with it. */
+export async function publishAuthorItem(authorItemId: string): Promise<void> {
+  await wfFetch(`/collections/${AUTHORS_COLLECTION_ID}/items/publish`, {
+    method: 'POST',
+    body: JSON.stringify({ itemIds: [authorItemId] }),
+  })
+}
+
+/** The author's headshot, reused as the blog post's main image. */
+export async function getAuthorHeadshotUrl(authorItemId: string): Promise<string | null> {
+  try {
+    const data = await wfFetch(`/collections/${AUTHORS_COLLECTION_ID}/items/${authorItemId}`)
+    return data.fieldData?.['author-headshot']?.url ?? null
+  } catch (err) {
+    console.error('[webflow] headshot lookup failed:', err)
+    return null
+  }
+}
