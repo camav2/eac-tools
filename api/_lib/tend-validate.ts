@@ -65,6 +65,14 @@ export function sanitiseAgent(body: any): Partial<TendAgent> {
   return patch
 }
 
+/** A chat message. Trimmed and capped; empty means "not a message". */
+export const MESSAGE_MAX = 4000
+
+export function sanitiseMessage(value: unknown): string {
+  if (typeof value !== 'string') return ''
+  return value.trim().slice(0, MESSAGE_MAX)
+}
+
 export function sanitiseWorkspace(body: any): Partial<TendWorkspace> {
   const patch: Partial<TendWorkspace> = {}
   if (!body || typeof body !== 'object') return patch

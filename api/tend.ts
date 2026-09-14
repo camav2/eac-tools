@@ -2,7 +2,8 @@
  * EAC Tend — roster and log API
  *
  * GET  /api/tend                → { agents, runs, workspace, tools, providers }
- * GET  /api/tend?runId={uuid}   → { run }  (full transcript and log)
+ * GET  /api/tend?agentId={uuid} → { runs }  (one teammate's thread, oldest first)
+ * GET  /api/tend?runId={uuid}   → { run }   (full transcript and log)
  * POST /api/tend                → { op: 'create' | 'update' | 'delete' | 'workspace', ... }
  *
  * Running an agent and resolving an approval live in /api/tend-run, because
@@ -22,8 +23,8 @@ import { providerCatalogue } from './_lib/tend-providers'
 import { sanitiseAgent, sanitiseWorkspace } from './_lib/tend-validate'
 import {
   listAgents, createAgent, updateAgent, deleteAgent,
-  listRuns, getRun,
-  getWorkspace, updateWorkspace,
+  listRuns, listRunsForAgent, getRun,
+  getWorkspace, updateWorkspace, getWorkerStatus,
 } from './_lib/tend-db'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -35,14 +36,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (req.method === 'GET') {
-      const { runId } = req.query as Record<string, string>
+      const { runId, agentId } = req.query as Record<string, string>
       if (runId) {
         const run = await getRun(runId)
         if (!run) return res.status(404).json({ error: 'Run not found' })
         return res.json({ run })
       }
-      const [agents, runs, workspace] = await Promise.all([listAgents(), listRuns(), getWorkspace()])
-      return res.json({ agents, runs, workspace, tools: toolCatalogue(), providers: providerCatalogue() })
+      if (agentId) {
+        return res.json({ runs: await listRunsForAgent(agentId) })
+      }
+      const [agents, runs, workspace, worker] = await Promise.all([
+        listAgents(), listRuns(), getWorkspace(), getWorkerStatus(),
+      ])
+      return res.json({
+        agents, runs, workspace,
+        worker: { alive: worker.alive, id: worker.worker?.id ?? null, lastSeen: worker.worker?.last_seen ?? null, version: worker.worker?.version ?? null },
+        tools: toolCatalogue(),
+        providers: providerCatalogue(),
+      })
     }
 
     if (req.method === 'POST') {

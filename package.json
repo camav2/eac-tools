@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "tsc --outDir .test-build && node --test \".test-build/tests/*.test.js\""
+    "test": "tsc --outDir .test-build && node --test \".test-build/tests/*.test.js\"",
+    "worker": "tsc --outDir .worker-build && node .worker-build/worker/index.js"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

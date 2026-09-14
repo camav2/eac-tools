@@ -19,11 +19,13 @@
       --amber: #d97706;
       --red: #dc2626;
       --radius: 10px;
+      --header-h: 60px;
     }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fb; color: var(--navy); min-height: 100vh; }
+    html, body { height: 100%; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fb; color: var(--navy); }
 
     /* ── Header ── */
-    .site-header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 60px; background: #fff; border-bottom: 1px solid var(--grey-200); position: sticky; top: 0; z-index: 100; }
+    .site-header { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: var(--header-h); background: #fff; border-bottom: 1px solid var(--grey-200); position: sticky; top: 0; z-index: 100; }
     .header-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--navy); }
     .header-logo-img { width: 28px; height: 28px; }
     .header-logo-text { font-weight: 700; font-size: 1rem; letter-spacing: -0.01em; }
@@ -41,20 +43,8 @@
     .dropdown-divider { height: 1px; background: var(--grey-200); margin: 4px 0; }
     .dropdown-logout { color: var(--red); }
 
-    /* ── Page ── */
-    .page-wrap { max-width: 960px; margin: 0 auto; padding: 48px 24px 100px; }
-    .page-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-500); margin-bottom: 8px; }
-    .page-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; display: flex; align-items: center; gap: 12px; }
-    .admin-badge { font-size: 0.65rem; font-weight: 700; background: var(--navy); color: #fff; padding: 3px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; }
-    .page-sub { color: var(--grey-500); font-size: 0.95rem; margin-top: 8px; max-width: 60ch; }
-
-    .section { margin-top: 40px; }
-    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
-    .section-title { font-size: 1.05rem; font-weight: 700; }
-    .section-note { font-size: 0.8rem; color: var(--grey-500); }
-
     /* ── Buttons ── */
-    .btn { padding: 9px 16px; border-radius: 7px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; background: var(--navy); color: #fff; font-family: inherit; }
+    .btn { padding: 9px 16px; border-radius: 7px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; background: var(--navy); color: #fff; font-family: inherit; white-space: nowrap; }
     .btn:hover { background: var(--navy-light); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-ghost { background: #fff; color: var(--navy); border-color: var(--grey-200); }
@@ -64,58 +54,90 @@
     .btn-go { background: var(--green); }
     .btn-go:hover { background: #047857; }
     .btn-sm { padding: 6px 12px; font-size: 0.78rem; }
-
-    /* ── Agent cards ── */
-    .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
-    .agent-card { background: #fff; border: 1px solid var(--grey-200); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
-    .agent-card.off { opacity: 0.6; }
-    .agent-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-    .agent-name { font-weight: 700; font-size: 1rem; }
-    .agent-role { font-size: 0.8rem; color: var(--grey-500); margin-top: 2px; }
-    .agent-meta { display: flex; flex-wrap: wrap; gap: 6px; }
-    .chip { font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: var(--grey-100); color: var(--grey-700); }
+    .chip { font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: var(--grey-100); color: var(--grey-700); white-space: nowrap; }
     .chip.gate { background: #fff7ed; color: var(--amber); }
     .chip.open { background: #fef2f2; color: var(--red); }
-    .agent-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 4px; }
-    .agent-last { font-size: 0.72rem; color: var(--grey-400); }
 
-    /* ── Workspace ── */
-    .ws-card { background: #fff; border: 1px solid var(--grey-200); border-radius: var(--radius); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    .ws-name { font-weight: 700; font-size: 0.95rem; }
-    .ws-people { font-size: 0.8rem; color: var(--grey-500); margin-top: 2px; }
-    .ws-warn { font-size: 0.78rem; color: var(--amber); font-weight: 600; margin-top: 4px; }
+    /* ── App shell ── */
+    .app { display: grid; grid-template-columns: 270px 1fr; height: calc(100vh - var(--header-h)); }
+    .side { background: #fff; border-right: 1px solid var(--grey-200); display: flex; flex-direction: column; min-height: 0; }
+    .side-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 10px; }
+    .side-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-500); }
+    .roster { list-style: none; overflow-y: auto; flex: 1; padding: 0 8px; }
+    .roster li { padding: 10px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+    .roster li:hover { background: var(--grey-100); }
+    .roster li.active { background: var(--navy); color: #fff; }
+    .roster li.active .r-role { color: rgba(255,255,255,0.7); }
+    .r-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--grey-200); flex-shrink: 0; }
+    .r-dot.busy { background: #2563eb; animation: pulse 1.2s infinite; }
+    .r-dot.wait { background: var(--amber); }
+    .r-dot.off { background: transparent; border: 1px solid var(--grey-400); }
+    .r-text { min-width: 0; }
+    .r-name { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .r-role { font-size: 0.72rem; color: var(--grey-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .side-foot { border-top: 1px solid var(--grey-200); padding: 12px 16px; }
+    .ws-name { font-weight: 700; font-size: 0.82rem; }
+    .ws-people { font-size: 0.72rem; color: var(--grey-500); margin-top: 2px; }
+    .ws-warn { font-size: 0.72rem; color: var(--amber); font-weight: 600; margin-top: 4px; }
+    .ws-worker { font-size: 0.72rem; color: var(--grey-500); margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+    .wk-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--grey-400); display: inline-block; }
+    .wk-dot.on { background: var(--green); }
+    .side-foot .btn { margin-top: 8px; }
 
-    /* ── Approvals ── */
-    .approval { background: #fff7ed; border: 1px solid #fed7aa; border-radius: var(--radius); padding: 18px; margin-bottom: 12px; }
-    .approval-head { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
-    .approval-sub { font-size: 0.8rem; color: var(--grey-500); margin-bottom: 12px; }
-    .action-block { background: #fff; border: 1px solid var(--grey-200); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
-    .action-name { font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .action-args { font-size: 0.78rem; }
-    .action-arg { display: grid; grid-template-columns: 90px 1fr; gap: 8px; padding: 3px 0; border-top: 1px solid var(--grey-100); }
-    .action-arg:first-child { border-top: none; }
-    .action-key { color: var(--grey-500); font-weight: 600; }
-    .action-val { white-space: pre-wrap; word-break: break-word; }
-    .approval-actions { display: flex; gap: 8px; }
+    .thread { display: flex; flex-direction: column; min-height: 0; }
+    .thread-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 24px; background: #fff; border-bottom: 1px solid var(--grey-200); flex-wrap: wrap; }
+    .t-name { font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; }
+    .t-role { font-size: 0.8rem; color: var(--grey-500); margin-top: 2px; }
+    .t-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .t-actions { display: flex; gap: 6px; }
 
-    /* ── Runs ── */
-    .run { background: #fff; border: 1px solid var(--grey-200); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; }
-    .run-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .run-agent { font-weight: 700; font-size: 0.9rem; }
-    .run-when { font-size: 0.72rem; color: var(--grey-400); margin-left: auto; }
-    .run-summary { font-size: 0.85rem; color: var(--grey-700); margin-top: 8px; white-space: pre-wrap; }
-    .run-toggle { font-size: 0.75rem; color: var(--grey-500); background: none; border: none; cursor: pointer; padding: 6px 0 0; font-family: inherit; text-decoration: underline; }
-    .run-trail { margin-top: 10px; border-top: 1px solid var(--grey-100); padding-top: 10px; display: none; }
-    .run-trail.open { display: block; }
+    .messages { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+    .sys { align-self: center; font-size: 0.72rem; color: var(--grey-400); }
+    .msg { max-width: 72ch; }
+    .msg.you { align-self: flex-end; }
+    .msg.bot { align-self: flex-start; }
+    /* pre-wrap lives on .txt only: the bubble itself holds buttons and panels
+       whose template whitespace must not render as blank lines. */
+    .bubble { padding: 12px 15px; border-radius: 14px; font-size: 0.9rem; line-height: 1.5; word-break: break-word; }
+    .bubble .txt { white-space: pre-wrap; }
+    .you .bubble { background: var(--navy); color: #fff; border-bottom-right-radius: 4px; }
+    .bot .bubble { background: #fff; border: 1px solid var(--grey-200); border-bottom-left-radius: 4px; }
+    .bot .bubble.err { background: #fef2f2; border-color: #fecaca; color: var(--red); }
+    .bot .bubble.working { color: var(--grey-500); font-style: italic; }
+    .when { font-size: 0.68rem; color: var(--grey-400); margin-top: 4px; }
+    .you .when { text-align: right; }
+    .more { font-size: 0.75rem; color: var(--grey-500); background: none; border: none; cursor: pointer; padding: 6px 0 0; font-family: inherit; text-decoration: underline; margin-right: 12px; }
+    .details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--grey-100); font-size: 0.85rem; white-space: pre-wrap; }
+    .details.open { display: block; }
+    .trail { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--grey-100); }
+    .trail.open { display: block; }
     .trail-item { font-size: 0.75rem; padding: 6px 0; border-bottom: 1px solid var(--grey-100); }
     .trail-item:last-child { border-bottom: none; }
     .trail-tool { font-weight: 700; }
     .trail-detail { color: var(--grey-500); white-space: pre-wrap; word-break: break-word; margin-top: 3px; max-height: 8em; overflow: auto; }
-    .status { font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .status.completed { background: #f0fdf4; color: var(--green); }
-    .status.failed, .status.rejected { background: #fef2f2; color: var(--red); }
-    .status.awaiting_approval { background: #fff7ed; color: var(--amber); }
-    .status.running { background: #eff6ff; color: #2563eb; }
+    .dots::after { content: '…'; animation: dots 1.2s steps(4, end) infinite; }
+    @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    /* ── Approval card, inline in the thread ── */
+    .approval { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 14px; border-bottom-left-radius: 4px; padding: 14px 16px; }
+    .approval-head { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+    .approval-sub { font-size: 0.78rem; color: var(--grey-500); margin-bottom: 10px; }
+    .action-block { background: #fff; border: 1px solid var(--grey-200); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+    .action-name { font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .action-arg { display: grid; grid-template-columns: 80px 1fr; gap: 8px; padding: 3px 0; border-top: 1px solid var(--grey-100); font-size: 0.78rem; }
+    .action-arg:first-child { border-top: none; }
+    .action-key { color: var(--grey-500); font-weight: 600; }
+    .action-val { white-space: pre-wrap; word-break: break-word; }
+    .approval-actions { display: flex; gap: 8px; margin-top: 4px; }
+
+    .composer { display: flex; gap: 10px; padding: 14px 24px; background: #fff; border-top: 1px solid var(--grey-200); align-items: flex-end; }
+    .composer textarea { flex: 1; resize: none; min-height: 44px; max-height: 160px; padding: 11px 13px; border: 1px solid var(--grey-200); border-radius: 10px; font-family: inherit; font-size: 0.9rem; line-height: 1.4; color: var(--navy); }
+    .composer textarea:disabled { background: var(--grey-100); }
+    .composer-hint { font-size: 0.7rem; color: var(--grey-400); padding: 0 24px 10px; background: #fff; }
+
+    .empty { margin: auto; text-align: center; color: var(--grey-500); font-size: 0.9rem; max-width: 40ch; line-height: 1.6; }
+    .empty .btn { margin-top: 14px; }
 
     /* ── Modal ── */
     .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,20,0.45); z-index: 200; padding: 32px 16px; overflow-y: auto; }
@@ -136,10 +158,18 @@
     .tool-desc { font-size: 0.72rem; color: var(--grey-500); }
     .check { display: flex; gap: 9px; align-items: flex-start; font-size: 0.85rem; }
     .check input { margin-top: 3px; }
-    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 22px; }
-    .empty { background: #fff; border: 1px dashed var(--grey-200); border-radius: var(--radius); padding: 34px; text-align: center; color: var(--grey-500); font-size: 0.88rem; }
+    .modal-actions { display: flex; gap: 8px; justify-content: space-between; margin-top: 22px; }
+    .modal-actions .right { display: flex; gap: 8px; }
     .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--navy); color: #fff; padding: 11px 20px; border-radius: 8px; font-size: 0.85rem; z-index: 300; display: none; box-shadow: 0 6px 20px rgba(0,0,40,0.25); }
     .toast.show { display: block; }
+
+    @media (max-width: 760px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .side { border-right: none; border-bottom: 1px solid var(--grey-200); max-height: 38vh; }
+      .messages { padding: 14px; }
+      .composer, .thread-head { padding-left: 14px; padding-right: 14px; }
+      .msg { max-width: 92%; }
+    }
   </style>
 </head>
 <body>
@@ -152,44 +182,20 @@
     <div class="header-auth" id="header-auth"></div>
   </header>
 
-  <main class="page-wrap">
-    <div class="page-eyebrow">Automation</div>
-    <h1 class="page-title">Tend <span class="admin-badge">Admin</span></h1>
-    <p class="page-sub">
-      AI teammates that do a recurring job on a schedule. Each one has its own
-      instructions, its own tools, and its own log. Anything that changes the
-      outside world waits for you to say yes.
-    </p>
-
-    <section class="section" style="margin-top: 28px">
-      <div class="ws-card" id="workspace"></div>
-    </section>
-
-    <section class="section" id="approvals-section" style="display:none">
-      <div class="section-head">
-        <div class="section-title">Waiting on you</div>
+  <div class="app">
+    <aside class="side">
+      <div class="side-head">
+        <div class="side-title">Teammates</div>
+        <button class="btn btn-sm" onclick="openEditor()">+ New</button>
       </div>
-      <div id="approvals"></div>
-    </section>
+      <ul class="roster" id="roster"></ul>
+      <div class="side-foot" id="workspace"></div>
+    </aside>
 
-    <section class="section">
-      <div class="section-head">
-        <div class="section-title">Your teammates</div>
-        <button class="btn" onclick="openEditor()">+ New teammate</button>
-      </div>
-      <div class="agent-grid" id="agents"></div>
-    </section>
+    <main class="thread" id="thread"></main>
+  </div>
 
-    <section class="section">
-      <div class="section-head">
-        <div class="section-title">Activity</div>
-        <div class="section-note">Last 40 runs</div>
-      </div>
-      <div id="runs"></div>
-    </section>
-  </main>
-
-  <!-- ── Agent editor ── -->
+  <!-- ── Teammate editor ── -->
   <div class="modal-bg" id="editor-bg">
     <div class="modal">
       <div class="modal-title" id="editor-title">New teammate</div>
@@ -207,7 +213,7 @@
 
       <div class="field">
         <label>Standing instructions</label>
-        <div class="hint">The job, in your words. Be specific about what "done" looks like.</div>
+        <div class="hint">Its standing job. Runs on the schedule below, or when you press "Run job". Chat messages can ask for anything else.</div>
         <textarea id="f-instructions" placeholder="Each week, list EAC authors whose books published in the last 30 days. For each one, check their website for launch news. Report anything worth posting in the Wins space."></textarea>
       </div>
 
@@ -229,9 +235,23 @@
 
       <div class="row">
         <div class="field">
-          <label>Runs</label>
+          <label>Brain</label>
+          <div class="hint">Which vendor this teammate thinks with.</div>
+          <select id="f-provider" onchange="onProviderChange()"></select>
+        </div>
+        <div class="field">
+          <label>Model</label>
+          <div class="hint" id="f-model-hint">Pick one.</div>
+          <select id="f-model"></select>
+          <input type="text" id="f-model-custom" placeholder="or type any model id" maxlength="120" style="margin-top:6px;display:none">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Standing job runs</label>
           <select id="f-schedule" onchange="onScheduleChange()">
-            <option value="manual">Only when I press go</option>
+            <option value="manual">Only when I press "Run job"</option>
             <option value="hourly">Every hour</option>
             <option value="daily">Every day</option>
             <option value="weekly">Every week</option>
@@ -257,20 +277,6 @@
 
       <div class="row">
         <div class="field">
-          <label>Brain</label>
-          <div class="hint">Which vendor this teammate thinks with.</div>
-          <select id="f-provider" onchange="onProviderChange()"></select>
-        </div>
-        <div class="field">
-          <label>Model</label>
-          <div class="hint" id="f-model-hint">Pick one.</div>
-          <select id="f-model"></select>
-          <input type="text" id="f-model-custom" placeholder="or type any model id" maxlength="120" style="margin-top:6px;display:none">
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="field">
           <label>Thinking effort</label>
           <div class="hint">Higher costs more and takes longer.</div>
           <select id="f-effort">
@@ -290,8 +296,11 @@
       </div>
 
       <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeEditor()">Cancel</button>
-        <button class="btn" id="f-save" onclick="saveAgent()">Save</button>
+        <button class="btn btn-danger" id="f-delete" onclick="removeAgent()" style="display:none">Delete</button>
+        <div class="right">
+          <button class="btn btn-ghost" onclick="closeEditor()">Cancel</button>
+          <button class="btn" id="f-save" onclick="saveAgent()">Save</button>
+        </div>
       </div>
     </div>
   </div>
@@ -300,7 +309,7 @@
   <div class="modal-bg" id="ws-bg">
     <div class="modal">
       <div class="modal-title">Your community</div>
-      <p class="hint" style="font-size:0.8rem;color:var(--grey-500);margin-bottom:18px">
+      <p style="font-size:0.8rem;color:var(--grey-500);margin-bottom:18px">
         Every teammate reads this before it starts. Change it here, not in code.
       </p>
 
@@ -317,7 +326,7 @@
         </div>
         <div class="field">
           <label>Who runs the tools</label>
-          <div class="hint">Reads the reports. Approves actions.</div>
+          <div class="hint">Reads the replies. Approves actions.</div>
           <input type="text" id="w-admin" placeholder="e.g. Cameron McGrane" maxlength="120">
         </div>
       </div>
@@ -335,8 +344,11 @@
       </div>
 
       <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeWorkspace()">Cancel</button>
-        <button class="btn" id="w-save" onclick="saveWorkspace()">Save</button>
+        <span></span>
+        <div class="right">
+          <button class="btn btn-ghost" onclick="closeWorkspace()">Cancel</button>
+          <button class="btn" id="w-save" onclick="saveWorkspace()">Save</button>
+        </div>
       </div>
     </div>
   </div>
@@ -346,13 +358,24 @@
   <script src="/eac.js"></script>
   <script>
   /* ============================================================
-     EAC TEND — dashboard
-     Roster, approval gates, and the run log. Talks to /api/tend
-     and /api/tend-run. Admin-only; the API enforces that too.
+     EAC TEND — chat dashboard
+     One thread per teammate. A thread is that teammate's runs,
+     oldest first: your message (if any), then its reply, or an
+     approval card, or "Working…". Talks to /api/tend and
+     /api/tend-run. Admin-only; the API enforces that too.
+
+     ASYNC: sending never waits for the reply. The run is
+     persisted server-side, the page polls the thread while a
+     run is live, and the reply appears when it is done —
+     including after closing the tab and coming back.
      ============================================================ */
 
-  let STATE = { agents: [], runs: [], tools: [], workspace: {}, providers: [] };
-  let EDITING = null;   // agent id when editing, null when creating
+  let STATE = { agents: [], runs: [], tools: [], workspace: {}, providers: [], worker: {} };
+  let THREAD = [];            // runs for the selected teammate, oldest first
+  let SELECTED = null;        // agent id
+  let EDITING = null;         // agent id in the editor, null when creating
+  let pollTimer = null;
+  const POLL_MS = 3000;
 
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -371,67 +394,28 @@
     return data;
   }
 
-  /* ── Hour picker ──────────────────────────────────────────────
-     Stored as UTC, shown in the browser's timezone. The offset is
-     read at edit time, so a schedule set in summer shifts by an
-     hour when daylight saving ends. That is a known trade for not
-     making Cam do UTC arithmetic. */
-  const TZ_OFFSET_HOURS = -new Date().getTimezoneOffset() / 60;
+  const post = body => api('/api/tend-run', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
 
+  /* ── Time and schedule helpers ─────────────────────────────── */
+
+  // Stored as UTC, shown in the browser's timezone. The offset is read at
+  // edit time, so a schedule set in summer shifts by an hour when daylight
+  // saving ends. Known trade for not making anyone do UTC arithmetic.
+  const TZ_OFFSET_HOURS = -new Date().getTimezoneOffset() / 60;
   function utcToLocalHour(h) { return ((h + TZ_OFFSET_HOURS) % 24 + 24) % 24; }
   function localToUtcHour(h) { return ((h - TZ_OFFSET_HOURS) % 24 + 24) % 24; }
-
-  function hourLabel(h) {
-    const suffix = h < 12 ? 'am' : 'pm';
-    const twelve = h % 12 === 0 ? 12 : h % 12;
-    return twelve + suffix;
-  }
+  function hourLabel(h) { const s = h < 12 ? 'am' : 'pm'; const t = h % 12 === 0 ? 12 : h % 12; return t + s; }
 
   (function fillHours() {
     const sel = document.getElementById('f-hour');
     for (let h = 0; h < 24; h++) {
       const o = document.createElement('option');
-      o.value = h;
-      o.textContent = hourLabel(h) + ' your time';
+      o.value = h; o.textContent = hourLabel(h) + ' your time';
       sel.appendChild(o);
     }
   })();
-
-  /* ── Providers ─────────────────────────────────────────────── */
-
-  function providerById(id) {
-    return STATE.providers.find(p => p.id === id) || STATE.providers[0] || { models: [], freeText: true };
-  }
-
-  // Short name for the card chip. Curated models have a label; free-text
-  // ids show as typed, minus the vendor prefix so "openai/gpt-5" reads "gpt-5".
-  function modelLabel(a) {
-    const p = providerById(a.provider);
-    const known = (p.models || []).find(m => m.id === a.model);
-    if (known) return known.label.split(' — ')[0];
-    return (a.model || '').split('/').pop() || 'no model';
-  }
-
-  function onProviderChange(keepModel) {
-    const p = providerById(document.getElementById('f-provider').value);
-    const sel = document.getElementById('f-model');
-    const custom = document.getElementById('f-model-custom');
-    const hint = document.getElementById('f-model-hint');
-
-    sel.innerHTML = (p.models || []).map(m =>
-      `<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('');
-
-    custom.style.display = p.freeText ? '' : 'none';
-    hint.innerHTML = p.freeText
-      ? `Pick one, or type any id from <a href="${esc(p.modelsUrl || '#')}" target="_blank" rel="noopener">the catalogue</a>.`
-      : 'Pick one.';
-
-    // keepModel is the agent's saved model when opening the editor. If it is
-    // in the list, select it; otherwise it was typed, so show it in the box.
-    const listed = (p.models || []).some(m => m.id === keepModel);
-    sel.value = listed ? keepModel : (p.defaultModel || '');
-    custom.value = (keepModel && !listed && p.freeText) ? keepModel : '';
-  }
 
   function scheduleText(a) {
     if (a.schedule === 'manual') return 'Manual only';
@@ -452,243 +436,303 @@
     return Math.floor(hrs / 24) + 'd ago';
   }
 
-  /* ── Render ─────────────────────────────────────────────────── */
-
-  function render() {
-    renderWorkspace();
-    renderApprovals();
-    renderAgents();
-    renderRuns();
+  function when(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' · ' +
+           d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   }
 
-  function renderAgents() {
-    const el = document.getElementById('agents');
+  /* ── Providers ─────────────────────────────────────────────── */
+
+  function providerById(id) {
+    return STATE.providers.find(p => p.id === id) || STATE.providers[0] || { models: [], freeText: true };
+  }
+
+  function modelLabel(a) {
+    const p = providerById(a.provider);
+    const known = (p.models || []).find(m => m.id === a.model);
+    if (known) return known.label.split(' — ')[0];
+    return (a.model || '').split('/').pop() || 'no model';
+  }
+
+  function onProviderChange(keepModel) {
+    const p = providerById(document.getElementById('f-provider').value);
+    const sel = document.getElementById('f-model');
+    const custom = document.getElementById('f-model-custom');
+    const hint = document.getElementById('f-model-hint');
+    sel.innerHTML = (p.models || []).map(m => `<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('');
+    custom.style.display = p.freeText ? '' : 'none';
+    hint.innerHTML = p.freeText
+      ? `Pick one, or type any id from <a href="${esc(p.modelsUrl || '#')}" target="_blank" rel="noopener">the catalogue</a>.`
+      : 'Pick one.';
+    const listed = (p.models || []).some(m => m.id === keepModel);
+    sel.value = listed ? keepModel : (p.defaultModel || '');
+    custom.value = (keepModel && !listed && p.freeText) ? keepModel : '';
+  }
+
+  /* ── Live state ────────────────────────────────────────────── */
+
+  const isBusy = r => r && (r.status === 'queued' || r.status === 'running');
+  const isLive = r => r && (isBusy(r) || r.status === 'awaiting_approval');
+  const latestRunFor = id => STATE.runs.find(r => r.agent_id === id); // runs are newest-first
+  const selectedAgent = () => STATE.agents.find(a => a.id === SELECTED);
+
+  /* ── Render: sidebar ───────────────────────────────────────── */
+
+  function renderRoster() {
+    const el = document.getElementById('roster');
     if (!STATE.agents.length) {
-      el.innerHTML = '<div class="empty">No teammates yet. Create one and give it a job.</div>';
+      el.innerHTML = '<li style="cursor:default;color:var(--grey-500);font-size:0.82rem">No teammates yet.</li>';
       return;
     }
     el.innerHTML = STATE.agents.map(a => {
-      const writes = (a.tools || []).filter(t =>
-        (STATE.tools.find(x => x.name === t) || {}).write).length;
+      const last = latestRunFor(a.id);
+      const dot = !a.enabled ? 'off'
+        : isBusy(last) ? 'busy'
+        : last?.status === 'awaiting_approval' ? 'wait' : '';
       return `
-      <div class="agent-card ${a.enabled ? '' : 'off'}">
-        <div class="agent-top">
-          <div>
-            <div class="agent-name">${esc(a.name)}</div>
-            <div class="agent-role">${esc(a.role || 'No role set')}</div>
-          </div>
-        </div>
-        <div class="agent-meta">
-          <span class="chip">${esc(scheduleText(a))}</span>
-          <span class="chip" title="${esc(a.provider)}">${esc(modelLabel(a))}</span>
-          <span class="chip">${(a.tools || []).length} tool${(a.tools || []).length === 1 ? '' : 's'}</span>
-          ${writes ? `<span class="chip ${a.approval_required ? 'gate' : 'open'}">${
-            a.approval_required ? 'Asks first' : 'Acts alone'}</span>` : ''}
-          ${a.enabled ? '' : '<span class="chip">Paused</span>'}
-        </div>
-        <div class="agent-last">Last run ${esc(ago(a.last_run_at))}</div>
-        <div class="agent-actions">
-          <button class="btn btn-go btn-sm" onclick="runNow('${a.id}')">Run now</button>
-          <button class="btn btn-ghost btn-sm" onclick="openEditor('${a.id}')">Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="removeAgent('${a.id}')">Delete</button>
-        </div>
-      </div>`;
+      <li class="${a.id === SELECTED ? 'active' : ''}" onclick="select('${a.id}')">
+        <span class="r-dot ${dot}" title="${dot === 'busy' ? 'Working' : dot === 'wait' ? 'Waiting on you' : dot === 'off' ? 'Paused' : ''}"></span>
+        <span class="r-text">
+          <div class="r-name">${esc(a.name)}</div>
+          <div class="r-role">${esc(a.role || 'No role set')}</div>
+        </span>
+      </li>`;
     }).join('');
   }
+
+  function renderWorkspace() {
+    const w = STATE.workspace || {};
+    const people = [w.operator_name, w.admin_name].filter(Boolean).join(' · ');
+    const wk = STATE.worker || {};
+    const workerLine = wk.alive
+      ? `<span class="wk-dot on"></span>Worker online${wk.id ? ' · ' + esc(wk.id) : ''}`
+      : `<span class="wk-dot"></span>Worker offline · runs in the cloud`;
+    document.getElementById('workspace').innerHTML = `
+      <div class="ws-name">${esc(w.community_name || 'Community not set')}</div>
+      <div class="ws-people">${esc(people || 'No names set')}</div>
+      ${w.about ? '' : '<div class="ws-warn">Tell your teammates about the community.</div>'}
+      <div class="ws-worker" title="${wk.lastSeen ? 'Last heartbeat ' + esc(ago(wk.lastSeen)) : 'No worker has ever checked in'}">${workerLine}</div>
+      <button class="btn btn-ghost btn-sm" onclick="openWorkspace()">Edit community</button>`;
+  }
+
+  /* ── Render: thread ────────────────────────────────────────── */
 
   function argRows(input) {
     const entries = Object.entries(input || {});
     if (!entries.length) return '<div class="action-arg"><div class="action-key">(no arguments)</div><div></div></div>';
     return entries.map(([k, v]) => {
       const text = typeof v === 'string' ? v : JSON.stringify(v);
-      return `<div class="action-arg">
-        <div class="action-key">${esc(k)}</div>
-        <div class="action-val">${esc(text.length > 1200 ? text.slice(0, 1200) + '…' : text)}</div>
-      </div>`;
+      return `<div class="action-arg"><div class="action-key">${esc(k)}</div><div class="action-val">${esc(text.length > 1200 ? text.slice(0, 1200) + '…' : text)}</div></div>`;
     }).join('');
   }
 
-  function renderApprovals() {
-    const waiting = STATE.runs.filter(r => r.status === 'awaiting_approval');
-    document.getElementById('approvals-section').style.display = waiting.length ? '' : 'none';
-    document.getElementById('approvals').innerHTML = waiting.map(r => {
+  function trailHtml(log) {
+    return (log || []).filter(e => e.tool !== 'finish').map(e => `
+      <div class="trail-item">
+        <span class="trail-tool">${esc(e.tool)}</span>
+        ${e.decision ? `<span class="chip ${e.decision === 'rejected' ? 'open' : ''}">${esc(e.decision)}</span>` : ''}
+        <div class="trail-detail">${esc(e.error ? 'Error: ' + e.error : (e.result || ''))}</div>
+      </div>`).join('');
+  }
+
+  function botBubble(r, agent) {
+    if (r.status === 'queued') {
+      const w = STATE.worker || {};
+      const where = w.alive ? 'on the worker' : 'for the next cloud run';
+      return `<div class="bubble working">${esc(agent.name)} is queued ${where}<span class="dots"></span></div>`;
+    }
+    if (r.status === 'running') {
+      return `<div class="bubble working">${esc(agent.name)} is working<span class="dots"></span></div>`;
+    }
+    if (r.status === 'awaiting_approval') {
       const blocks = (r.pending && r.pending.blocks) || [];
       return `
       <div class="approval">
-        <div class="approval-head">${esc(r.agent_name)} wants to do something</div>
-        <div class="approval-sub">Started ${esc(ago(r.started_at))}. Nothing has happened yet.</div>
+        <div class="approval-head">${esc(agent.name)} wants to do something</div>
+        <div class="approval-sub">Nothing has happened yet. It is waiting for you.</div>
         ${blocks.map(b => `
           <div class="action-block">
-            <div class="action-name">
-              ${esc(b.name)}
-              ${b.write ? '<span class="chip gate">Changes things</span>' : '<span class="chip">Read only</span>'}
-            </div>
-            <div class="action-args">${argRows(b.input)}</div>
+            <div class="action-name">${esc(b.name)} ${b.write ? '<span class="chip gate">Changes things</span>' : '<span class="chip">Read only</span>'}</div>
+            ${argRows(b.input)}
           </div>`).join('')}
         <div class="approval-actions">
-          <button class="btn btn-go" onclick="decide('${r.id}','approve',this)">Approve</button>
-          <button class="btn btn-danger" onclick="decide('${r.id}','reject',this)">Decline</button>
+          <button class="btn btn-go btn-sm" onclick="decide('${r.id}','approve',this)">Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="decide('${r.id}','reject',this)">Decline</button>
         </div>
       </div>`;
-    }).join('');
+    }
+    if (r.status === 'failed') {
+      return `<div class="bubble err"><span class="txt">${esc(r.error || 'Something went wrong.')}</span></div>`;
+    }
+    const fin = (r.log || []).find(e => e.tool === 'finish');
+    const details = fin && fin.result ? fin.result : '';
+    const steps = (r.log || []).filter(e => e.tool !== 'finish').length;
+    const more = [
+      details ? `<button class="more" onclick="this.closest('.bubble').querySelector('.details').classList.toggle('open')">Full report</button>` : '',
+      steps   ? `<button class="more" onclick="this.closest('.bubble').querySelector('.trail').classList.toggle('open')">What it did (${steps})</button>` : '',
+    ].join('');
+    return `<div class="bubble"><span class="txt">${esc(r.summary || '(no reply)')}</span>` +
+      (more ? `<div>${more}</div>` : '') +
+      (details ? `<div class="details">${esc(details)}</div>` : '') +
+      (steps ? `<div class="trail">${trailHtml(r.log)}</div>` : '') +
+      `</div>`;
   }
 
-  function renderRuns() {
-    const el = document.getElementById('runs');
-    const done = STATE.runs.filter(r => r.status !== 'awaiting_approval');
-    if (!done.length) {
-      el.innerHTML = '<div class="empty">Nothing has run yet.</div>';
+  function renderThread() {
+    const el = document.getElementById('thread');
+    const agent = selectedAgent();
+
+    if (!STATE.agents.length) {
+      el.innerHTML = `<div class="empty">No teammates yet. Make one, give it a job, and talk to it here.<br><button class="btn" onclick="openEditor()">+ New teammate</button></div>`;
       return;
     }
-    el.innerHTML = done.map(r => {
-      const trail = (r.log || []).map(e => `
-        <div class="trail-item">
-          <span class="trail-tool">${esc(e.tool)}</span>
-          ${e.decision ? `<span class="chip ${e.decision === 'rejected' ? 'open' : ''}">${esc(e.decision)}</span>` : ''}
-          <div class="trail-detail">${esc(e.error ? 'Error: ' + e.error : (e.result || ''))}</div>
-        </div>`).join('');
-      return `
-      <div class="run">
-        <div class="run-top">
-          <span class="run-agent">${esc(r.agent_name)}</span>
-          <span class="status ${esc(r.status)}">${esc(r.status.replace(/_/g, ' '))}</span>
-          <span class="chip">${esc(r.trigger)}</span>
-          <span class="run-when">${esc(ago(r.started_at))}</span>
-        </div>
-        <div class="run-summary">${esc(r.error ? r.error : (r.summary || '(no summary)'))}</div>
-        ${trail ? `<button class="run-toggle" onclick="this.nextElementSibling.classList.toggle('open')">Show what it did (${(r.log || []).length})</button>
-        <div class="run-trail">${trail}</div>` : ''}
-      </div>`;
+    if (!agent) { el.innerHTML = `<div class="empty">Pick a teammate on the left.</div>`; return; }
+
+    const live = THREAD.some(isLive);
+    const busy = THREAD.some(isBusy);
+
+    const items = THREAD.map(r => {
+      const parts = [];
+      if (r.prompt) {
+        parts.push(`<div class="msg you"><div class="bubble"><span class="txt">${esc(r.prompt)}</span></div><div class="when">${esc(when(r.started_at))}</div></div>`);
+      } else {
+        parts.push(`<div class="sys">${r.trigger === 'schedule' ? 'Scheduled run' : 'Ran its standing job'} · ${esc(when(r.started_at))}</div>`);
+      }
+      parts.push(`<div class="msg bot">${botBubble(r, agent)}${r.finished_at ? `<div class="when">${esc(when(r.finished_at))}</div>` : ''}</div>`);
+      return parts.join('');
     }).join('');
+
+    const writes = (agent.tools || []).filter(t => (STATE.tools.find(x => x.name === t) || {}).write).length;
+
+    el.innerHTML = `
+      <div class="thread-head">
+        <div>
+          <div class="t-name">${esc(agent.name)}</div>
+          <div class="t-role">${esc(agent.role || 'No role set')}</div>
+          <div class="t-meta">
+            <span class="chip">${esc(scheduleText(agent))}</span>
+            <span class="chip">${esc(modelLabel(agent))}</span>
+            <span class="chip">${(agent.tools || []).length} tool${(agent.tools || []).length === 1 ? '' : 's'}</span>
+            ${writes ? `<span class="chip ${agent.approval_required ? 'gate' : 'open'}">${agent.approval_required ? 'Asks first' : 'Acts alone'}</span>` : ''}
+            ${agent.enabled ? '' : '<span class="chip">Paused</span>'}
+          </div>
+        </div>
+        <div class="t-actions">
+          <button class="btn btn-go btn-sm" onclick="runJob()" ${live ? 'disabled' : ''} title="Run the standing instructions now">Run job</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEditor('${agent.id}')">Edit</button>
+        </div>
+      </div>
+      <div class="messages" id="messages">
+        ${items || `<div class="empty">Nothing yet. Say hello, or press "Run job" to run its standing instructions.</div>`}
+      </div>
+      <div class="composer">
+        <textarea id="composer" rows="1" placeholder="${busy ? esc(agent.name) + ' is working. Wait for it to finish.' : 'Message ' + esc(agent.name) + '…'}" ${busy ? 'disabled' : ''} onkeydown="onComposerKey(event)" oninput="autoGrow(this)"></textarea>
+        <button class="btn" id="send-btn" onclick="send()" ${busy ? 'disabled' : ''}>Send</button>
+      </div>
+      <div class="composer-hint">Enter to send · Shift+Enter for a new line · You can close this tab; the reply will be here when you come back.</div>`;
+
+    const m = document.getElementById('messages');
+    m.scrollTop = m.scrollHeight;
+    const c = document.getElementById('composer');
+    if (c && !busy && document.activeElement?.tagName !== 'TEXTAREA') c.focus();
   }
 
-  /* ── Actions ────────────────────────────────────────────────── */
+  function render() {
+    renderRoster();
+    renderWorkspace();
+    renderThread();
+  }
+
+  /* ── Data ──────────────────────────────────────────────────── */
 
   async function load() {
     try {
       STATE = await api('/api/tend');
-      render();
+      if (!STATE.agents.some(a => a.id === SELECTED)) {
+        let remembered = null;
+        try { remembered = localStorage.getItem('tend.selected'); } catch {}
+        SELECTED = STATE.agents.some(a => a.id === remembered) ? remembered : (STATE.agents[0]?.id ?? null);
+      }
+      await loadThread();
     } catch (e) {
-      document.getElementById('agents').innerHTML =
-        `<div class="empty">Could not load your teammates: ${esc(e.message)}</div>`;
+      document.getElementById('thread').innerHTML = `<div class="empty">Could not load your teammates: ${esc(e.message)}</div>`;
     }
   }
 
-  async function runNow(id) {
-    const agent = STATE.agents.find(a => a.id === id);
-    // A run calls the model and its tools inside the request, so this can sit
-    // for minutes. Say so, rather than looking frozen.
-    toast((agent ? agent.name : 'Agent') + ' is working. This can take a few minutes.');
-    document.querySelectorAll('.btn-go').forEach(b => b.disabled = true);
+  async function loadThread() {
+    if (!SELECTED) { THREAD = []; render(); return; }
     try {
-      const { run } = await api('/api/tend-run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agentId: id }),
-      });
-      toast(run.status === 'awaiting_approval'
-        ? 'Needs your approval.'
-        : run.status === 'completed' ? 'Done.' : 'Run ' + run.status + '.');
-    } catch (e) {
-      toast('Failed: ' + e.message);
-    } finally {
-      document.querySelectorAll('.btn-go').forEach(b => b.disabled = false);
-      load();
-    }
+      const { runs } = await api('/api/tend?agentId=' + encodeURIComponent(SELECTED));
+      THREAD = runs;
+    } catch (e) { toast('Could not load the thread: ' + e.message); }
+    render();
+    schedulePoll();
   }
 
-  async function decide(runId, decision, btn) {
+  // Poll only while something is actually running. An approval waits for a
+  // human, so it does not need polling; a running job does.
+  function schedulePoll() {
+    clearTimeout(pollTimer);
+    const busy = THREAD.some(isBusy) || STATE.runs.some(isBusy);
+    if (busy) pollTimer = setTimeout(load, POLL_MS);
+  }
+
+  function select(id) {
+    SELECTED = id;
+    try { localStorage.setItem('tend.selected', id); } catch {}
+    loadThread();
+  }
+
+  /* ── Actions ───────────────────────────────────────────────── */
+
+  // Fire and forget, then poll. The reply lands in the thread when it lands.
+  function kick(body, startedMsg) {
+    post(body)
+      .then(({ run }) => {
+        if (run.status === 'awaiting_approval') toast('Needs your approval.');
+        else if (run.status === 'failed') toast('That run failed. See the thread.');
+      })
+      .catch(e => toast(e.message))
+      .finally(load);
+    if (startedMsg) toast(startedMsg);
+    setTimeout(load, 600);   // the run row exists almost immediately
+  }
+
+  function send() {
+    const c = document.getElementById('composer');
+    const text = (c?.value || '').trim();
+    if (!text || !SELECTED) return;
+    c.value = '';
+    autoGrow(c);
+    // Show the message straight away, before the server has the row.
+    THREAD = [...THREAD, { id: 'tmp', status: 'running', trigger: 'manual', prompt: text, started_at: new Date().toISOString(), log: [] }];
+    render();
+    kick({ agentId: SELECTED, text });
+  }
+
+  function runJob() {
+    if (!SELECTED) return;
+    const a = selectedAgent();
+    kick({ agentId: SELECTED }, (a ? a.name : 'It') + ' is running its standing job.');
+  }
+
+  function decide(runId, decision, btn) {
     btn.parentElement.querySelectorAll('button').forEach(b => b.disabled = true);
-    toast(decision === 'approve' ? 'Approved. Carrying on…' : 'Declined. Carrying on…');
-    try {
-      const { run } = await api('/api/tend-run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ runId, decision }),
-      });
-      toast(run.status === 'awaiting_approval' ? 'Another action needs you.' : 'Run ' + run.status + '.');
-    } catch (e) {
-      toast('Failed: ' + e.message);
-    } finally {
-      load();
-    }
+    kick({ runId, decision }, decision === 'approve' ? 'Approved. Carrying on…' : 'Declined. Carrying on…');
   }
 
-  async function removeAgent(id) {
-    const agent = STATE.agents.find(a => a.id === id);
-    if (!confirm(`Delete ${agent ? agent.name : 'this teammate'}? Its run history goes too.`)) return;
-    try {
-      await api('/api/tend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ op: 'delete', id }),
-      });
-      toast('Deleted.');
-      load();
-    } catch (e) { toast('Failed: ' + e.message); }
+  function onComposerKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   }
 
-  /* ── Workspace ──────────────────────────────────────────────── */
-
-  function renderWorkspace() {
-    const w = STATE.workspace || {};
-    const people = [w.operator_name, w.admin_name].filter(Boolean).join(' · ');
-    // An empty "about" is the one thing that quietly makes every run worse:
-    // the teammate has no idea what a win looks like here. Say so up front.
-    document.getElementById('workspace').innerHTML = `
-      <div>
-        <div class="ws-name">${esc(w.community_name || 'Community not set')}</div>
-        <div class="ws-people">${esc(people || 'No names set')}</div>
-        ${w.about ? '' : '<div class="ws-warn">Tell your teammates about the community. They read this before every job.</div>'}
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="openWorkspace()">Edit</button>`;
+  function autoGrow(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 160) + 'px';
   }
 
-  function openWorkspace() {
-    const w = STATE.workspace || {};
-    document.getElementById('w-community').value = w.community_name || '';
-    document.getElementById('w-operator').value  = w.operator_name  || '';
-    document.getElementById('w-admin').value     = w.admin_name     || '';
-    document.getElementById('w-about').value     = w.about          || '';
-    document.getElementById('w-style').value     = w.style_notes    || '';
-    document.getElementById('ws-bg').classList.add('open');
-  }
-
-  function closeWorkspace() {
-    document.getElementById('ws-bg').classList.remove('open');
-  }
-
-  async function saveWorkspace() {
-    const btn = document.getElementById('w-save');
-    btn.disabled = true;
-    try {
-      await api('/api/tend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          op: 'workspace',
-          community_name: document.getElementById('w-community').value,
-          operator_name:  document.getElementById('w-operator').value,
-          admin_name:     document.getElementById('w-admin').value,
-          about:          document.getElementById('w-about').value,
-          style_notes:    document.getElementById('w-style').value,
-        }),
-      });
-      toast('Saved.');
-      closeWorkspace();
-      load();
-    } catch (e) {
-      toast('Failed: ' + e.message);
-    } finally {
-      btn.disabled = false;
-    }
-  }
-
-  document.getElementById('ws-bg').addEventListener('click', e => {
-    if (e.target.id === 'ws-bg') closeWorkspace();
-  });
-
-  /* ── Editor ─────────────────────────────────────────────────── */
+  /* ── Teammate editor ───────────────────────────────────────── */
 
   function onScheduleChange() {
     const value = document.getElementById('f-schedule').value;
@@ -704,10 +748,7 @@
         ${tools.map(t => `
           <label class="tool-row">
             <input type="checkbox" value="${esc(t.name)}" ${chosen.has(t.name) ? 'checked' : ''}>
-            <span>
-              ${esc(t.label)}
-              <div class="tool-desc">${esc(t.description)}</div>
-            </span>
+            <span>${esc(t.label)}<div class="tool-desc">${esc(t.description)}</div></span>
           </label>`).join('')}
       </div>`;
     document.getElementById('f-tools').innerHTML =
@@ -728,10 +769,10 @@
     document.getElementById('f-hour').value         = String(Math.round(utcToLocalHour(a ? a.hour_utc : 21)));
     document.getElementById('f-effort').value       = a ? a.effort : 'medium';
     document.getElementById('f-enabled').value      = a ? String(a.enabled) : 'true';
+    document.getElementById('f-delete').style.display = a ? '' : 'none';
 
     const provSel = document.getElementById('f-provider');
-    provSel.innerHTML = STATE.providers.map(p =>
-      `<option value="${esc(p.id)}">${esc(p.label)}</option>`).join('');
+    provSel.innerHTML = STATE.providers.map(p => `<option value="${esc(p.id)}">${esc(p.label)}</option>`).join('');
     provSel.value = a ? a.provider : (STATE.providers[0] ? STATE.providers[0].id : '');
     onProviderChange(a ? a.model : null);
 
@@ -740,14 +781,11 @@
     document.getElementById('editor-bg').classList.add('open');
   }
 
-  function closeEditor() {
-    document.getElementById('editor-bg').classList.remove('open');
-  }
+  function closeEditor() { document.getElementById('editor-bg').classList.remove('open'); }
 
   async function saveAgent() {
     const name = document.getElementById('f-name').value.trim();
     if (!name) return toast('Give it a name.');
-
     const tools = [...document.querySelectorAll('#f-tools input:checked')].map(i => i.value);
     const body = {
       op: EDITING ? 'update' : 'create',
@@ -763,32 +801,70 @@
       effort:   document.getElementById('f-effort').value,
       enabled:  document.getElementById('f-enabled').value === 'true',
       provider: document.getElementById('f-provider').value,
-      // A typed id wins over the dropdown, so "pick one or type" is literal.
-      model:    document.getElementById('f-model-custom').value.trim()
-             || document.getElementById('f-model').value,
+      model:    document.getElementById('f-model-custom').value.trim() || document.getElementById('f-model').value,
     };
-
     const btn = document.getElementById('f-save');
     btn.disabled = true;
     try {
-      await api('/api/tend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      const out = await api('/api/tend', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       toast('Saved.');
       closeEditor();
+      if (out.agent) SELECTED = out.agent.id;   // a new teammate opens its own thread
       load();
-    } catch (e) {
-      toast('Failed: ' + e.message);
-    } finally {
-      btn.disabled = false;
-    }
+    } catch (e) { toast('Failed: ' + e.message); }
+    finally { btn.disabled = false; }
   }
 
-  document.getElementById('editor-bg').addEventListener('click', e => {
-    if (e.target.id === 'editor-bg') closeEditor();
-  });
+  async function removeAgent() {
+    const a = STATE.agents.find(x => x.id === EDITING);
+    if (!a || !confirm(`Delete ${a.name}? Its whole thread goes too.`)) return;
+    try {
+      await api('/api/tend', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'delete', id: a.id }) });
+      toast('Deleted.');
+      closeEditor();
+      SELECTED = null;
+      load();
+    } catch (e) { toast('Failed: ' + e.message); }
+  }
+
+  /* ── Workspace editor ──────────────────────────────────────── */
+
+  function openWorkspace() {
+    const w = STATE.workspace || {};
+    document.getElementById('w-community').value = w.community_name || '';
+    document.getElementById('w-operator').value  = w.operator_name  || '';
+    document.getElementById('w-admin').value     = w.admin_name     || '';
+    document.getElementById('w-about').value     = w.about          || '';
+    document.getElementById('w-style').value     = w.style_notes    || '';
+    document.getElementById('ws-bg').classList.add('open');
+  }
+
+  function closeWorkspace() { document.getElementById('ws-bg').classList.remove('open'); }
+
+  async function saveWorkspace() {
+    const btn = document.getElementById('w-save');
+    btn.disabled = true;
+    try {
+      await api('/api/tend', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        op: 'workspace',
+        community_name: document.getElementById('w-community').value,
+        operator_name:  document.getElementById('w-operator').value,
+        admin_name:     document.getElementById('w-admin').value,
+        about:          document.getElementById('w-about').value,
+        style_notes:    document.getElementById('w-style').value,
+      }) });
+      toast('Saved.');
+      closeWorkspace();
+      load();
+    } catch (e) { toast('Failed: ' + e.message); }
+    finally { btn.disabled = false; }
+  }
+
+  document.getElementById('editor-bg').addEventListener('click', e => { if (e.target.id === 'editor-bg') closeEditor(); });
+  document.getElementById('ws-bg').addEventListener('click', e => { if (e.target.id === 'ws-bg') closeWorkspace(); });
+
+  // Coming back to the tab after a while: refresh rather than trust a stale view.
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
 
   load();
   </script>

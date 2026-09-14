@@ -14,7 +14,29 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { isDue, resolveAdminEmail } from '../api/tend-cron'
+import { isDue, resolveAdminEmail, staleCutoff, STALE_AFTER_MS } from '../api/_lib/tend-schedule'
+import { isWorkerAlive, WORKER_TIMEOUT_MS } from '../api/_lib/tend-db'
+
+test('a worker is alive only on a fresh heartbeat', () => {
+  const now = new Date('2026-09-14T12:00:00Z')
+  const ago = (ms: number) => new Date(now.getTime() - ms).toISOString()
+  assert.equal(isWorkerAlive(ago(5_000), now), true)
+  assert.equal(isWorkerAlive(ago(WORKER_TIMEOUT_MS - 1), now), true)
+  assert.equal(isWorkerAlive(ago(WORKER_TIMEOUT_MS + 1), now), false, 'just past the window')
+  assert.equal(isWorkerAlive(null, now), false)
+  assert.equal(isWorkerAlive(undefined, now), false)
+  assert.equal(isWorkerAlive('not a date', now), false)
+  // The heartbeat is every 10s; the window must tolerate a few missed beats.
+  assert.ok(WORKER_TIMEOUT_MS >= 30_000)
+})
+
+test('a run is stale well after the function cap, not before', () => {
+  const now = new Date('2026-09-14T12:00:00Z')
+  const cutoff = new Date(staleCutoff(now))
+  assert.equal(now.getTime() - cutoff.getTime(), STALE_AFTER_MS)
+  // Longer than any single function can run, so a slow run is never swept.
+  assert.ok(STALE_AFTER_MS > 300_000, 'cutoff exceeds the 300s maxDuration')
+})
 import type { TendAgent } from '../api/_lib/tend-db'
 
 function agent(over: Partial<TendAgent> = {}): TendAgent {

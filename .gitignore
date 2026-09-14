@@ -4,3 +4,5 @@ node_modules/
 .vercel/
 .env*.local
 .test-build/
+.worker-build/
+worker/.env

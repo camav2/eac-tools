@@ -21,6 +21,7 @@ import {
   systemPrompt,
   kickoffMessages,
   MAX_STEPS,
+  HISTORY_EXCHANGES,
   type RunnerDeps,
 } from '../api/_lib/tend-runner'
 import type { TendAgent, TendRun, TendWorkspace } from '../api/_lib/tend-db'
@@ -54,9 +55,10 @@ function run(over: Partial<TendRun> = {}): TendRun {
   return {
     id: 'r1', agent_id: 'a1', agent_name: 'Scout', status: 'running', trigger: 'manual',
     provider: 'anthropic', model: 'claude-opus-5',
-    summary: null, error: null,
+    prompt: null, summary: null, error: null,
     messages: [{ role: 'user', content: 'go' }], log: [], pending: null,
-    input_tokens: 0, output_tokens: 0, started_at: '', finished_at: null,
+    input_tokens: 0, output_tokens: 0, claimed_by: null, pending_decision: null,
+    started_at: '', updated_at: '', finished_at: null,
     ...over,
   }
 }
@@ -129,13 +131,48 @@ test('system prompt survives an empty workspace with sane fallbacks', () => {
   assert.ok(!p.includes('ABOUT THIS COMMUNITY'), 'empty about is omitted, not printed blank')
 })
 
-test('kickoff message names the date and demands finish', () => {
+test('scheduled kickoff names the date and demands finish, with no chat framing', () => {
   const h = harness([])
-  const msgs = kickoffMessages('anthropic', new Date('2026-09-14T03:00:00Z'), h.deps.adapter)
+  const msgs = kickoffMessages('anthropic', { now: new Date('2026-09-14T03:00:00Z') }, h.deps.adapter)
   assert.equal(msgs.length, 1)
   assert.equal(msgs[0].role, 'user')
   assert.ok(msgs[0].content.includes('2026-09-14'))
   assert.ok(msgs[0].content.includes('call finish'))
+  assert.ok(msgs[0].content.includes('scheduled job'))
+  assert.ok(!msgs[0].content.includes('says:'), 'no operator message on a scheduled run')
+  assert.ok(!msgs[0].content.includes('RECENT CONVERSATION'))
+})
+
+test('chat kickoff carries the message and the recent thread, named by the admin', () => {
+  const h = harness([])
+  const msgs = kickoffMessages('anthropic', {
+    now: new Date('2026-09-14T03:00:00Z'),
+    prompt: 'Which books came out this month?',
+    adminName: 'Grace',
+    history: [
+      { prompt: 'Who joined last week?', summary: 'Three people: A, B, C.' },
+      { prompt: null, summary: 'Weekly pulse: all quiet.' },
+    ],
+  }, h.deps.adapter)
+  const text = msgs[0].content as string
+
+  assert.ok(text.includes('RECENT CONVERSATION'))
+  assert.ok(text.includes('[Grace]: Who joined last week?'))
+  assert.ok(text.includes('[You]: Three people: A, B, C.'))
+  assert.ok(text.includes('[Scheduled run]'), 'a scheduled exchange is labelled, not shown as a blank prompt')
+  assert.ok(text.includes('Grace says:\nWhich books came out this month?'))
+  assert.ok(text.includes('call finish'))
+  // History comes before the new message, so the model reads context first.
+  assert.ok(text.indexOf('RECENT CONVERSATION') < text.indexOf('Grace says:'))
+})
+
+test('chat kickoff keeps only the most recent exchanges', () => {
+  const h = harness([])
+  const history = Array.from({ length: HISTORY_EXCHANGES + 5 }, (_, i) => ({ prompt: `q${i}`, summary: `a${i}` }))
+  const text = kickoffMessages('anthropic', { now: new Date(), prompt: 'hi', history }, h.deps.adapter)[0].content as string
+  assert.ok(!text.includes('[The operator]: q0'), 'oldest dropped')
+  assert.ok(text.includes(`q${HISTORY_EXCHANGES + 4}`), 'newest kept')
+  assert.equal((text.match(/\[You\]:/g) ?? []).length, HISTORY_EXCHANGES)
 })
 
 // ── Ending a run ──────────────────────────────────────────────────────────────

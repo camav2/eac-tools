@@ -11,7 +11,16 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { sanitiseAgent, sanitiseWorkspace, clampInt } from '../api/_lib/tend-validate'
+import { sanitiseAgent, sanitiseWorkspace, sanitiseMessage, clampInt, MESSAGE_MAX } from '../api/_lib/tend-validate'
+
+test('message: trimmed, capped, and anything that is not a string is empty', () => {
+  assert.equal(sanitiseMessage('  hello  '), 'hello')
+  assert.equal(sanitiseMessage('x'.repeat(MESSAGE_MAX + 100)).length, MESSAGE_MAX)
+  assert.equal(sanitiseMessage('   '), '')
+  assert.equal(sanitiseMessage(null), '')
+  assert.equal(sanitiseMessage(42), '')
+  assert.equal(sanitiseMessage({ text: 'hi' }), '')
+})
 
 test('clampInt keeps in-range integers and falls back on everything else', () => {
   assert.equal(clampInt(5, 0, 23, 21), 5)

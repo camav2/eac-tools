@@ -1,25 +1,27 @@
 /*
  * EAC Tend — scheduler
  *
- * Vercel cron hits this hourly. It finds the agents that are due, runs them
- * one after another, and stops. Anything it does not reach is picked up on the
- * next tick, so a busy hour delays a job rather than dropping it.
+ * Vercel cron hits this hourly. It finds the agents that are due and starts
+ * them. Anything it does not reach is picked up on the next tick, so a busy
+ * hour delays a job rather than dropping it.
  *
- * Schedules are stored as intent (hourly / daily at hour / weekly on day) not
- * as cron strings. Cam picks them from a dropdown; nobody should have to read
- * "0 21 * * 1" to know when their teammate wakes up.
+ * WHERE A RUN EXECUTES. If a worker (the Mac mini) has heartbeated in the
+ * last minute, due runs are created `queued` and the worker takes them —
+ * that is the path that allows hour-long jobs and, later, a browser. If no
+ * worker is alive, this function runs them inline as before, within its
+ * 300 s cap. Same rule for runs already sitting in the queue: a dead worker
+ * must not strand them, so the cron drains the queue itself when it can.
  *
- * A scheduled run that proposes a gated write stops at awaiting_approval and
- * waits on the dashboard. Unattended does not mean unsupervised.
+ * Schedules are stored as intent (hourly / daily at hour / weekly on day),
+ * not cron strings. Cam picks them from a dropdown; nobody should have to
+ * read "0 21 * * 1" to know when their teammate wakes up.
+ *
+ * Who a scheduled run "is": the admin with a connected Gmail (from
+ * gmail_tokens). TEND_ADMIN_EMAIL overrides that for an install with several
+ * connected admins. Neither is required — see _lib/tend-schedule.ts.
  *
  * Protection: requires Authorization: Bearer CRON_SECRET (Vercel injects it
  * for cron invocations when the env var is set).
- *
- * Who a scheduled run "is": the admin with a connected Gmail (from
- * gmail_tokens), so sends go out from their mailbox. TEND_ADMIN_EMAIL
- * overrides that when set, for an install with several connected admins.
- * Neither is required to run — a teammate with only read tools never needs
- * a mailbox, and send_email fails with a plain message if there is none.
  *
  * Env vars required:
  *   CRON_SECRET, ANTHROPIC_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY
@@ -28,67 +30,26 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { drive, kickoffMessages } from './_lib/tend-runner'
+import { drive, resolveApproval, kickoffMessages } from './_lib/tend-runner'
 import { listConnectedAdmins } from './_lib/gmail'
+import { isDue, resolveAdminEmail, staleCutoff } from './_lib/tend-schedule'
 import {
-  listAgents, createRun, updateAgent, hasLiveRun, getWorkspace,
-  type TendAgent,
+  listAgents, getAgent, createRun, updateAgent, hasLiveRun, getWorkspace,
+  expireStaleRuns, getWorkerStatus, claimNextRun,
 } from './_lib/tend-db'
+
+// Kept as re-exports so existing imports and tests keep working.
+export { isDue, resolveAdminEmail, staleCutoff, STALE_AFTER_MS } from './_lib/tend-schedule'
 
 export const maxDuration = 300
 
 /**
- * Agents started per tick. Each can take minutes, and the function is capped
- * at 300 seconds — better to run three properly than to be killed mid-way
- * through the fourth and leave a half-written transcript.
+ * Runs this function will execute itself per tick, when no worker is alive.
+ * Each can take minutes and the function is capped at 300 seconds — better
+ * to run three properly than to be killed mid-way through the fourth.
+ * Queueing for the worker has no such limit.
  */
-const MAX_PER_TICK = 3
-
-const HOUR_MS = 60 * 60 * 1000
-
-/**
- * Who an unattended run acts as. An explicit override wins; otherwise the
- * most recently connected admin. Never throws: a run with only read tools
- * needs no mailbox, so a missing one is a note in the log, not a refusal.
- */
-export function resolveAdminEmail(
-  override: string | undefined,
-  connected: string[],
-): { adminEmail: string; note?: string } {
-  if (override) return { adminEmail: override }
-  const adminEmail = connected[0] ?? ''
-  if (!adminEmail) {
-    return { adminEmail, note: 'no connected mailbox — send_email will fail if a teammate tries it' }
-  }
-  if (connected.length > 1) {
-    return {
-      adminEmail,
-      note: `${connected.length} admins have Gmail connected; acting as ${adminEmail}. Set TEND_ADMIN_EMAIL to choose.`,
-    }
-  }
-  return { adminEmail }
-}
-
-export function isDue(agent: TendAgent, now: Date): boolean {
-  if (!agent.enabled) return false
-  if (agent.schedule === 'manual') return false
-
-  const last = agent.last_run_at ? new Date(agent.last_run_at) : null
-  const sinceLast = last ? now.getTime() - last.getTime() : Infinity
-
-  if (agent.schedule === 'hourly') {
-    // 55 minutes, not 60: an hourly cron never fires at exactly the same
-    // offset twice, and a strict hour means every other tick is skipped.
-    return sinceLast >= 55 * 60 * 1000
-  }
-
-  if (now.getUTCHours() !== agent.hour_utc) return false
-
-  if (agent.schedule === 'daily')  return sinceLast >= 23 * HOUR_MS
-  if (agent.schedule === 'weekly') return now.getUTCDay() === agent.dow && sinceLast >= 6 * 24 * HOUR_MS
-
-  return false
-}
+const MAX_INLINE_PER_TICK = 3
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
@@ -102,25 +63,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Resolve, don't require. See the header comment.
+    const now = new Date()
+
+    // Housekeeping first, so a teammate blocked by a dead run can be
+    // scheduled again on this same tick.
+    const expired = await expireStaleRuns(staleCutoff(now))
+    if (expired) console.warn(`[tend-cron] marked ${expired} stale run(s) as failed`)
+
+    const { alive: workerAlive, worker } = await getWorkerStatus(now)
+    console.log(`[tend-cron] worker ${workerAlive ? `alive (${worker?.id})` : 'not alive — running inline'}`)
+
     const { adminEmail, note } = resolveAdminEmail(
       process.env.TEND_ADMIN_EMAIL,
       await listConnectedAdmins(),
     )
     if (note) console.warn(`[tend-cron] ${note}`)
-
-    const now = new Date()
-    const due = (await listAgents()).filter(a => isDue(a, now))
-
-    if (!due.length) {
-      console.log('[tend-cron] nothing due')
-      return res.json({ ok: true, started: 0, ts: now.toISOString() })
-    }
+    const workspace = await getWorkspace()
+    const ctx = { adminEmail, workspace }
 
     const results: { agent: string; status: string }[] = []
-    const workspace = await getWorkspace()
+    let inlineBudget = MAX_INLINE_PER_TICK
 
-    for (const agent of due.slice(0, MAX_PER_TICK)) {
+    // ── Start what is due ────────────────────────────────────────────────
+    const due = (await listAgents()).filter(a => isDue(a, now))
+    for (const agent of due) {
+      if (!workerAlive && inlineBudget <= 0) break
+
       if (await hasLiveRun(agent.id)) {
         // Usually an earlier run still sitting at an approval gate. Skipping is
         // right: starting a second one would queue a second thing to approve.
@@ -132,26 +100,60 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const run = await createRun({
         agent_id:   agent.id,
         agent_name: agent.name,
-        status:     'running',
+        status:     workerAlive ? 'queued' : 'running',
         trigger:    'schedule',
         provider:   agent.provider,
         model:      agent.model,
-        messages:   kickoffMessages(agent.provider, now),
+        prompt:     null,
+        messages:   kickoffMessages(agent.provider, { now, adminName: workspace.admin_name }),
       })
 
       // Stamped before the run, not after. A crash mid-run must not leave the
       // agent looking un-run, or the next tick starts it again immediately.
       await updateAgent(agent.id, { last_run_at: now.toISOString() })
 
-      const done = await drive(run, agent, { adminEmail, workspace })
+      if (workerAlive) {
+        console.log(`[tend-cron] ${agent.name} queued for worker`)
+        results.push({ agent: agent.name, status: 'queued' })
+        continue
+      }
+
+      const done = await drive(run, agent, ctx)
+      inlineBudget--
       console.log(`[tend-cron] ${agent.name} → ${done.status}`)
       results.push({ agent: agent.name, status: done.status })
     }
 
+    // ── Drain the queue if the worker is gone ────────────────────────────
+    // Runs queued while the worker was alive (or decisions handed to it)
+    // must not sit forever because the Mac mini lost power.
+    let drained = 0
+    if (!workerAlive) {
+      while (inlineBudget > 0) {
+        const claimed = await claimNextRun('vercel-cron')
+        if (!claimed) break
+        const { run, decision } = claimed
+        const agent = await getAgent(run.agent_id)
+        if (!agent) {
+          console.warn(`[tend-cron] queued run ${run.id} has no agent — leaving it to the stale sweep`)
+          continue
+        }
+        const done = decision
+          ? await resolveApproval(run, agent, decision === 'approve', ctx)
+          : await drive(run, agent, ctx)
+        inlineBudget--
+        drained++
+        console.log(`[tend-cron] drained ${agent.name} (${decision ?? 'run'}) → ${done.status}`)
+        results.push({ agent: agent.name, status: `drained:${done.status}` })
+      }
+    }
+
     return res.json({
       ok: true,
-      started: results.length,
-      deferred: Math.max(0, due.length - MAX_PER_TICK),
+      workerAlive,
+      due: due.length,
+      started: results.filter(r => r.status !== 'skipped').length,
+      drained,
       results,
       ts: now.toISOString(),
     })
