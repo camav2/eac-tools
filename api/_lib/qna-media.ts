@@ -58,31 +58,78 @@ function headers(extra: Record<string, string> = {}) {
   return { Authorization: `Bearer ${key}`, apikey: key, ...extra }
 }
 
-/**
- * Idempotent bucket creation.
+/*
+ * ── Supabase buries the real status in the body ──────────────────────────────
  *
- * Supabase reports "already exists" as HTTP 400 with a 409 buried in the body,
- * so the status alone cannot be trusted — the same trap that made every
- * recording after the first one fail when this was written for audio.
+ * None of these three conditions can be read off res.status, and getting that
+ * wrong is what broke this feature: a missing bucket arrives as HTTP 400 with
+ * {"statusCode":"404","error":"InvalidRequest","message":"The related resource
+ * does not exist"}. The status says 400 and the message never says "bucket",
+ * so the old check — res.status === 404 || /Bucket not found|NoSuchBucket/ —
+ * never fired. ensureBucket() was therefore never reached, the bucket was
+ * never provisioned, and every upload an author ever attempted failed.
+ *
+ * The audio module documents the same trap in the opposite direction, where a
+ * 409 hides inside a 400. Both live here as named predicates so the next
+ * variant has one obvious place to go.
  */
-async function ensureBucket(): Promise<void> {
-  const res = await fetch(storageUrl('/bucket'), {
+
+/** Missing bucket: HTTP 404, or a 404 buried in the body of a 400. */
+export function isMissingBucket(status: number, body: string): boolean {
+  return (
+    status === 404 ||
+    /"statusCode"\s*:\s*"?404"?/.test(body) ||
+    /Bucket not found|NoSuchBucket|The related resource does not exist/i.test(body)
+  )
+}
+
+/** Already provisioned — the desired end state, not a failure. */
+export function isBucketAlreadyExists(status: number, body: string): boolean {
+  return (
+    status === 409 ||
+    /"statusCode"\s*:\s*"?409"?/.test(body) ||
+    /BucketAlreadyExists|already exists/i.test(body)
+  )
+}
+
+/**
+ * The project-wide upload cap can sit below the bucket we ask for, which
+ * rejects the create outright. Free projects default to 50 MB; MAX_BYTES is
+ * 100 MB.
+ */
+export function isOverGlobalLimit(body: string): boolean {
+  return /global limit|exceeded the maximum allowed size|file_size_limit/i.test(body)
+}
+
+function createBucket(fileSizeLimit: number | null) {
+  return fetch(storageUrl('/bucket'), {
     method: 'POST',
     headers: headers({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({
       id: BUCKET,
       name: BUCKET,
       public: false,
-      file_size_limit: MAX_BYTES,
+      ...(fileSizeLimit === null ? {} : { file_size_limit: fileSizeLimit }),
       allowed_mime_types: ALLOWED_TYPES,
     }),
   })
-  if (res.ok) return
+}
 
-  const body = await res.text().catch(() => '')
-  if (res.status === 409 || /BucketAlreadyExists|already exists|"statusCode":"409"/i.test(body)) {
-    return
+/** Idempotent bucket creation. */
+async function ensureBucket(): Promise<void> {
+  let res = await createBucket(MAX_BYTES)
+  if (res.ok) return
+  let body = await res.text().catch(() => '')
+  if (isBucketAlreadyExists(res.status, body)) return
+
+  // Inheriting the project's global limit is a better outcome than no bucket.
+  if (isOverGlobalLimit(body)) {
+    res = await createBucket(null)
+    if (res.ok) return
+    body = await res.text().catch(() => '')
+    if (isBucketAlreadyExists(res.status, body)) return
   }
+
   throw new Error(`Supabase bucket create failed: ${res.status} ${body.slice(0, 200)}`)
 }
 
@@ -128,7 +175,7 @@ export async function signUpload(
   if (!res.ok) {
     const body = await res.text().catch(() => '')
     // First upload of the tool's life: provision, then try once more.
-    if (res.status === 404 || /Bucket not found|NoSuchBucket/i.test(body)) {
+    if (isMissingBucket(res.status, body)) {
       await ensureBucket()
       res = await sign()
     } else {
