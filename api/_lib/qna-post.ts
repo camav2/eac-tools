@@ -88,10 +88,18 @@ export function postBodyHtml(draft: Draft): string {
     parts.push('<hr>')
   }
 
+  // A rule between each pair, so an answer cannot run into the next question.
+  // Without it a long answer and the heading below it read as one block, and
+  // the reader loses the turn-taking that makes an interview an interview.
+  let first = true
   for (const item of draft?.items ?? []) {
     const q = String(item?.question ?? '').trim()
     const a = paragraphs(item?.answer ?? '')
     if (!q && !a.length) continue
+    // Never before the first pair: the standfirst already put a rule there,
+    // and two in a row reads as a mistake.
+    if (!first) parts.push('<hr>')
+    first = false
     if (q) parts.push(`<h3>${esc(q)}</h3>`)
     for (const p of a) parts.push(`<p>${esc(p)}</p>`)
   }
@@ -143,4 +151,90 @@ export function candidateSlugs(authorName: string, bookTitle: string): string[] 
 
 export function blogUrl(slug: string): string {
   return `${BLOG_BASE_URL}/${encodeURIComponent(slug)}`
+}
+
+/* ── The end of the post ─────────────────────────────────────────────────────
+ *
+ * Buy their book, then connect with them. Cam's call, and it is the only
+ * ending consistent with the rest of the series: this is not a testimonial,
+ * so it does not end by selling EAC. It ends by being useful to the author,
+ * which is also what makes them want to share it - and their network is where
+ * the next members come from anyway.
+ */
+
+export interface PostFooter {
+  authorName?: string
+  authorLinkedin?: string
+  bookTitle?: string
+  bookCoverUrl?: string
+  bookCoverAlt?: string
+  buyLinks?: Array<{ label: string; url: string }>
+}
+
+function firstNameOf(full?: string): string {
+  return String(full ?? '').trim().split(/\s+/)[0] || ''
+}
+
+/** "Booktopia", "Booktopia or Amazon", "Booktopia, Amazon or the publisher". */
+function joinLinks(links: Array<{ label: string; url: string }>): string {
+  const parts = links.map(l => `<a href="${esc(l.url)}">${esc(l.label)}</a>`)
+  if (parts.length <= 1) return parts[0] ?? ''
+  return `${parts.slice(0, -1).join(', ')} or ${parts[parts.length - 1]}`
+}
+
+export function footerHtml(f: PostFooter): string {
+  const parts: string[] = []
+  const book = String(f?.bookTitle ?? '').trim()
+  const links = (f?.buyLinks ?? []).filter(l => l?.url)
+  const first = firstNameOf(f?.authorName)
+
+  if (!book && !links.length && !f?.authorLinkedin) return ''
+
+  parts.push('<hr>')
+
+  if (book) {
+    // The cover sits with the buy line rather than alone: a cover with no way
+    // to act on it is decoration, and this is the one place the post asks for
+    // something.
+    if (f.bookCoverUrl) {
+      parts.push(`<p><img src="${esc(f.bookCoverUrl)}" alt="${esc(f.bookCoverAlt || book)}"></p>`)
+    }
+    parts.push(
+      links.length
+        ? `<p><strong>${esc(book)}</strong> is available from ${joinLinks(links)}.</p>`
+        : `<p><strong>${esc(book)}</strong></p>`
+    )
+  } else if (links.length) {
+    parts.push(`<p>The book is available from ${joinLinks(links)}.</p>`)
+  }
+
+  if (f?.authorLinkedin && first) {
+    parts.push(
+      `<p>You can connect with ${esc(first)} ` +
+      `<a href="${esc(f.authorLinkedin)}">on LinkedIn</a>.</p>`
+    )
+  }
+
+  return parts.join('\n')
+}
+
+/**
+ * The post image, best available first.
+ *
+ * A photograph the author sent beats everything: it is theirs, it is specific,
+ * and it is why the upload box exists. A headshot is the last resort because
+ * every headshot looks like every other headshot and says nothing about the
+ * book.
+ */
+export function choosePostImage(opts: {
+  uploadedImageUrl?: string | null
+  bookHeroUrl?: string | null
+  bookCoverUrl?: string | null
+  headshotUrl?: string | null
+}): string | null {
+  return opts.uploadedImageUrl
+    || opts.bookHeroUrl
+    || opts.bookCoverUrl
+    || opts.headshotUrl
+    || null
 }

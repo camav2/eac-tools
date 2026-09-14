@@ -13,7 +13,9 @@ import assert from 'node:assert/strict'
 import {
   authorSummaryHtml,
   candidateSlugs,
+  choosePostImage,
   defaultTitle,
+  footerHtml,
   metaDescription,
   postBodyHtml,
   slugify,
@@ -139,4 +141,126 @@ test('candidate slugs ignore an edited headline', () => {
   // staged post stays findable from the pipeline alone.
   const a = candidateSlugs('Benita Bensch', 'Seen Again: Light on Matrescence')[0]
   assert.equal(a, slugify(defaultTitle('Benita Bensch', 'Seen Again: Light on Matrescence')))
+})
+
+/* ── The end of the post ──
+ * Buy their book, connect with them. No EAC pitch: the series is built on not
+ * being a testimonial, and an ending that sold EAC would undo the reason the
+ * editor cuts praise from the answers.
+ */
+
+test('the ending offers the book and the author, and never EAC', () => {
+  const html = footerHtml({
+    authorName: 'Penelope Barr',
+    authorLinkedin: 'https://linkedin.com/in/penelopebarr',
+    bookTitle: 'Win the Night to Win the Day',
+    buyLinks: [{ label: 'Booktopia', url: 'https://booktopia.test/win' }],
+  })
+  assert.match(html, /Win the Night to Win the Day/)
+  assert.match(html, /booktopia\.test/)
+  assert.match(html, /linkedin\.com\/in\/penelopebarr/)
+  assert.doesNotMatch(html, /Expert Author Community|join|membership/i)
+})
+
+test('connects by first name', () => {
+  const html = footerHtml({
+    authorName: 'Penelope Barr',
+    authorLinkedin: 'https://linkedin.test/p',
+  })
+  assert.match(html, /connect with Penelope/)
+  assert.doesNotMatch(html, /connect with Penelope Barr/)
+})
+
+test('reads as a sentence with two or three shops', () => {
+  const two = footerHtml({
+    bookTitle: 'A Book',
+    buyLinks: [
+      { label: 'Booktopia', url: 'https://b.test' },
+      { label: 'Amazon', url: 'https://a.test' },
+    ],
+  })
+  assert.match(two, /Booktopia<\/a> or <a[^>]*>Amazon/)
+
+  const three = footerHtml({
+    bookTitle: 'A Book',
+    buyLinks: [
+      { label: 'Booktopia', url: 'https://b.test' },
+      { label: 'Amazon', url: 'https://a.test' },
+      { label: 'the publisher', url: 'https://p.test' },
+    ],
+  })
+  assert.match(three, /Booktopia<\/a>, <a[^>]*>Amazon<\/a> or <a[^>]*>the publisher/)
+})
+
+test('no LinkedIn means no LinkedIn line, not an empty one', () => {
+  const html = footerHtml({
+    authorName: 'Penelope Barr',
+    bookTitle: 'A Book',
+    buyLinks: [{ label: 'Booktopia', url: 'https://b.test' }],
+  })
+  assert.doesNotMatch(html, /connect with/i)
+  assert.match(html, /A Book/)
+})
+
+test('a book with nowhere to buy it still gets named', () => {
+  const html = footerHtml({ bookTitle: 'A Book', buyLinks: [] })
+  assert.match(html, /A Book/)
+  assert.doesNotMatch(html, /available from/)
+})
+
+test('nothing to say means no trailing rule', () => {
+  // An <hr> with nothing under it is a page that looks broken.
+  assert.equal(footerHtml({}), '')
+  assert.equal(footerHtml({ authorName: 'Penelope Barr' }), '')
+})
+
+test('the ending escapes markup', () => {
+  const html = footerHtml({
+    authorName: '<script>x</script> Barr',
+    authorLinkedin: 'https://l.test',
+    bookTitle: '<img onerror=1>',
+    buyLinks: [],
+  })
+  assert.doesNotMatch(html, /<script>/)
+  assert.doesNotMatch(html, /<img onerror/)
+})
+
+/* ── Which picture the post uses ── */
+
+test("the author's own photo beats everything", () => {
+  // It is theirs, it is specific, and it is why the upload box exists.
+  assert.equal(choosePostImage({
+    uploadedImageUrl: 'https://up.test/launch.jpg',
+    bookHeroUrl: 'https://wf.test/hero.jpg',
+    bookCoverUrl: 'https://wf.test/cover.jpg',
+    headshotUrl: 'https://wf.test/face.jpg',
+  }), 'https://up.test/launch.jpg')
+})
+
+test('falls back in order, headshot last', () => {
+  // Every headshot looks like every other headshot and says nothing about the
+  // book, so it is the last resort rather than the default it used to be.
+  assert.equal(choosePostImage({ bookHeroUrl: 'h', bookCoverUrl: 'c', headshotUrl: 'f' }), 'h')
+  assert.equal(choosePostImage({ bookCoverUrl: 'c', headshotUrl: 'f' }), 'c')
+  assert.equal(choosePostImage({ headshotUrl: 'f' }), 'f')
+  assert.equal(choosePostImage({}), null)
+})
+
+test('a rule separates each answer from the next question', () => {
+  // Without it a long answer runs into the heading below it and the reader
+  // loses the turn-taking that makes an interview an interview.
+  const html = postBodyHtml(DRAFT)
+  const parts = html.split('<h3>')
+  assert.equal(parts.length - 1, 2, 'two questions')
+  assert.match(html, /<\/p>\n<hr>\n<h3>What surprised you\?<\/h3>/)
+})
+
+test('no double rule under the standfirst', () => {
+  // The standfirst already puts one there; a second reads as a mistake.
+  assert.doesNotMatch(postBodyHtml(DRAFT), /<hr>\n<hr>/)
+})
+
+test('no rule at all when there is only one question', () => {
+  const html = postBodyHtml({ standfirst: '', items: [{ question: 'Q', answer: 'A' }] })
+  assert.doesNotMatch(html, /<hr>/)
 })

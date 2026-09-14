@@ -29,15 +29,22 @@ import {
   findBlogPostBySlugs,
   getAuthorHeadshotUrl,
   getBlogPost,
+  getPostFooterData,
+  listBlogPosts,
   publishAuthorItem,
   publishBlogPost,
+  writeBlogBody,
   writeEditorialQna,
 } from './_lib/webflow'
+import { findRoundup, linkNameInHtml } from './_lib/qna-roundup'
+import { parseMedia, signedUrlFor as signedMediaUrl } from './_lib/qna-media'
 import {
   authorSummaryHtml,
   blogUrl,
   candidateSlugs,
+  choosePostImage,
   defaultTitle,
+  footerHtml,
   metaDescription,
   postBodyHtml,
   slugify,
@@ -83,6 +90,31 @@ async function findRow(authorItemId: string) {
   )
 }
 
+/**
+ * The images an author sent, signed so Webflow can fetch them.
+ *
+ * Webflow re-hosts whatever URL it is given on its own CDN, so a signed link
+ * that lives an hour is long enough - the file it pulls is permanent even
+ * though the link is not.
+ *
+ * Only images. A PDF or a video cannot be a post's main image, and offering
+ * one as a choice would be offering a broken post.
+ */
+async function uploadedImages(row: any) {
+  const files = parseMedia(row.fields['Author Media']).filter(
+    f => f.type.startsWith('image/')
+  )
+  return Promise.all(
+    files.map(async f => ({
+      name: f.name,
+      url:  await signedMediaUrl(f.path, 3600).catch(err => {
+        console.error('[qna-publish] media sign failed:', err)
+        return null
+      }),
+    }))
+  ).then(list => list.filter(f => f.url))
+}
+
 function parseDraft(raw: unknown): Draft | null {
   if (typeof raw !== 'string' || !raw) return null
   try {
@@ -90,6 +122,33 @@ function parseDraft(raw: unknown): Draft | null {
     return Array.isArray(d?.items) ? d as Draft : null
   } catch {
     return null
+  }
+}
+
+/**
+ * Whether the round-up mentions this author, and whether it already links to
+ * their interview.
+ *
+ * Read-only. Editing a live article that ranks is never a side effect of
+ * loading a screen - it is its own button, pressed on purpose.
+ */
+async function roundupStatus(authorName: string, interviewUrl: string) {
+  try {
+    const posts = await listBlogPosts()
+    const roundup = findRoundup(posts)
+    if (!roundup) return { found: false as const, reason: 'no round-up post found' }
+
+    const result = linkNameInHtml(roundup.bodyHtml, authorName, interviewUrl)
+    return {
+      found: true as const,
+      postName: roundup.name,
+      postSlug: roundup.slug,
+      outcome: result.outcome,
+      context: result.context ?? null,
+    }
+  } catch (err) {
+    console.error('[qna-publish] roundup check failed:', err)
+    return { found: false as const, reason: 'could not read the blog' }
   }
 }
 
@@ -111,6 +170,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const authorName = String(row.fields['Author Name'] ?? '')
     const bookTitle  = String(row.fields['Book Title'] ?? '')
+    const bookItemId = String(row.fields['Webflow Book Item ID'] ?? '')
     const draft      = parseDraft(row.fields['Draft QnA'])
     const approved   = Boolean(row.fields['Approved At'])
 
@@ -126,6 +186,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'GET') {
       const title = defaultTitle(authorName, bookTitle)
+      const [footer, uploads] = await Promise.all([
+        getPostFooterData(authorItemId, bookItemId).catch(err => {
+          console.error('[qna-publish] footer data failed:', err)
+          return null
+        }),
+        uploadedImages(row).catch(() => [] as Array<{ name: string; url: string | null }>),
+      ])
       return res.status(200).json({
         authorName,
         bookTitle,
@@ -135,13 +202,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Report where it actually lives rather than where it would have gone
         // - the slug differs if it hit a collision.
         staged: existing ? { ...existing, url: blogUrl(existing.slug) } : null,
+        // Only worth asking about once the interview has somewhere to point.
+        roundup: existing ? await roundupStatus(authorName, blogUrl(existing.slug)) : null,
+        // Every picture this post could use, best first, for Cam to choose
+        // between. The author's own photograph leads because that is the whole
+        // reason the upload box exists.
+        images: [
+          ...uploads.map(u => ({ label: u.name, url: u.url, source: 'author' })),
+          ...(footer?.bookHeroUrl ? [{ label: 'Book cover on a background', url: footer.bookHeroUrl, source: 'book' }] : []),
+          ...(footer?.bookCoverUrl ? [{ label: 'Book cover', url: footer.bookCoverUrl, source: 'book' }] : []),
+        ],
         preview: draft ? {
           title,
           slug:        slugify(title),
           description: metaDescription(draft),
-          bodyHtml:    postBodyHtml(draft),
+          bodyHtml:    postBodyHtml(draft) + (footer ? '\n' + footerHtml(footer) : ''),
           summaryHtml: authorSummaryHtml(draft, slugify(title)),
           editorNotes: draft.editorNotes ?? '',
+          hasLinkedin: Boolean(footer?.authorLinkedin),
+          buyLinks:    footer?.buyLinks?.length ?? 0,
         } : null,
       })
     }
@@ -164,14 +243,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const title = String(req.body?.title ?? '').trim() || defaultTitle(authorName, bookTitle)
       const description = String(req.body?.description ?? '').trim() || metaDescription(draft)
 
-      // Best-effort: a missing headshot is a post without a picture, not a
-      // failed publish.
-      const imageUrl = await getAuthorHeadshotUrl(authorItemId)
+      const [footer, uploads, headshotUrl] = await Promise.all([
+        getPostFooterData(authorItemId, bookItemId).catch(err => {
+          console.error('[qna-publish] footer data failed:', err)
+          return null
+        }),
+        uploadedImages(row).catch(() => [] as Array<{ name: string; url: string | null }>),
+        // Best-effort throughout: a missing picture is a post without one, not
+        // a failed publish.
+        getAuthorHeadshotUrl(authorItemId),
+      ])
+
+      // Cam's choice if he made one, otherwise the best available.
+      const chosen = String(req.body?.imageUrl ?? '').trim()
+      const imageUrl = chosen || choosePostImage({
+        uploadedImageUrl: uploads[0]?.url,
+        bookHeroUrl:      footer?.bookHeroUrl,
+        bookCoverUrl:     footer?.bookCoverUrl,
+        headshotUrl,
+      })
 
       const post = await createBlogPost({
         title,
         slug: slugify(title),
-        bodyHtml: postBodyHtml(draft),
+        bodyHtml: postBodyHtml(draft) + (footer ? '\n' + footerHtml(footer) : ''),
         description,
         imageUrl,
       })
@@ -206,7 +301,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ ok: true, url: post ? blogUrl(post.slug) : null })
     }
 
-    return res.status(400).json({ error: "action must be 'stage' or 'publish'" })
+    if (action === 'link-roundup') {
+      if (!existing) return res.status(400).json({ error: 'Stage the post first.' })
+
+      const interviewUrl = blogUrl(existing.slug)
+      const posts = await listBlogPosts()
+      const roundup = findRoundup(posts)
+      if (!roundup) return res.status(404).json({ error: 'No round-up post found.' })
+
+      const result = linkNameInHtml(roundup.bodyHtml, authorName, interviewUrl)
+      if (result.outcome === 'already') {
+        return res.status(200).json({ ok: true, outcome: 'already' })
+      }
+      if (result.outcome === 'not-found') {
+        return res.status(404).json({
+          error: `${authorName} is not mentioned in "${roundup.name}" outside an existing link.`,
+        })
+      }
+
+      // Staged, not published. The round-up is a live article; its change goes
+      // out when Cam publishes it, the same as everything else here.
+      await writeBlogBody(roundup.id, result.html)
+      console.log(`[qna-publish] linked ${authorName} in ${roundup.slug}`)
+
+      return res.status(200).json({
+        ok: true, outcome: 'linked', context: result.context ?? null,
+        postName: roundup.name, postSlug: roundup.slug,
+      })
+    }
+
+    return res.status(400).json({ error: "action must be 'stage', 'publish' or 'link-roundup'" })
   } catch (err) {
     console.error('[qna-publish] request failed:', err)
     const detail = err instanceof Error ? err.message : ''
