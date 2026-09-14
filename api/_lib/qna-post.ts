@@ -185,10 +185,22 @@ function joinLinks(links: Array<{ label: string; url: string }>): string {
   return `${parts.slice(0, -1).join(', ')} or ${parts[parts.length - 1]}`
 }
 
+/**
+ * A "buy the book" link that points at our own site is not a buy link.
+ *
+ * This happened: a Books field holding the author's own website was offered as
+ * "the publisher", so the post said "available from the publisher" and sent
+ * the reader back to the author page they had arrived from. Dropping the field
+ * fixed that one; this stops the next one, whichever field it comes from.
+ */
+function isOffSite(url: string): boolean {
+  return !/(^|\/\/|\.)expertauthor\.community/i.test(String(url ?? ''))
+}
+
 export function footerHtml(f: PostFooter): string {
   const parts: string[] = []
   const book = String(f?.bookTitle ?? '').trim()
-  const links = (f?.buyLinks ?? []).filter(l => l?.url)
+  const links = (f?.buyLinks ?? []).filter(l => l?.url && isOffSite(l.url))
   const first = firstNameOf(f?.authorName)
 
   if (!book && !links.length && !f?.authorLinkedin) return ''

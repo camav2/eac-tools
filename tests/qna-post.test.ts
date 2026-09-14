@@ -266,3 +266,49 @@ test('no spacer at all when there is only one question', () => {
   const html = postBodyHtml({ standfirst: '', items: [{ question: 'Q', answer: 'A' }] })
   assert.doesNotMatch(html, /<hr>/)
 })
+
+test('a buy link pointing at our own site is dropped', () => {
+  // This shipped: a Books field holding the author's own website was offered
+  // as "the publisher", so the post said "available from the publisher" and
+  // sent the reader back to the author page they had arrived from.
+  const html = footerHtml({
+    bookTitle: 'Win the Night',
+    buyLinks: [
+      { label: 'Booktopia', url: 'https://booktopia.com.au/win' },
+      { label: 'the publisher', url: 'https://www.expertauthor.community/authors/penelope-barr' },
+    ],
+  })
+  assert.match(html, /booktopia/)
+  assert.doesNotMatch(html, /expertauthor\.community/)
+  assert.doesNotMatch(html, /the publisher/)
+})
+
+test('our own site is dropped however the url is written', () => {
+  const forms = [
+    'https://expertauthor.community/x',
+    'https://www.expertauthor.community/x',
+    'http://the.expertauthor.community/x',
+  ]
+  for (const url of forms) {
+    const html = footerHtml({ bookTitle: 'A Book', buyLinks: [{ label: 'somewhere', url }] })
+    assert.doesNotMatch(html, /expertauthor\.community/, url)
+  }
+})
+
+test('a shop with a similar name is not dropped by accident', () => {
+  // The guard matches our domain, not the words in it.
+  const html = footerHtml({
+    bookTitle: 'A Book',
+    buyLinks: [{ label: 'Booktopia', url: 'https://booktopia.com.au/expertauthor-community-title' }],
+  })
+  assert.match(html, /booktopia\.com\.au/)
+})
+
+test('nothing left to buy from means no buy sentence', () => {
+  const html = footerHtml({
+    bookTitle: 'A Book',
+    buyLinks: [{ label: 'the publisher', url: 'https://www.expertauthor.community/x' }],
+  })
+  assert.match(html, /A Book/)
+  assert.doesNotMatch(html, /available from/)
+})
