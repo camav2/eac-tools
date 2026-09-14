@@ -414,11 +414,65 @@ function clearError(elId) { $(elId).classList.remove('show'); }
    storage, no extra dependency — the bytes only leave the browser when the
    member presses Post.
    ========================================================================== */
+/* ==========================================================================
+   EAC DESIGN SYSTEM
+   Values taken from _EAC2025_Style-guide.pdf (June 2025) and the brand SVGs,
+   not eyeballed from a screenshot.
+
+   Note on navy: the style guide specifies #00003C. eac.css carries #00003D
+   for the rest of the hub. The badge is a brand asset that leaves the site
+   and gets seen beside other EAC material, so it uses the style guide value.
+   ========================================================================== */
 var C = {
-  navy:   '#00003D',
+  navy:   '#00003C',
   yellow: '#FFE64B',
   white:  '#FFFFFF'
 };
+
+/* The badge is viewed in the LinkedIn feed at roughly 540px wide, so the
+   design system's pixel specs are scaled by the 1200 -> 540 ratio to land at
+   the intended *apparent* size rather than the literal one. */
+var DISPLAY_SCALE = 1200 / 540;
+var FRAME_RADIUS  = Math.round(10 * DISPLAY_SCALE);  // "10px radius"
+var FRAME_STROKE  = Math.round(4  * DISPLAY_SCALE);  // "4px white stroke"
+var FRAME_TILT    = -6.5 * Math.PI / 180;            // "6.5/-6.5 rotation"
+
+function roundedRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+/**
+ * The Dog Ear: EAC's signature motif. Traced from the brand SVG, whose 70x70
+ * viewBox draws the yellow shape as (70,70) (0,70) (0,0) (35,35), with the
+ * background showing through the remaining triangle.
+ * `spin` orients the right angle into whichever corner it sits in.
+ */
+function drawDogEar(ctx, x, y, size, spin) {
+  var s = size / 70;
+  ctx.save();
+  ctx.translate(x + size / 2, y + size / 2);
+  ctx.rotate((spin || 0) * Math.PI / 180);
+  ctx.translate(-size / 2, -size / 2);
+  ctx.beginPath();
+  ctx.moveTo(70 * s, 70 * s);
+  ctx.lineTo(0, 70 * s);
+  ctx.lineTo(0, 0);
+  ctx.lineTo(34.9452 * s, 35.0548 * s);
+  ctx.closePath();
+  ctx.fillStyle = C.yellow;
+  ctx.fill();
+  ctx.restore();
+}
 
 /** Shrink the font until the text fits maxWidth. Returns the size used. */
 function fitText(ctx, text, maxWidth, startSize, weight, minSize) {
@@ -442,7 +496,6 @@ function wrapLines(ctx, text, maxWidth, maxLines) {
       lines.push(line);
       line = words[i];
       if (lines.length === maxLines - 1 && i < words.length - 1) {
-        // Last available line — dump the rest into it and let fitText shrink.
         lines.push(words.slice(i).join(' '));
         return lines;
       }
@@ -470,107 +523,104 @@ function drawBadge() {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  // Background
   ctx.fillStyle = C.navy;
   ctx.fillRect(0, 0, W, H);
 
-  // Soft yellow halo behind the portrait
-  var halo = ctx.createRadialGradient(600, 430, 120, 600, 430, 420);
-  halo.addColorStop(0, 'rgba(255,230,75,0.16)');
-  halo.addColorStop(1, 'rgba(255,230,75,0)');
-  ctx.fillStyle = halo;
-  ctx.fillRect(0, 0, W, 900);
+  // Signature motif, right angle tucked into the top-right corner.
+  drawDogEar(ctx, W - 280, 0, 280, 180);
 
-  // Eyebrow
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
+
+  // Eyebrow - yellow on navy, an allowed pairing under the style guide's
+  // text/background rules.
   ctx.fillStyle = C.yellow;
   ctx.font = '800 22px Montserrat, sans-serif';
   if ('letterSpacing' in ctx) ctx.letterSpacing = '7px';
-  ctx.fillText('EXPERT AUTHOR COMMUNITY', 600, 116);
+  ctx.fillText('EXPERT AUTHOR COMMUNITY', 600, 112);
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
-  // Portrait — circular, yellow ring
-  var cx = 600, cy = 430, r = 196;
+  // -- Angled image frame ------------------------------------------------
+  // A framed, tilted photo rather than a circle. It is also why the portrait
+  // can be smaller: LinkedIn only hands us a 100px source, and a 330px frame
+  // is a 3.3x upscale instead of the 3.9x a full-bleed circle demanded.
+  var FS = 330, fcx = 600, fcy = 400;
 
   ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.closePath();
-  ctx.clip();
+  ctx.translate(fcx, fcy);
+  ctx.rotate(FRAME_TILT);
 
+  roundedRectPath(ctx, -FS / 2, -FS / 2, FS, FS, FRAME_RADIUS);
+  ctx.save();
+  ctx.clip();
   if (state.photoImg) {
-    // Cover-fit the (often small) LinkedIn photo into the circle.
     var img = state.photoImg;
-    var scale = Math.max((r * 2) / img.width, (r * 2) / img.height);
+    var scale = Math.max(FS / img.width, FS / img.height);
     var dw = img.width * scale, dh = img.height * scale;
-    ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
+    ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
   } else {
     ctx.fillStyle = C.yellow;
-    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+    ctx.fillRect(-FS / 2, -FS / 2, FS, FS);
     ctx.fillStyle = C.navy;
-    ctx.font = '900 150px Montserrat, sans-serif';
+    ctx.font = '900 130px Montserrat, sans-serif';
     ctx.textBaseline = 'middle';
-    ctx.fillText(initials(state.name), cx, cy + 6);
+    ctx.fillText(initials(state.name), 0, 6);
     ctx.textBaseline = 'alphabetic';
   }
   ctx.restore();
 
-  ctx.beginPath();
-  ctx.arc(cx, cy, r + 7, 0, Math.PI * 2);
-  ctx.strokeStyle = C.yellow;
-  ctx.lineWidth = 14;
+  roundedRectPath(ctx, -FS / 2, -FS / 2, FS, FS, FRAME_RADIUS);
+  ctx.strokeStyle = C.white;
+  ctx.lineWidth = FRAME_STROKE;
   ctx.stroke();
+  ctx.restore();
 
-  // Name
+  // -- Name --------------------------------------------------------------
   var name = state.name || 'Your name';
-  var nameSize = fitText(ctx, name, 1000, 66, '900', 34);
+  var nameSize = fitText(ctx, name, 1000, 64, '900', 34);
   ctx.fillStyle = C.white;
   ctx.font = '900 ' + nameSize + 'px Montserrat, sans-serif';
-  ctx.fillText(name, 600, 736);
+  ctx.fillText(name, 600, 668);
 
-  // Role line (optional)
+  // -- Role line (optional) ----------------------------------------------
   var role = ($('role-line') ? $('role-line').value : '').trim();
   if (role) {
     var roleSize = fitText(ctx, role, 940, 30, '500', 18);
     ctx.fillStyle = 'rgba(255,255,255,0.72)';
     ctx.font = '500 ' + roleSize + 'px Montserrat, sans-serif';
-    ctx.fillText(role, 600, 784);
+    ctx.fillText(role, 600, 716);
   }
 
-  // "IS ATTENDING"
   ctx.fillStyle = C.yellow;
   ctx.font = '800 21px Montserrat, sans-serif';
   if ('letterSpacing' in ctx) ctx.letterSpacing = '8px';
-  ctx.fillText('IS ATTENDING', 600, role ? 858 : 846);
+  ctx.fillText('IS ATTENDING', 600, role ? 790 : 778);
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
-  // Event name — up to two lines
-  ctx.font = '900 58px Montserrat, sans-serif';
+  // -- Event name --------------------------------------------------------
+  ctx.font = '900 64px Montserrat, sans-serif';
   var evLines = wrapLines(ctx, EVENT.name, 1020, 2);
-  var evSize = 58;
+  var evSize = 64;
   evLines.forEach(function (l) {
-    evSize = Math.min(evSize, fitText(ctx, l, 1020, 58, '900', 30));
+    evSize = Math.min(evSize, fitText(ctx, l, 1020, 64, '900', 30));
   });
   ctx.fillStyle = C.white;
   ctx.font = '900 ' + evSize + 'px Montserrat, sans-serif';
-  var evTop = (role ? 930 : 918);
+  var evTop = (role ? 864 : 852);
   evLines.forEach(function (l, i) {
     ctx.fillText(l, 600, evTop + i * (evSize + 8));
   });
 
-  // Bottom band
+  // -- Date and site -----------------------------------------------------
   ctx.fillStyle = C.yellow;
-  ctx.fillRect(0, 1044, W, H - 1044);
-
-  ctx.fillStyle = C.navy;
-  var dateSize = fitText(ctx, EVENT.date, 1040, 34, '800', 20);
+  var dateSize = fitText(ctx, EVENT.date, 1000, 36, '800', 20);
   ctx.font = '800 ' + dateSize + 'px Montserrat, sans-serif';
-  ctx.fillText(EVENT.date, 600, 1114);
+  ctx.fillText(EVENT.date, 600, 1046);
 
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = '600 19px Montserrat, sans-serif';
   if ('letterSpacing' in ctx) ctx.letterSpacing = '2px';
-  ctx.fillText(EVENT.url.replace(/^https?:\/\//, ''), 600, 1162);
+  ctx.fillText(EVENT.url.replace(/^https?:\/\//, ''), 600, 1100);
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 }
 

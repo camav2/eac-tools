@@ -82,10 +82,21 @@ async function atPost(fields: Record<string, unknown>) {
   return json
 }
 
+/**
+ * Try to add our Action Type choice to the shared Activity Log.
+ *
+ * This needs `schema.bases:write` on AIRTABLE_API_KEY, which the current token
+ * does not have — it returns 403 and logActivity then fails with
+ * INVALID_MULTIPLE_CHOICE_OPTIONS. Add the choice by hand in Airtable (or widen
+ * the token) and this becomes a no-op.
+ *
+ * The earlier version of this function never checked the response and logged
+ * success either way, which is how the missing choice went unnoticed.
+ */
 async function ensureAttendingActionType() {
   if (actionTypePatched) return
   try {
-    await fetch(
+    const res = await fetch(
       `https://api.airtable.com/v0/meta/bases/${process.env.AIRTABLE_BASE_ID}/tables/${ACTIVITY_LOG_TABLE}/fields/${ACTION_TYPE_FIELD_ID}`,
       {
         method: 'PATCH',
@@ -100,8 +111,16 @@ async function ensureAttendingActionType() {
         }),
       }
     )
-    actionTypePatched = true
-    console.log('[attending] Action Type choice ensured')
+    if (res.ok) {
+      actionTypePatched = true
+      console.log('[attending] Action Type choice ensured')
+      return
+    }
+    const body = (await res.text()).slice(0, 200)
+    console.error(
+      `[attending] could not add the "${ACTION_TYPE}" Action Type choice (${res.status}). ` +
+      `Add it manually in Airtable, or grant schema.bases:write to AIRTABLE_API_KEY. ${body}`
+    )
   } catch (err) {
     console.error('[attending] ensureActionType failed:', err)
   }

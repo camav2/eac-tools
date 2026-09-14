@@ -550,11 +550,23 @@ The file was renamed to `api/idea-test.ts`. Any reference to `/api/airtable` is 
 ### CMS content override
 If a page has a CMS JSON block with `"page/section/key": "value"`, that overrides the hardcoded HTML fallback. Both must be kept consistent. When changing hero copy etc., update both the JSON block AND the `data-content-key` element's fallback content.
 
-### LinkedIn photo resolution
-The OIDC `picture` claim is often served small (100x100). The badge deliberately
-draws the portrait into a 392px circle with a heavy yellow ring and a cover-fit
-scale, so a low-res source still reads cleanly. Do not enlarge the portrait
-without re-checking against a real low-res account.
+### LinkedIn photo resolution — confirmed 100x100, and not upgradeable
+The OIDC `picture` claim serves `profile-displayphoto-shrink_100_100`. Swapping
+the size segment for a larger rendition was tried and **LinkedIn rejects it** —
+the signature covers the rendition. `fetchPhotoDataUrl` still attempts 800/400/200
+first and falls back to the original, so if that ever changes we get it for free.
+
+The real mitigation is design: the portrait is a 330px Angled Image Frame, not a
+full-bleed circle, which is a 3.3x upscale rather than 3.9x, and the white stroke
+plus tilt make the softness read as intent. Do not enlarge the portrait without
+re-checking against a real account.
+
+### The Airtable token cannot create select options
+`AIRTABLE_API_KEY` lacks `schema.bases:write`, so `ensureAttendingActionType()`
+gets a 403 and any new Activity Log **Action Type** choice must be added by hand
+in Airtable first. Tool writes still succeed — only the audit trail is skipped.
+Always check `res.ok` when patching Airtable schema; the first version of this
+logged success unconditionally and hid the failure for a full test cycle.
 
 ### Canvas tainting
 The LinkedIn CDN (`media.licdn.com`) does not reliably send CORS headers. The
@@ -767,6 +779,29 @@ non-members can use the tool too.
 □ Set the event name/date/url — either the EVENT object at the top of the page
   script, or the attending/event/* keys via /editor
 ```
+
+### Badge design — EAC Design System
+The badge is a brand asset, so it follows the design system rather than the
+hub's UI conventions. Sources of truth, both on Dropbox:
+`16 KI - BRAND/EAC Brand, Logos and graphics/_EAC2025_Style-guide.pdf` and the
+brand SVGs beside it.
+
+| Element | Rule |
+|---|---|
+| Dark blue | `#00003C` (the style guide value; `eac.css` carries `#00003D` for the rest of the hub) |
+| Yellow | `#FFE64B` |
+| Angled Image Frame | 10px radius, 4px white stroke, 6.5/-6.5 rotation |
+| Dog Ear | signature motif, traced from the brand SVG's 70x70 viewBox |
+| Type | Montserrat throughout |
+
+Design-system pixel specs are multiplied by `DISPLAY_SCALE` (1200/540) because
+the badge is viewed in the LinkedIn feed at roughly 540px — the specs describe
+the *apparent* size, not the canvas size.
+
+**Forbidden text pairings** (style guide, accessibility): blue on orange,
+orange on blue, yellow on orange, orange on yellow, green on blue, blue on
+green, and any tint on tint. The badge uses yellow-on-navy and white-on-navy,
+both allowed.
 
 ### Graceful degradation
 `LINKEDIN_ENABLE_POSTING` is the switch between two shipped experiences:
