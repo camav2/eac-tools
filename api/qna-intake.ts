@@ -19,13 +19,16 @@
  *
  * Env vars required:
  *   AIRTABLE_API_KEY, AIRTABLE_BASE_ID, AIRTABLE_QNA_TABLE_ID,
- *   WEBFLOW_API_TOKEN (headshot and cover — best-effort)
+ *   WEBFLOW_API_TOKEN (headshot and cover — best-effort),
+ *   SUPABASE_URL, SUPABASE_SERVICE_KEY,
+ *   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (the receipt email — best-effort)
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { tokensMatch } from './_lib/qna-tokens'
 import { signedUrlFor } from './_lib/qna-storage'
 import { getQnaMedia } from './_lib/webflow'
+import { sendReceipt } from './_lib/qna-receipt'
 import {
   MAX_FILES,
   parseMedia,
@@ -41,6 +44,10 @@ import {
   parseJsonArray,
   sanitiseAuthorQuestions,
 } from './_lib/qna-rows'
+
+// Submitting now refreshes a Google token and sends an email on top of the
+// Airtable write. The 15s default leaves no room for a slow one.
+export const maxDuration = 60
 
 const QNA_TABLE = process.env.AIRTABLE_QNA_TABLE_ID!
 
@@ -330,6 +337,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           'Author Submitted At': now,
           'Status':              'Author Responded',
         })
+
+        // Awaited, not fired and forgotten: a serverless function can be
+        // frozen the moment it responds, which kills an unawaited send about
+        // half the time. sendReceipt never throws, so the submission that is
+        // already saved cannot be reported as a failure because of an email.
+        const receipt = await sendReceipt({
+          to:         String(row.fields['Author Email'] ?? ''),
+          authorName: String(row.fields['Author Name'] ?? ''),
+          bookTitle:  String(row.fields['Book Title'] ?? ''),
+          token:      String(row.fields['Intake Token'] ?? ''),
+        })
+        console.log(`[qna-intake] ${row.fields['Author Name']} submitted; receipt ${receipt}`)
+
         return res.status(200).json({ ok: true, submitted: true })
       }
 

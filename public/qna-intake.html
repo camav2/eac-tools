@@ -261,6 +261,14 @@
     .cta-btn:hover { opacity: 0.88; }
     .cta-note { font-size: 0.78rem; color: var(--grey-500); margin-top: 12px; }
 
+    /* ── The read-only transcript after submitting ── */
+    .done-wrap { margin-top: 8px; }
+    .done-title { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 18px; }
+    .done-block { border-top: 1px solid var(--grey-200); padding: 18px 0; }
+    .done-q { font-size: 0.95rem; font-weight: 700; line-height: 1.45; margin-bottom: 8px; }
+    .done-a { font-size: 0.95rem; line-height: 1.65; color: var(--grey-700); white-space: pre-wrap; }
+    .done-audio { width: 100%; max-width: 420px; margin-top: 10px; }
+
     /* ── Site footer ──
      * Same markup and colours as index.html and access-denied.html, so the
      * tool pages close the same way. Navy picks the masthead back up and
@@ -346,8 +354,8 @@ async function load() {
       return renderError(e.error || 'This link is not valid.');
     }
     var data = await res.json();
-    if (data.submitted) return renderSubmitted(data.authorName);
     state = data;
+    if (data.submitted) return renderSubmitted(data.authorName);
     // Everything the render path indexes into must exist, whatever the API
     // did or didn't send.
     state.questions = state.questions || [];
@@ -375,8 +383,53 @@ function renderSubmitted(name) {
     '<h2>Thank you' + (name ? ', ' + esc(firstName(name)) : '') + '</h2>' +
     '<p>Your answers are in. We\'ll shape them into an edited Q&amp;A and send it to you ' +
     'for approval before anything is published.</p>' +
-    ctaHtml() +
+    '</div>' +
+    transcriptHtml() +
+    ctaHtml();
+}
+
+/* What they said, read-only.
+ * The receipt email links straight back here, so this page has to be worth
+ * opening - a bare thank-you would make that link a dead end. Their own
+ * recordings play back too, because an author who spoke their answers has
+ * never actually heard what we received. */
+function transcriptHtml() {
+  var qs = (state.questions || []).concat(state.authorQuestions || []);
+  if (!qs.length) return '';
+  var base = (state.questions || []).length;
+
+  var blocks = qs.map(function(q, i) {
+    var text  = (state.answers || [])[i] || '';
+    var audio = (state.audio || [])[i];
+    if (!text && !audio) return '';
+    return '<div class="done-block">' +
+      '<div class="done-q">' + esc(q) +
+        (i >= base ? ' <span class="own-badge">Your question</span>' : '') + '</div>' +
+      (text ? '<div class="done-a">' + esc(text) + '</div>' : '') +
+      (audio ? '<audio class="done-audio" controls preload="none" src="' + esc(audio) + '"></audio>' : '') +
     '</div>';
+  }).filter(Boolean).join('');
+
+  if (!blocks) return '';
+
+  var files = state.uploads || [];
+  var media = files.length
+    ? '<div class="done-block"><div class="done-q">You also sent ' + files.length +
+        (files.length === 1 ? ' file' : ' files') + '</div>' +
+        '<div class="media-grid">' + files.map(function(f) {
+          var isImage = (f.type || '').indexOf('image/') === 0 && f.url;
+          return '<div class="media-item">' +
+            (isImage
+              ? '<img class="media-thumb" src="' + esc(f.url) + '" alt="' + esc(f.name) + '">'
+              : '<div class="media-icon">' + ((f.type || '').indexOf('video/') === 0 ? '🎬' : '📄') + '</div>') +
+            '<div class="media-name">' + esc(f.name) + '</div></div>';
+        }).join('') + '</div></div>'
+    : '';
+
+  return '<div class="done-wrap">' +
+    '<h2 class="done-title">What you sent us</h2>' +
+    blocks + media +
+  '</div>';
 }
 
 /* Cameron's interview invitation.
