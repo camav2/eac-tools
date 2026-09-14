@@ -35,7 +35,7 @@ import {
   publishBlogPost,
   updateBlogPost,
   writeBlogBody,
-  writeEditorialQna,
+  writeAuthorInterviewLink,
 } from './_lib/webflow'
 import { findRoundup, linkNameInHtml } from './_lib/qna-roundup'
 import { parseMedia, signedUrlFor as signedMediaUrl } from './_lib/qna-media'
@@ -286,7 +286,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // The summary links to the slug Webflow actually kept, not the one we
       // asked for. A collision would otherwise leave the author page pointing
       // at a page that does not exist.
-      const summary = await writeEditorialQna(authorItemId, authorSummaryHtml(draft, post.slug))
+      const summary = await writeAuthorInterviewLink(authorItemId, authorSummaryHtml(draft, post.slug))
       if (!summary.ok) {
         console.error(`[qna-publish] ${authorName} summary not written: ${summary.error}`)
       }
