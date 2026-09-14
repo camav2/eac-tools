@@ -88,17 +88,20 @@ export function postBodyHtml(draft: Draft): string {
     parts.push('<hr>')
   }
 
-  // A rule between each pair, so an answer cannot run into the next question.
-  // Without it a long answer and the heading below it read as one block, and
-  // the reader loses the turn-taking that makes an interview an interview.
+  // Space between each pair, so an answer cannot run into the next question.
+  // A rule was too heavy: six of them down a page turned the interview into a
+  // form. An empty paragraph is the only spacing that survives a Webflow rich
+  // text field, which strips inline styles and has no margin set on h3.
+  //
+  // If the h3 margin is ever set in site custom code, drop this and the
+  // spacing gets better for free.
   let first = true
   for (const item of draft?.items ?? []) {
     const q = String(item?.question ?? '').trim()
     const a = paragraphs(item?.answer ?? '')
     if (!q && !a.length) continue
-    // Never before the first pair: the standfirst already put a rule there,
-    // and two in a row reads as a mistake.
-    if (!first) parts.push('<hr>')
+    // Never before the first pair: the standfirst already put a rule there.
+    if (!first) parts.push('<p>&nbsp;</p>')
     first = false
     if (q) parts.push(`<h3>${esc(q)}</h3>`)
     for (const p of a) parts.push(`<p>${esc(p)}</p>`)

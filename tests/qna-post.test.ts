@@ -246,21 +246,23 @@ test('falls back in order, headshot last', () => {
   assert.equal(choosePostImage({}), null)
 })
 
-test('a rule separates each answer from the next question', () => {
-  // Without it a long answer runs into the heading below it and the reader
-  // loses the turn-taking that makes an interview an interview.
+test('space separates each answer from the next question', () => {
+  // A rule was too heavy - six down a page turned it into a form. Without any
+  // gap a long answer runs straight into the heading below it.
   const html = postBodyHtml(DRAFT)
   const parts = html.split('<h3>')
   assert.equal(parts.length - 1, 2, 'two questions')
-  assert.match(html, /<\/p>\n<hr>\n<h3>What surprised you\?<\/h3>/)
+  assert.match(html, /<\/p>\n<p>&nbsp;<\/p>\n<h3>What surprised you\?<\/h3>/)
+  // The rule is gone. Six of them down a page turned the interview into a form.
+  assert.doesNotMatch(html.split('<hr>').slice(1).join('<hr>'), /<hr>/)
 })
 
-test('no double rule under the standfirst', () => {
+test('no spacer directly under the standfirst rule', () => {
   // The standfirst already puts one there; a second reads as a mistake.
   assert.doesNotMatch(postBodyHtml(DRAFT), /<hr>\n<hr>/)
 })
 
-test('no rule at all when there is only one question', () => {
+test('no spacer at all when there is only one question', () => {
   const html = postBodyHtml({ standfirst: '', items: [{ question: 'Q', answer: 'A' }] })
   assert.doesNotMatch(html, /<hr>/)
 })

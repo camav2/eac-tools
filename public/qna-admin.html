@@ -1158,11 +1158,11 @@ function renderPublish(authorItemId, d) {
           'they were promised they would see it before anyone else.</div>') +
       '<label class="mail-label">Headline</label>' +
       '<input type="text" class="link-input pub-input" id="pub-title" value="' +
-        escHtml(staged ? staged.name : d.preview.title) + '"' + (staged ? ' disabled' : '') + '>' +
+        escHtml(staged ? staged.name : d.preview.title) + '">' +
       '<label class="mail-label" style="margin-top:12px">Search description</label>' +
       '<input type="text" class="link-input pub-input" id="pub-desc" value="' +
-        escHtml(d.preview.description) + '"' + (staged ? ' disabled' : '') + '>' +
-      (staged || !(d.images || []).length
+        escHtml(d.preview.description) + '">' +
+      (!(d.images || []).length
         ? ''
         : '<label class="mail-label" style="margin-top:12px">Post image</label>' +
           '<div class="pic-row">' + d.images.map(function(im, n) {
@@ -1181,13 +1181,19 @@ function renderPublish(authorItemId, d) {
           (staged.isDraft ? ' - a draft in Webflow, not visible to anyone yet.' : ' - live.') + '</div>'
         : '<div class="send-sub" style="margin-top:14px">Creates the post as a draft in Webflow and puts ' +
           'a summary and link on the author page. Nothing goes live until you press publish.</div>') +
+      (staged && staged.isDraft
+        ? '<div class="send-sub">Change the headline or the picture above and press update to ' +
+          'catch the post up. It stays invisible until you publish it.</div>'
+        : '') +
       '<div class="review-actions">' +
+        '<button type="button" id="pub-stage" class="send-btn"' +
+          (d.approved ? '' : ' disabled') + '>' +
+          (staged ? 'Update the staged post' : 'Stage the post') + '</button>' +
         (staged
           ? '<button type="button" id="pub-live" class="approve-btn"' +
             (staged.isDraft && d.approved ? '' : ' disabled') + '>' +
             (staged.isDraft ? 'Publish to the site' : 'Published') + '</button>'
-          : '<button type="button" id="pub-stage" class="send-btn"' +
-            (d.approved ? '' : ' disabled') + '>Stage the post</button>') +
+          : '') +
         '<span class="review-status" id="pub-status"></span>' +
       '</div>' +
       roundupHtml(d.roundup) +

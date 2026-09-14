@@ -33,6 +33,7 @@ import {
   listBlogPosts,
   publishAuthorItem,
   publishBlogPost,
+  updateBlogPost,
   writeBlogBody,
   writeEditorialQna,
 } from './_lib/webflow'
@@ -236,9 +237,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           error: 'The author has not approved this yet. They were promised they would see it first.',
         })
       }
-      if (existing) {
-        return res.status(409).json({ error: 'A post already exists for this author.' })
-      }
+
 
       const title = String(req.body?.title ?? '').trim() || defaultTitle(authorName, bookTitle)
       const description = String(req.body?.description ?? '').trim() || metaDescription(draft)
@@ -263,22 +262,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         headshotUrl,
       })
 
-      const post = await createBlogPost({
-        title,
-        slug: slugify(title),
-        bodyHtml: postBodyHtml(draft) + (footer ? '\n' + footerHtml(footer) : ''),
-        description,
-        imageUrl,
-      })
+      const bodyHtml = postBodyHtml(draft) + (footer ? '\n' + footerHtml(footer) : '')
+
+      // Staging twice is how a post catches up with a changed draft, a new
+      // headline or a different photograph. Refusing the second attempt left
+      // Cam deleting items in Webflow by hand to get another go.
+      let post: { id: string; slug: string }
+      if (existing) {
+        await updateBlogPost(existing.id, { title, bodyHtml, description, imageUrl })
+        post = { id: existing.id, slug: existing.slug }
+        console.log(`[qna-publish] restaged ${authorName} as ${post.slug}`)
+      } else {
+        post = await createBlogPost({ title, slug: slugify(title), bodyHtml, description, imageUrl })
+        console.log(`[qna-publish] staged ${authorName} as ${post.slug}`)
+      }
 
       // The summary links to the slug Webflow actually kept, not the one we
       // asked for. A collision would otherwise leave the author page pointing
       // at a page that does not exist.
       await writeEditorialQna(authorItemId, authorSummaryHtml(draft, post.slug))
-      console.log(`[qna-publish] staged ${authorName} as ${post.slug}`)
 
       return res.status(200).json({
-        ok: true, staged: { ...post, url: blogUrl(post.slug) },
+        ok: true,
+        restaged: Boolean(existing),
+        staged: { ...post, url: blogUrl(post.slug) },
       })
     }
 
