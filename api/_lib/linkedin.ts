@@ -340,7 +340,10 @@ export async function publishImagePost(params: {
   const upRes = await fetch(uploadUrl, {
     method:  'PUT',
     headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'image/jpeg' },
-    body:    imageBytes,
+    // Uint8Array, not the Buffer itself: fetch's BodyInit does not accept a
+    // Node Buffer under these lib types, and tsc fails the whole build — which
+    // takes `npm test` with it. Same wrapping as qna-storage's putObject.
+    body:    new Uint8Array(imageBytes),
   })
   if (!upRes.ok) {
     console.error('[linkedin] image upload failed:', upRes.status, (await upRes.text()).slice(0, 300))
