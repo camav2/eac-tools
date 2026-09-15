@@ -110,8 +110,20 @@ export function linkNameInHtml(html: string, name: string, url: string): LinkRes
 export function findRoundup<T extends { id: string; name: string; slug: string }>(
   posts: T[]
 ): T | null {
-  // Hyphens as well as spaces: the title is worded, the slug is hyphenated,
-  // and only matching spaces would find the post by one and never the other.
-  const re = /best[\s-]+business[\s-]+book/i
-  return posts.find(p => re.test(String(p?.name ?? '')) || re.test(String(p?.slug ?? ''))) ?? null
+  // "best business books" was a guess and it was wrong. The post is actually
+  // "28 new business books you should read in 2026", so matching on "best"
+  // would never have found it - and the button would have quietly reported
+  // that no round-up existed, forever.
+  //
+  // Matching on "business books" alone is what survives the wording changing
+  // again, which it does every year along with the number.
+  const re = /business[\s-]+books/i
+  const matches = posts.filter(
+    p => re.test(String(p?.name ?? '')) || re.test(String(p?.slug ?? ''))
+  )
+  if (!matches.length) return null
+
+  // A round-up counts its books, so a title starting with a number is the
+  // round-up rather than an essay that happens to mention business books.
+  return matches.find(p => /^\d/.test(String(p?.name ?? '').trim())) ?? matches[0]
 }
