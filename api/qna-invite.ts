@@ -59,7 +59,9 @@ async function atPatch(recordId: string, fields: Record<string, unknown>) {
       Authorization:  `Bearer ${process.env.AIRTABLE_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ fields }),
+    // Same reason as qna-send: "Invited" is a select option that does not
+    // exist yet, and this is what brings it into being.
+    body: JSON.stringify({ fields, typecast: true }),
   })
   if (!res.ok) {
     const body = await res.text().catch(() => '')
@@ -84,18 +86,6 @@ function esc(s: string): string {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
-/**
- * The default draft.
- *
- * EAC house style: hyphens rather than em dashes, no exclamation marks, one
- * thought per line. It opens on the author's own book rather than on us,
- * because the first line decides whether the rest gets read — and it says
- * plainly that this is not a testimonial, which is the single thing most
- * likely to stop an author replying.
- *
- * Cam edits this on screen, so it is a starting point rather than a template
- * to be defended.
- */
 /**
  * Lines and blank lines, in the shape Gmail itself produces when a person
  * types an email: a <div> per line, and a <div><br></div> for the gap.
@@ -259,8 +249,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     // Don't drag a further-along author backwards just because the invite was
     // sent again.
-    if (row.fields.Status === 'Questions Generated' || row.fields.Status === 'Not Started') {
-      fields['Status'] = 'Sent to Author'
+    //
+    // "Link Created" has to be in this list. A link is minted before the
+    // invitation can be drafted, so by the time an invite is sent that is
+    // always the status - leaving it out meant nobody ever reached "Invited".
+    // "Sent to Author" is the same state under its old name, still on rows
+    // written before the rename.
+    const BEFORE_INVITE = ['Not Started', 'Questions Generated', 'Link Created', 'Sent to Author']
+    if (BEFORE_INVITE.includes(String(row.fields.Status ?? ''))) {
+      fields['Status'] = 'Invited'
     }
     await atPatch(row.id, fields)
 

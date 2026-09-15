@@ -3,7 +3,7 @@
  *
  * GET  ?authorItemId=…  → the current link, if one has been minted
  * POST — admin-only. Generates (or returns the existing) opaque token for an
- *        author and flips the pipeline row to "Sent to Author". Returns the
+ *        author and flips the pipeline row to "Link Created". Returns the
  *        link for Cam to send manually — nothing is emailed from here.
  *
  * Re-minting is deliberate: POST with regenerate=true issues a fresh token and
@@ -40,7 +40,10 @@ async function atPatch(recordId: string, fields: Record<string, unknown>) {
       Authorization:  `Bearer ${process.env.AIRTABLE_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ fields }),
+    // typecast lets Airtable create a select option it has not seen before.
+    // "Link Created" and "Invited" are new, and nobody can add them by hand
+    // from here - the write path is the only way they come into existence.
+    body: JSON.stringify({ fields, typecast: true }),
   })
   if (!res.ok) {
     const body = await res.text().catch(() => '')
@@ -97,12 +100,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       await atPatch(row.id, {
         'Author Submitted At': null,
-        'Status':              'Sent to Author',
+        'Status':              'Link Created',
       })
       const t = row.fields['Intake Token']
       return res.status(200).json({
         reopened: true,
-        status:   'Sent to Author',
+        status:   'Link Created',
         url:      t ? `${INTAKE_BASE_URL}?token=${encodeURIComponent(t)}` : null,
       })
     }
@@ -126,13 +129,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const fields: Record<string, unknown> = { 'Intake Token': token }
     if (token !== existingToken) fields['Token Created At'] = new Date().toISOString()
-    if (shouldAdvance) fields['Status'] = 'Sent to Author'
+    if (shouldAdvance) fields['Status'] = 'Link Created'
 
     await atPatch(row.id, fields)
 
     return res.status(200).json({
       url:    `${INTAKE_BASE_URL}?token=${encodeURIComponent(token)}`,
-      status: shouldAdvance ? 'Sent to Author' : currentStatus,
+      status: shouldAdvance ? 'Link Created' : currentStatus,
     })
   } catch (err) {
     console.error('[qna-send] request failed:', err)
