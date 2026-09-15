@@ -152,6 +152,12 @@
     .status-Approved           { background: #ede9fe; color: #5b21b6; }
     .status-Draft-Ready        { background: #dbeafe; color: #1d4ed8; }
     .status-Author-Responded   { background: #cffafe; color: #155e75; }
+    /* Two states, because they are two different things: a link exists, and
+     * an author has actually been emailed. The old single "Sent to Author"
+     * said the second while meaning the first.
+     * It stays defined - rows written before this still carry it. */
+    .status-Link-Created       { background: #e0e7ff; color: #3730a3; }
+    .status-Invited            { background: #ffedd5; color: #9a3412; }
     .status-Sent-to-Author     { background: #ffedd5; color: #9a3412; }
     .status-Questions-Generated{ background: #fef9c3; color: #854d0e; }
     .status-Skipped            { background: #fee2e2; color: #991b1b; }
