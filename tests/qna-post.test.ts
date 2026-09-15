@@ -341,18 +341,6 @@ test("the author's own site is a buy link, named after them", () => {
   assert.doesNotMatch(html, /the publisher/)
 })
 
-test('the headshot floats beside the standfirst, inside it', () => {
-  // Inside the paragraph, not above it: that is what makes the text wrap
-  // around the picture instead of sitting under a lonely one.
-  const html = postBodyHtml(DRAFT, {
-    headshotUrl: 'https://wf.test/penelope.jpg',
-    authorName: 'Penelope Barr',
-  })
-  assert.match(html, /<p><img src="https:\/\/wf\.test\/penelope\.jpg"[^>]*><em>/)
-  assert.match(html, /float:left/)
-  assert.match(html, /width="96"/)
-})
-
 test('the headshot is named, for a reader who cannot see it', () => {
   const html = postBodyHtml(DRAFT, {
     headshotUrl: 'https://wf.test/p.jpg',
@@ -430,4 +418,25 @@ test('the block is marked by a heading a reader also sees', () => {
   const block = authorSummaryHtml(DRAFT, 'a-slug')
   assert.ok(block.startsWith(INTERVIEW_HEADING))
   assert.match(INTERVIEW_HEADING, /<h3>/)
+})
+
+test('the headshot is written as a Webflow figure, not a styled img', () => {
+  // The published page proved why: Webflow rewrites every rich text image into
+  // its own figure, lifts it out of the paragraph and strips the style
+  // attribute. A float in a style attribute cannot survive that.
+  const html = postBodyHtml(DRAFT, {
+    headshotUrl: 'https://wf.test/p.jpg',
+    authorName: 'Penelope Barr',
+  })
+  assert.match(html, /<figure class="w-richtext-align-floatleft w-richtext-figure-type-image">/)
+  assert.match(html, /<div><img src="https:\/\/wf\.test\/p\.jpg" alt="Penelope Barr" width="96"><\/div>/)
+  // No style attribute at all - Webflow would only throw it away.
+  assert.doesNotMatch(html, /style="float/)
+})
+
+test('the figure sits before the standfirst paragraph, not inside it', () => {
+  // Webflow lifts it out anyway; writing it outside means the markup we send
+  // is the markup that renders.
+  const html = postBodyHtml(DRAFT, { headshotUrl: 'https://wf.test/p.jpg', authorName: 'P B' })
+  assert.match(html, /<\/figure><p><em>/)
 })

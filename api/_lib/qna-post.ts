@@ -90,19 +90,26 @@ export function postBodyHtml(draft: Draft, opts: BodyOptions = {}): string {
 
   const stand = String(draft?.standfirst ?? '').trim()
   if (stand) {
-    // The headshot goes INSIDE the standfirst paragraph, not above it, so the
-    // text wraps around the float instead of sitting under a lonely picture.
+    // Webflow's own figure, with Webflow's own float class.
     //
-    // A float is the only side-by-side a rich text field can do - there is no
-    // grid and no wrapper to hang one on. If Webflow strips the style the
-    // image simply stacks above the text at 96px, which is a worse layout but
-    // not a broken one.
+    // The first attempt put a styled <img> inside this paragraph and the
+    // published page showed why that can never work: Webflow rewrites every
+    // rich text image into
+    //   <figure class="w-richtext-align-normal w-richtext-figure-type-image">
+    //     <div><img ...></div></figure>
+    // lifting it out of the paragraph, and it strips the style attribute on
+    // the way. The float was gone and the picture sat alone above the text.
+    //
+    // width survives, and so does the class - so the float has to come from
+    // w-richtext-align-floatleft, which is the class Webflow's own editor
+    // applies when a person floats an image. Writing the figure in the shape
+    // Webflow would have written it means there is nothing left to normalise.
     const face = opts.headshotUrl
-      ? `<img src="${esc(opts.headshotUrl)}" alt="${esc(opts.authorName || 'The author')}" ` +
-        `width="96" style="float:left;width:96px;max-width:96px;height:auto;` +
-        `margin:4px 18px 10px 0;border-radius:50%;">`
+      ? `<figure class="w-richtext-align-floatleft w-richtext-figure-type-image">` +
+        `<div><img src="${esc(opts.headshotUrl)}" ` +
+        `alt="${esc(opts.authorName || 'The author')}" width="96"></div></figure>`
       : ''
-    parts.push(`<p>${face}<em>${esc(stand)}</em></p>`)
+    parts.push(`${face}<p><em>${esc(stand)}</em></p>`)
     parts.push('<hr>')
   }
 

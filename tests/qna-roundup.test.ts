@@ -118,3 +118,30 @@ test('returns nothing rather than guessing', () => {
   assert.equal(findRoundup([{ id: '1', name: 'A post', slug: 'a-post' }]), null)
   assert.equal(findRoundup([]), null)
 })
+
+test('finds the round-up that actually exists on the site', () => {
+  // The real one is "28 new business books you should read in 2026". Matching
+  // on "best" was a guess, and it would have reported no round-up forever.
+  const posts = [
+    { id: '1', name: 'Why are you writing a book?', slug: 'why-are-you-writing-a-book' },
+    { id: '2', name: '28 New Business Books You Should Read in 2026', slug: '28-new-business-books-you-should-read-in-2026' },
+  ]
+  assert.equal(findRoundup(posts)?.id, '2')
+})
+
+test('prefers the numbered round-up over an essay that mentions the words', () => {
+  // A round-up counts its books; an essay does not.
+  const posts = [
+    { id: '1', name: 'What business books get wrong', slug: 'what-business-books-get-wrong' },
+    { id: '2', name: '28 New Business Books You Should Read in 2026', slug: '28-new-business-books' },
+  ]
+  assert.equal(findRoundup(posts)?.id, '2')
+})
+
+test('still finds it when the wording changes again', () => {
+  // The number and the adjective change every year. "business books" is what
+  // survives.
+  for (const name of ['The 30 Best Business Books', '25 business books for 2027', 'Business Books We Loved']) {
+    assert.ok(findRoundup([{ id: 'x', name, slug: 'x' }]), name)
+  }
+})
