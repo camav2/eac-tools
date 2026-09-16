@@ -11,9 +11,16 @@
  */
 
 import { mainTitle } from '../qna-voice'
+import { figureHtml, sanitiseImageSpec, type ImageSpec } from './qna-images'
 
-export interface DraftItem { question: string; answer: string }
-export interface Draft { standfirst: string; items: DraftItem[]; editorNotes?: string }
+export interface DraftItem { question: string; answer: string; image?: ImageSpec | null }
+export interface Draft {
+  standfirst: string
+  items: DraftItem[]
+  editorNotes?: string
+  /** Optional photograph under the standfirst, before the first question. */
+  lead?: ImageSpec | null
+}
 
 export const BLOG_BASE_URL = 'https://www.expertauthor.community/blog-posts'
 
@@ -83,6 +90,28 @@ export interface BodyOptions {
   /** The author's headshot, floated beside the standfirst. */
   headshotUrl?: string | null
   authorName?: string
+  /**
+   * Storage path to the URL the image will actually be served from, resolved
+   * by the caller before any HTML is built.
+   *
+   * A path with no entry here renders nothing at all. The draft holds a
+   * storage path rather than a URL because the only URLs available before
+   * publish - a Supabase signed URL, an Airtable attachment - both expire
+   * within hours, and a post full of them would look right on the day and be
+   * broken pictures by the weekend.
+   */
+  imageUrls?: Record<string, string>
+}
+
+/** The figure for one image, or nothing if it has no resolved URL. */
+function imageFigure(spec: ImageSpec | null | undefined, opts: BodyOptions): string {
+  const clean = sanitiseImageSpec(spec)
+  if (!clean) return ''
+  const url = opts.imageUrls?.[clean.file]
+  // Silence rather than a broken image: an unresolved path means the upload
+  // was never re-hosted, and half a picture is worse than none.
+  if (!url) return ''
+  return figureHtml(url, clean)
 }
 
 export function postBodyHtml(draft: Draft, opts: BodyOptions = {}): string {
@@ -111,6 +140,10 @@ export function postBodyHtml(draft: Draft, opts: BodyOptions = {}): string {
       : ''
     parts.push(`${face}<p><em>${esc(stand)}</em></p>`)
     parts.push('<hr>')
+    // The lead photograph sits under the rule, so the standfirst and the
+    // floated headshot are not competing with it for the top of the page.
+    const lead = imageFigure(draft?.lead, opts)
+    if (lead) parts.push(lead)
   }
 
   // Space between each pair, so an answer cannot run into the next question.
@@ -133,6 +166,11 @@ export function postBodyHtml(draft: Draft, opts: BodyOptions = {}): string {
     // the same weight as the answers and the interview read as one voice.
     if (q) parts.push(`<h3><strong>${esc(q)}</strong></h3>`)
     for (const p of a) parts.push(`<p>${esc(p)}</p>`)
+    // After the answer rather than before it: the photograph illustrates
+    // what they just said, and above the answer it reads as an answer to
+    // the question on its own.
+    const fig = imageFigure(item?.image, opts)
+    if (fig) parts.push(fig)
   }
 
   return parts.join('\n')
