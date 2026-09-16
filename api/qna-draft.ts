@@ -17,9 +17,10 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getSession } from './_lib/auth'
-import { generateStandfirst } from './_lib/anthropic'
+import { generateStandfirst, cleanSpokenAnswers } from './_lib/anthropic'
 import { houseDashes } from './_lib/house-style'
 import { sourceText, wordDiff } from './_lib/qna-diff'
+import { isSpoken, checkClean, cleanSummary } from './_lib/qna-transcript'
 
 // Drafting six answers at high effort is not a 15-second job.
 export const maxDuration = 300
@@ -174,20 +175,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })),
       })
 
-      // The answers are the author's, unedited. Nothing the model returns can
-      // change them, because the model is never asked for them - it writes the
-      // standfirst and flags anything worth a look, and that is all.
+      // A TYPED answer is the author's own writing and goes out untouched -
+      // it is never sent to a model for anything but the standfirst's context.
       //
-      // Only the dash rule is applied, and only because it is punctuation
-      // rather than words. It is visible in the comparison beside each answer,
-      // so it is a change Cam can see and undo like any other.
+      // A SPOKEN answer has no writing to protect. What sits in the field is
+      // Whisper's transcription, and publishing that unedited is fidelity to
+      // the speech model rather than to the author. Those get transcribed
+      // properly instead, and every clean-up is checked before it is allowed
+      // to stand in for the recording. See _lib/qna-transcript.
+      const spoken = answered
+        .map((r: any, index: number) => ({ r, index }))
+        .filter(({ r }: any) => isSpoken(r))
+        .map(({ r, index }: any) => ({
+          index,
+          question:   String(r?.question ?? ''),
+          transcript: String(r?.transcript ?? '').trim(),
+        }))
+
+      const { voiceNote, cleaned } = await cleanSpokenAnswers({
+        authorName: row.fields['Author Name'] ?? '',
+        bookTitle:  row.fields['Book Title'] ?? '',
+        answers:    spoken,
+      })
+
+      // What happened to each recording, in words. A rejected clean-up has to
+      // say so: publishing the raw transcript silently would look identical to
+      // a clean-up that decided nothing needed doing.
+      const cleanNotes: string[] = []
+
+      const items = answered.map((r: any, index: number) => {
+        const question = houseDashes(String(r?.question ?? ''))
+
+        const typed = String(r?.text ?? '').trim()
+        if (typed) return { question, answer: houseDashes(typed) }
+
+        const raw = String(r?.transcript ?? '').trim()
+        const check = checkClean(raw, cleaned.get(index) ?? '')
+        cleanNotes.push(`Q${index + 1}: ${cleanSummary(check)}`)
+        return {
+          question,
+          answer: check.accepted ? (cleaned.get(index) as string) : houseDashes(raw),
+        }
+      })
+
       const draft = {
         standfirst,
-        items: answered.map((r: any) => ({
-          question: houseDashes(String(r?.question ?? '')),
-          answer:   houseDashes(String(r?.text ?? '').trim() || String(r?.transcript ?? '').trim()),
-        })),
-        editorNotes,
+        items,
+        editorNotes: [
+          String(editorNotes ?? '').trim(),
+          voiceNote ? `How ${row.fields['Author Name'] ?? 'this author'} speaks: ${voiceNote}` : '',
+          cleanNotes.join('\n'),
+        ].filter(Boolean).join('\n\n'),
       }
 
       await atPatch(row.id, {

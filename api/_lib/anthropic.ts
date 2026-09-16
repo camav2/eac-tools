@@ -247,7 +247,7 @@ const DRAFT_SYSTEM = `You are writing the standfirst for EAC's Author Editorial 
 
 ## What you are NOT doing
 
-You are NOT editing the answers. The author's words are published exactly as they wrote them. You will never be asked for them and you must not return them.
+You are NOT editing the answers. You will never be asked for them and you must not return them. A typed answer is published exactly as the author wrote it; a spoken one is transcribed properly by a separate job that only ever sees the recordings. Neither is your work.
 
 You write one short introduction, and you flag anything a human editor should look at. That is the whole job.
 
@@ -288,7 +288,8 @@ function draftUserPrompt(ctx: DraftContext): string {
     `Book: ${ctx.bookTitle}`,
     `Bucket: ${ctx.bucket}`,
     '',
-    'Answers follow. Each is tagged [WRITTEN] or [SPOKEN] — edit accordingly.',
+    'Answers follow, tagged [WRITTEN] or [SPOKEN]. Both are context for the',
+    'standfirst only. You never return an answer.',
     '',
   ]
 
@@ -344,6 +345,159 @@ export async function generateStandfirst(
     standfirst: houseDashes(standfirst),
     editorNotes: String(input.editorNotes ?? ''),
   }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Spoken answers — transcription clean-up
+ *
+ * Separate call from the standfirst on purpose. The standfirst job must never
+ * be able to touch an answer, and this job must never be able to write the
+ * introduction, so they do not share a prompt, a tool or a response.
+ * ──────────────────────────────────────────────────────────────────────────*/
+
+const RETURN_CLEANED_TOOL = {
+  name: 'return_cleaned',
+  description: 'Return the speaker style read, and the cleaned version of each spoken answer.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      voiceNote: {
+        type: 'string',
+        description:
+          'For the editor, never published. 2-3 sentences on how this person speaks: rhythm, ' +
+          'vocabulary, register, recurring constructions, humour. Written before the clean-up ' +
+          'and used to guide it.',
+      },
+      answers: {
+        type: 'array',
+        description: 'One entry per spoken answer given, using the index supplied.',
+        items: {
+          type: 'object',
+          properties: {
+            index:   { type: 'number', description: 'The index the answer was supplied under.' },
+            cleaned: { type: 'string', description: 'The cleaned answer, with paragraph breaks.' },
+          },
+          required: ['index', 'cleaned'],
+        },
+      },
+    },
+    required: ['voiceNote', 'answers'],
+  },
+}
+
+const CLEAN_SYSTEM = `You are transcribing spoken answers for EAC's Author Editorial Q&A - a magazine-style interview series with Expert Author Community authors.
+
+These authors recorded their answers out loud. What you are given is an automatic transcription of that recording, with every filler, false start and stumble in it. Your job is to produce what a good human transcriptionist would have produced from the same audio.
+
+## This is not editing
+
+You are not improving the answer. You are not making the author more articulate, more concise or more quotable. The author already gave a good answer; the transcription is what is letting them down.
+
+Nobody speaks in publishable prose. Publishing an automatic transcript unedited is not fidelity to the author, it is fidelity to the speech model.
+
+## First, read how they speak
+
+Before you clean anything, work out how this person actually talks: their rhythm, the words they reach for, how formal they are, the constructions they repeat, where they are funny, where they trail off to think. Write that down as voiceNote.
+
+Then clean every answer TO THAT VOICE. Two authors must not come out sounding the same. A blunt speaker stays blunt. A digressive one stays digressive.
+
+## Remove
+
+- Filler: um, uh, er, ah, you know (when it is filler rather than an address to the listener)
+- False starts and self-corrections. Keep the version they settled on: "what I had to remem- what I remembered" becomes "what I remembered"
+- Stutter repetition: "to, to, to rehash" becomes "to rehash"
+- Interview scaffolding: "interesting question", "I think that's probably the best way to answer that", "I can't think what else to say about that"
+- Stage directions the transcriber inserted, like [laughs]
+
+## Add, and add nothing else
+
+- Sentence punctuation. Speech has none, and its absence is most of why a transcript reads badly
+- Paragraph breaks where they moved to a new idea
+
+## Keep
+
+- Their words. Every noun, verb and image in your output must be one they said
+- Their grammar where it is theirs. "So much more deep" is how she talks. Do not correct it
+- Their idiom, contractions and regional register. Australian English stays Australian
+- The order of their ideas. Never reorder, merge or split their points
+- Their asides and self-interruptions where these carry character rather than confusion. "Is overwhelming an emotion? I don't know." is the author thinking on the page and it stays. This is the difference between a clean transcript and a flattened one, and it is the part that matters most
+
+## Never
+
+- Introduce a word, metaphor or claim the author did not say
+- Raise the register. Not "commenced" for "started", not "utilise" for "use"
+- Tighten in a way that shifts emphasis
+- Make the answer longer. A clean-up that grows is a rewrite, and it will be rejected automatically
+
+## Punctuation
+
+NO EM DASHES and no en dashes. EAC writes with hyphens. This is a house rule.
+
+No exclamation marks unless the author was plainly shouting.
+
+Return one entry per answer you were given, under the index it was given with. Call return_cleaned and nothing else.`
+
+export interface SpokenAnswer {
+  /** Index in the caller's own list, returned untouched so it can be matched back. */
+  index: number
+  question: string
+  transcript: string
+}
+
+export interface CleanContext {
+  authorName: string
+  bookTitle: string
+  answers: SpokenAnswer[]
+}
+
+function cleanUserPrompt(ctx: CleanContext): string {
+  const parts = [
+    `Author: ${ctx.authorName}`,
+    `Book: ${ctx.bookTitle}`,
+    '',
+    'Automatic transcriptions of spoken answers follow.',
+    '',
+  ]
+
+  ctx.answers.forEach(a => {
+    parts.push(`--- Answer index ${a.index} ---`)
+    parts.push(`Question: ${a.question}`)
+    parts.push('')
+    parts.push('Transcript:')
+    parts.push(a.transcript.trim())
+    parts.push('')
+  })
+
+  return parts.join('\n')
+}
+
+/**
+ * Cleaned spoken answers, keyed by the index they were supplied under.
+ *
+ * Returns whatever the model gave back, unvalidated beyond its shape. The
+ * caller decides whether each one may stand in for the recording - see
+ * checkClean in qna-transcript, which is where the arithmetic that catches a
+ * rewrite lives.
+ */
+export async function cleanSpokenAnswers(
+  ctx: CleanContext
+): Promise<{ voiceNote: string; cleaned: Map<number, string> }> {
+  if (!ctx.answers.length) return { voiceNote: '', cleaned: new Map() }
+
+  const input = await callWithTool(CLEAN_SYSTEM, cleanUserPrompt(ctx), RETURN_CLEANED_TOOL)
+
+  const cleaned = new Map<number, string>()
+  for (const a of Array.isArray(input?.answers) ? input.answers : []) {
+    const i = Number(a?.index)
+    const text = String(a?.cleaned ?? '').trim()
+    // A clean-up under an index nobody asked about cannot be matched to a
+    // recording, so it cannot be checked against one either.
+    if (!Number.isInteger(i) || !text) continue
+    if (!ctx.answers.some(src => src.index === i)) continue
+    cleaned.set(i, houseDashes(text))
+  }
+
+  return { voiceNote: String(input?.voiceNote ?? '').trim(), cleaned }
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
