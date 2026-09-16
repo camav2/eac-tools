@@ -221,6 +221,71 @@ export async function writeAuthorInterviewLink(
   }
 }
 
+// ── Assets ───────────────────────────────────────────────────────────────────
+
+/**
+ * Puts a file on Webflow's CDN and returns the URL it will be served from.
+ *
+ * WHY THE ASSETS API AND NOT AN IMAGE FIELD
+ * Handing an Image field a {url} makes Webflow fetch and re-host it, which is
+ * how the post image and the headshots get onto the CDN. That trick needs a
+ * field to put the image in, and a photograph that belongs in the middle of a
+ * rich text body has no field of its own. Assets is the route that does not
+ * require inventing one.
+ *
+ * Two steps, because the second is a presigned S3 POST rather than a Webflow
+ * endpoint: ask Webflow to mint an upload, then send the bytes where it says.
+ * The md5 is not optional - Webflow uses it to name and dedupe the asset, and
+ * a wrong one is rejected at the S3 step with an error that mentions neither.
+ */
+export async function uploadAsset(
+  siteId: string,
+  fileName: string,
+  buffer: Buffer,
+  contentType = 'image/webp'
+): Promise<string> {
+  if (buffer.length > 4 * 1024 * 1024) {
+    // Refused here rather than by Webflow, because Webflow's refusal does not
+    // say which file or how far over it was.
+    throw new Error(
+      `${fileName} is ${(buffer.length / 1024 / 1024).toFixed(1)} MB. Webflow caps assets at 4 MB.`
+    )
+  }
+
+  const { createHash } = await import('node:crypto')
+  const fileHash = createHash('md5').update(buffer).digest('hex')
+
+  const created = await wfFetch(`/sites/${siteId}/assets`, {
+    method: 'POST',
+    body: JSON.stringify({ fileName, fileHash }),
+  })
+
+  const uploadUrl = created?.uploadUrl
+  const details = created?.uploadDetails ?? {}
+  // Already on the CDN from an earlier run: Webflow answers a known hash with
+  // the existing asset and no upload. Re-sending would be wasted bytes.
+  const hosted = created?.hostedUrl || created?.assetUrl
+  if (!uploadUrl) {
+    if (hosted) return String(hosted)
+    throw new Error(`Webflow returned no upload target for ${fileName}`)
+  }
+
+  // Field order matters to S3: every policy field first, the file last.
+  const form = new FormData()
+  for (const [k, v] of Object.entries(details)) form.append(k, String(v))
+  form.append('file', new Blob([new Uint8Array(buffer)], { type: contentType }), fileName)
+
+  const put = await fetch(String(uploadUrl), { method: 'POST', body: form })
+  if (!put.ok) {
+    const body = await put.text().catch(() => '')
+    throw new Error(`Asset upload failed for ${fileName}: ${put.status} ${body.slice(0, 200)}`)
+  }
+
+  if (!hosted) throw new Error(`Webflow gave no hosted URL for ${fileName}`)
+  console.log(`[webflow] hosted ${fileName} (${(buffer.length / 1024).toFixed(0)} KB)`)
+  return String(hosted)
+}
+
 // ── Blog ─────────────────────────────────────────────────────────────────────
 
 const BLOG_COLLECTION_ID = '6870006917acd593b9a7f477'

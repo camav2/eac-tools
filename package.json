@@ -13,6 +13,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "jose": "^4.15.9"
+    "jose": "^4.15.9",
+    "sharp": "^0.33.5"
   }
 }

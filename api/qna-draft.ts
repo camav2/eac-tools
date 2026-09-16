@@ -4,11 +4,17 @@
  * GET  ?authorItemId=…                     → current draft (if any) + source answers
  * POST { authorItemId, action: 'generate' } → AI first pass from the answers
  * POST { authorItemId, action: 'save', draft } → persist Cam's edited version
+ * POST { authorItemId, action: 'archive' }  → mirror the uploads into Airtable
  * POST { authorItemId, action: 'approve' }  → mark the author has signed off
  *
- * The draft is stored as JSON ({ standfirst, items[], editorNotes }) rather
- * than prose, so the publish step can render it deterministically instead of
- * parsing paragraphs back into structure.
+ * The draft is stored as JSON ({ standfirst, lead?, items[], editorNotes })
+ * rather than prose, so the publish step can render it deterministically
+ * instead of parsing paragraphs back into structure.
+ *
+ * An item may carry an optional image, and the draft an optional lead image.
+ * Position is a property of the item, never a marker inside the answer: a
+ * token in the text would edit the author's words and would count against the
+ * spoken-answer vocabulary guard in qna-transcript. See _lib/qna-images.
  *
  * Env vars required:
  *   JWT_SECRET, ANTHROPIC_API_KEY,
@@ -21,6 +27,9 @@ import { generateStandfirst, cleanSpokenAnswers } from './_lib/anthropic'
 import { houseDashes } from './_lib/house-style'
 import { sourceText, wordDiff } from './_lib/qna-diff'
 import { isSpoken, checkClean, cleanSummary } from './_lib/qna-transcript'
+import { sanitiseImageSpec } from './_lib/qna-images'
+import { parseMedia, signedUrlFor } from './_lib/qna-media'
+import { mirrorLibrary } from './_lib/qna-library'
 
 // Drafting six answers at high effort is not a 15-second job.
 export const maxDuration = 300
@@ -65,18 +74,32 @@ async function findRow(authorItemId: string) {
   )
 }
 
-/** Only the shape the editor needs — validated so a malformed save can't
- *  poison the publish step later. */
+/** Only the shape the editor needs - validated so a malformed save can't
+ *  poison the publish step later.
+ *
+ *  An item may carry an optional image, and the draft an optional lead image
+ *  above the first question. Position is a property of the item rather than a
+ *  marker inside the answer, so the author's words are never touched and the
+ *  spoken-answer guards never see vocabulary the author did not say. See
+ *  _lib/qna-images. */
 function sanitiseDraft(input: any) {
   if (!input || typeof input !== 'object') return null
   if (!Array.isArray(input.items)) return null
+
+  const lead = sanitiseImageSpec(input.lead)
+
   return {
     standfirst:  String(input.standfirst ?? ''),
+    ...(lead ? { lead } : {}),
     items: input.items
-      .map((it: any) => ({
-        question: String(it?.question ?? '').trim(),
-        answer:   String(it?.answer ?? '').trim(),
-      }))
+      .map((it: any) => {
+        const image = sanitiseImageSpec(it?.image)
+        return {
+          question: String(it?.question ?? '').trim(),
+          answer:   String(it?.answer ?? '').trim(),
+          ...(image ? { image } : {}),
+        }
+      })
       .filter((it: any) => it.question || it.answer),
     editorNotes: String(input.editorNotes ?? ''),
   }
@@ -249,6 +272,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ ok: true })
     }
 
+    // Mirrors the uploads into Airtable so there is a library somebody can
+    // look through. The bucket is private and reachable only through signed
+    // URLs, which makes it correct storage and a useless repository.
+    //
+    // Deliberately a button rather than something that happens on submit: an
+    // author can still be adding files after a reopen, and re-running this is
+    // free. It replaces rather than appends, so the bucket stays the truth.
+    if (action === 'archive') {
+      const files = parseMedia(row.fields['Author Media'])
+      if (!files.length) {
+        return res.status(400).json({ error: 'This author has not uploaded anything.' })
+      }
+
+      // Airtable fetches each URL itself, so these only have to outlive the
+      // download. Any that cannot be signed are reported rather than silently
+      // missing from the library.
+      const signed = await Promise.all(
+        files.map(async f => {
+          try {
+            return { path: f.path, name: f.name, url: await signedUrlFor(f.path) }
+          } catch (err) {
+            console.error('[qna-draft] archive sign failed:', f.path, err)
+            return null
+          }
+        })
+      )
+      const usable = signed.filter((f): f is NonNullable<typeof f> => f !== null)
+      if (!usable.length) {
+        return res.status(502).json({ error: 'Could not read any of the uploads from storage.' })
+      }
+
+      const count = await mirrorLibrary(row.id, usable)
+      return res.status(200).json({
+        ok: true,
+        mirrored: count,
+        skipped: files.length - usable.length,
+      })
+    }
+
     if (action === 'approve') {
       if (!row.fields['Draft QnA']) {
         return res.status(400).json({ error: 'There is no draft to approve' })
@@ -260,7 +322,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ ok: true, status: 'Approved' })
     }
 
-    return res.status(400).json({ error: 'action must be generate, save or approve' })
+    return res.status(400).json({ error: 'action must be generate, save, archive or approve' })
   } catch (err) {
     console.error('[qna-draft] request failed:', err)
     return res.status(500).json({ error: err instanceof Error ? err.message : 'Request failed' })

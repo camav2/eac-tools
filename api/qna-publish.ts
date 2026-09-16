@@ -36,9 +36,12 @@ import {
   updateBlogPost,
   writeBlogBody,
   writeAuthorInterviewLink,
+  uploadAsset,
 } from './_lib/webflow'
 import { findRoundup, linkNameInHtml } from './_lib/qna-roundup'
 import { parseMedia, signedUrlFor as signedMediaUrl } from './_lib/qna-media'
+import { imagesInDraft } from './_lib/qna-images'
+import { optimiseImage, outputName } from './_lib/qna-optimise'
 import {
   authorSummaryHtml,
   blogUrl,
@@ -265,9 +268,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         headshotUrl,
       })
 
+      // Photographs placed in the draft have to be on a permanent host before
+      // the body references them. The storage bucket signs URLs for an hour
+      // and Airtable expires its attachments within a few, so either would
+      // publish a post that looks right today and is broken pictures by the
+      // weekend.
+      //
+      // Resized and re-encoded on the way through. A 14 MB photograph straight
+      // off a camera is refused by Webflow outright, and rich text images get
+      // no srcset, so whatever is uploaded is what every visitor downloads on
+      // every device.
+      //
+      // Reported rather than thrown: one photograph that will not encode
+      // should cost the post that photograph, not the publish. postBodyHtml
+      // renders nothing for a path it has no URL for.
+      const imageUrls: Record<string, string> = {}
+      const imageProblems: string[] = []
+      const wanted = imagesInDraft(draft as any)
+
+      if (wanted.length) {
+        const bySource = new Map(parseMedia(row.fields['Author Media']).map(f => [f.path, f]))
+        for (const spec of wanted) {
+          const source = bySource.get(spec.file)
+          try {
+            if (!source) throw new Error('that upload is no longer in the author files')
+            const signed = await signedMediaUrl(spec.file)
+            const got = await fetch(signed)
+            if (!got.ok) throw new Error('storage returned ' + got.status)
+            const raw = Buffer.from(await got.arrayBuffer())
+            const small = await optimiseImage(raw)
+            imageUrls[spec.file] = await uploadAsset(
+              process.env.WEBFLOW_SITE_ID!,
+              outputName(source.name),
+              small.buffer,
+              small.contentType
+            )
+            console.log(
+              '[qna-publish] ' + source.name + ': ' +
+              (raw.length / 1024 / 1024).toFixed(1) + ' MB -> ' +
+              (small.bytes / 1024).toFixed(0) + ' KB at ' + small.width + 'px q' + small.quality
+            )
+          } catch (err) {
+            const why = err instanceof Error ? err.message : String(err)
+            imageProblems.push((source ? source.name : spec.file) + ': ' + why)
+            console.error('[qna-publish] image not hosted:', spec.file, why)
+          }
+        }
+      }
+
       const bodyHtml = postBodyHtml(draft, {
         headshotUrl: footer?.authorHeadshotUrl,
         authorName,
+        imageUrls,
       }) + (footer ? '\n' + footerHtml(footer) : '')
 
       // Staging twice is how a post catches up with a changed draft, a new
@@ -295,6 +347,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ok: true,
         restaged: Boolean(existing),
         staged: { ...post, url: blogUrl(post.slug) },
+        // Named rather than counted: "one image failed" only sends Cam looking.
+        imagesHosted: Object.keys(imageUrls).length,
+        imageProblems,
         // Reported rather than thrown: the post exists either way, and an
         // error that killed the whole stage said nothing about which half of
         // it had worked.
