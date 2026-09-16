@@ -979,6 +979,16 @@ function renderResponses(authorItemId, data) {
         '</button>' +
         '<span class="review-status" id="gen-draft-status" style="margin-left:12px"></span>' +
       '</div>' +
+      (uploads.length
+        ? '<div class="send-panel">' +
+            '<div class="send-title">Media library</div>' +
+            '<div class="send-sub">Copies all ' + uploads.length + ' file' + (uploads.length > 1 ? 's' : '') +
+              ' onto the Airtable record so they can be browsed in the grid. The thumbnails above are ' +
+              'signed links that expire; the library does not. Safe to run again - it replaces rather than adds.</div>' +
+            '<button type="button" class="generate-btn" id="archive-btn">Copy to Airtable</button>' +
+            '<span class="review-status" id="archive-status" style="margin-left:12px"></span>' +
+          '</div>'
+        : '') +
       '<div class="send-panel">' +
         '<div class="send-title">Intake link</div>' +
         '<div class="send-sub">The author\'s link — reopen the submission to edit or resubmit.</div>' +
@@ -995,11 +1005,50 @@ function renderResponses(authorItemId, data) {
   var genBtn = document.getElementById('gen-draft-btn');
   if (genBtn) genBtn.addEventListener('click', function() { generateDraftFor(authorItemId, untranscribed); });
 
+  var archiveBtn = document.getElementById('archive-btn');
+  if (archiveBtn) archiveBtn.addEventListener('click', function() { archiveMedia(authorItemId); });
+
   var author = currentAuthors.find(function(a) { return a.authorItemId === authorItemId; });
   if (author) showExistingLink(author);
 }
 
 /* ── Draft ── */
+
+/*
+ * Copies the uploads onto the Airtable record.
+ *
+ * Deliberately a button rather than something that happens on submit: an
+ * author can still be adding files after a reopen, and running it again is
+ * free because it replaces the library rather than appending to it.
+ */
+async function archiveMedia(authorItemId) {
+  var btn = document.getElementById('archive-btn');
+  var status = document.getElementById('archive-status');
+  if (btn) { btn.disabled = true; btn.textContent = 'Copying...'; }
+  if (status) { status.textContent = ''; status.className = 'review-status'; }
+
+  try {
+    var res = await fetch('/api/qna-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorItemId: authorItemId, action: 'archive' }),
+    });
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) throw new Error(data.error || 'Could not copy the files.');
+
+    if (status) {
+      // The skipped count is worth saying out loud: a library quietly missing
+      // two photographs looks identical to one that copied everything.
+      status.textContent = 'Copied ' + data.mirrored + ' file' + (data.mirrored === 1 ? '' : 's') +
+        (data.skipped ? ' - ' + data.skipped + ' could not be read from storage' : '');
+      status.className = 'review-status' + (data.skipped ? ' err' : ' ok');
+    }
+  } catch (err) {
+    if (status) { status.textContent = err.message; status.className = 'review-status err'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Copy to Airtable'; }
+  }
+}
 
 async function generateDraftFor(authorItemId, untranscribedCount) {
   if (untranscribedCount && !confirm(
