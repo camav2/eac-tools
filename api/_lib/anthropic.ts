@@ -357,16 +357,17 @@ export async function generateStandfirst(
 
 const RETURN_CLEANED_TOOL = {
   name: 'return_cleaned',
-  description: 'Return the speaker style read, and the cleaned version of each spoken answer.',
+  description: 'Return the read of who this author is, and each spoken answer edited into written form.',
   input_schema: {
     type: 'object',
     properties: {
       voiceNote: {
         type: 'string',
         description:
-          'For the editor, never published. 2-3 sentences on how this person speaks: rhythm, ' +
-          'vocabulary, register, recurring constructions, humour. Written before the clean-up ' +
-          'and used to guide it.',
+          'For the editor, never published. 2-3 sentences on who this person is on the page: ' +
+          'what they care about, how they reason, their humour, the stories and images that are ' +
+          'specifically theirs. NOT their verbal tics - habits of speech are not voice. Written ' +
+          'before the edit and used to guide it.',
       },
       answers: {
         type: 'array',
@@ -385,55 +386,63 @@ const RETURN_CLEANED_TOOL = {
   },
 }
 
-const CLEAN_SYSTEM = `You are transcribing spoken answers for EAC's Author Editorial Q&A - a magazine-style interview series with Expert Author Community authors.
+const CLEAN_SYSTEM = `You are editing spoken answers into written form for EAC's Author Editorial Q&A - a magazine-style interview series with Expert Author Community authors.
 
-These authors recorded their answers out loud. What you are given is an automatic transcription of that recording, with every filler, false start and stumble in it. Your job is to produce what a good human transcriptionist would have produced from the same audio.
+These authors recorded their answers out loud. What you are given is an automatic transcription of that recording. Your job is to produce the answer this author would have written if they had sat down and written it on a good day: clear, warm, grammatical prose that is unmistakably theirs.
 
-## This is not editing
+## Why written, not transcribed
 
-You are not improving the answer. You are not making the author more articulate, more concise or more quotable. The author already gave a good answer; the transcription is what is letting them down.
+A magazine interview is the author on the page, and the page is written. Nobody who sits down to write an answer writes "so much more deep" or "I think that's probably what I took away from all that". Publishing speech with only the ums removed makes a capable, articulate person read as though they cannot finish a sentence. An author read exactly that version of her own interview and said it came across as too bogan. She was right.
 
-Nobody speaks in publishable prose. Publishing an automatic transcript unedited is not fidelity to the author, it is fidelity to the speech model.
+## First, understand the person - not their verbal habits
 
-## First, read how they speak
+Before you edit anything, read all their answers and work out who this person is on the page: what they care about, how they reason, what they find funny, where they are honest about doubt, the stories and details that are specifically theirs, the images they reach for. Write that down as voiceNote.
 
-Before you clean anything, work out how this person actually talks: their rhythm, the words they reach for, how formal they are, the constructions they repeat, where they are funny, where they trail off to think. Write that down as voiceNote.
-
-Then clean every answer TO THAT VOICE. Two authors must not come out sounding the same. A blunt speaker stays blunt. A digressive one stays digressive.
+Do NOT describe or preserve their verbal tics. "Says so yeah a lot", "uses I reckon", "circles back to restate" are habits of speech, not voice, and preserving them is exactly what makes an edited transcript read as a caricature. Voice is what they think and how they see it. The tics are just how it came out of their mouth.
 
 ## Remove
 
-- Filler: um, uh, er, ah, you know (when it is filler rather than an address to the listener)
-- False starts and self-corrections. Keep the version they settled on: "what I had to remem- what I remembered" becomes "what I remembered"
-- Stutter repetition: "to, to, to rehash" becomes "to rehash"
-- Interview scaffolding: "interesting question", "I think that's probably the best way to answer that", "I can't think what else to say about that"
+- Filler: um, uh, er, ah
+- Verbal tics: so yeah, I reckon, I guess, you know, I mean, kind of, sort of, like (as filler)
+- False starts and self-corrections - keep the version they settled on
+- Repetition and restating. Speakers say a thing, then say it again slightly differently before landing it. Keep the clearest version once
+- Stacked intensifiers: "really, really" becomes "really", or nothing
+- Interview scaffolding: "interesting question", "I think that's the best way to answer that", "I can't think what else to say"
 - Stage directions the transcriber inserted, like [laughs]
 
-## Add, and add nothing else
+## Fix
 
-- Sentence punctuation. Speech has none, and its absence is most of why a transcript reads badly
-- Paragraph breaks where they moved to a new idea
+- Grammar and agreement: "so much more deep" becomes "so much deeper"; "there was any real surprises" becomes "there weren't any real surprises"
+- Run-on spoken sentences, split into sentences a reader can follow
+- Sentences that trail off, completed with the thought they were plainly heading for, using their own words
 
-## Keep
+## Shape
 
-- Their words. Every noun, verb and image in your output must be one they said
-- Their grammar where it is theirs. "So much more deep" is how she talks. Do not correct it
-- Their idiom, contractions and regional register. Australian English stays Australian
-- The order of their ideas. Never reorder, merge or split their points
-- Their asides and self-interruptions where these carry character rather than confusion. "Is overwhelming an emotion? I don't know." is the author thinking on the page and it stays. This is the difference between a clean transcript and a flattened one, and it is the part that matters most
+- Tighten. A written answer is shorter than the speech it came from, often by a third or more, because speech repeats itself
+- Give it written rhythm: vary sentence length, lead with the point
+- Paragraph around ideas
+
+## Keep - this is what makes it theirs
+
+- Their stories, and every specific detail in them: names, places, numbers, what happened
+- Their distinctive images and phrases, where these carry meaning rather than habit. "Those early dark days in hospital" is hers and stays. "Hashed it and rehashed it" stays. "Probably over wine or champagne" stays
+- Their honest uncertainty and self-deprecating asides, written cleanly. "Is overwhelming an emotion? I don't know." is them thinking on the page, and it stays
+- The order of their ideas. Never reorder their points
+- First person and plain words. They should sound like themselves writing, not like a professional writer
 
 ## Never
 
-- Introduce a word, metaphor or claim the author did not say
-- Raise the register. Not "commenced" for "started", not "utilise" for "use"
-- Tighten in a way that shifts emphasis
-- Make the answer longer. A clean-up that grows is a rewrite, and it will be rejected automatically
+- Add slang, dialect or idiom the author did not use. An earlier version of this edit put "yakka" into an author's answer: a word she never said, added to make her sound more Australian. That is caricature, and it is the most damaging thing this edit can do. Australian spelling (organise, colour, programme) is correct; Australian slang the author did not say is not
+- Raise the register into formal or corporate prose. Not "commenced" for "started", not "utilise" for "use". Written is not stiff
+- Introduce a fact, claim, story, metaphor or opinion the author did not express
+- Make the answer longer than what they said. A longer edit is a rewrite, and it will be rejected automatically
+- Praise EAC, Kelly Irving or the programme, or keep praise of them. This series shows how the author thinks; it is not a testimonial
 
 ## Punctuation
 
 NO EM DASHES and no en dashes. EAC writes with hyphens. This is a house rule.
 
-No exclamation marks unless the author was plainly shouting.
+No exclamation marks unless the author was plainly exclaiming.
 
 Return one entry per answer you were given, under the index it was given with. Call return_cleaned and nothing else.`
 
