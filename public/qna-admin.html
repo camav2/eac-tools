@@ -137,6 +137,10 @@
     .author-photo { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
     .author-photo-placeholder { width: 32px; height: 32px; border-radius: 50%; background: var(--grey-200); color: var(--grey-500); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; }
     .author-name { font-weight: 700; }
+    /* Small enough to stay out of the way of the name, which is what the
+     * column is for. Only rendered when the author actually has a URL. */
+    .author-linkedin { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 3px; background: var(--grey-200); color: var(--grey-700); font-size: 0.6rem; font-weight: 800; text-decoration: none; flex-shrink: 0; }
+    .author-linkedin:hover { background: #0a66c2; color: #fff; }
     .book-title { color: var(--grey-700); }
     .book-date { color: var(--grey-500); font-size: 0.8rem; white-space: nowrap; }
 
@@ -392,7 +396,7 @@ function renderAuthors(authors) {
       ? '<img class="author-photo" src="' + escHtml(a.authorPhotoUrl) + '" alt="">'
       : '<div class="author-photo-placeholder">' + escHtml(initials(a.authorName)) + '</div>';
     return '<tr>' +
-      '<td><div class="author-cell">' + photo + '<div class="author-name">' + escHtml(a.authorName) + '</div></div></td>' +
+      '<td><div class="author-cell">' + photo + '<div class="author-name">' + escHtml(a.authorName) + '</div>' + linkedinBadge(a) + '</div></td>' +
       '<td><div class="book-title">' + escHtml(a.bookTitle) + '</div></td>' +
       '<td><span class="book-date">' + formatDate(a.publishedDate) + '</span></td>' +
       '<td>' + bucketButtons(a) + '</td>' +
@@ -408,6 +412,20 @@ function renderAuthors(authors) {
         '<tbody>' + rows + '</tbody>' +
       '</table>' +
     '</div>';
+}
+
+/*
+ * The author's LinkedIn, when Webflow has one.
+ *
+ * http(s) only. The URL comes from the CMS rather than a person typing into
+ * this page, but an href is an href: a javascript: URL in a CMS field would
+ * run here, and checking the scheme costs nothing.
+ */
+function linkedinBadge(a) {
+  var url = String(a.linkedinUrl || '').trim();
+  if (!/^https?:\/\//i.test(url)) return '';
+  return '<a class="author-linkedin" href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer" ' +
+    'title="' + escHtml(url) + '">in</a>';
 }
 
 function initials(name) {
